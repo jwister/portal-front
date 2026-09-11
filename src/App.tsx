@@ -8,6 +8,7 @@ import { ConsoleLayout, type ConsoleKey } from './components/ConsoleLayout'
 import { HomePage } from './features/home/HomePage'
 import { SignInPage } from './features/auth/SignInPage'
 import { SignUpPage } from './features/auth/SignUpPage'
+import { OAuthCallbackPage } from './features/auth/OAuthCallbackPage'
 import './i18n'
 
 /**
@@ -68,6 +69,8 @@ export function App() {
   if (path === '/console/orders') return <ConsoleRoute activeKey="orders" onNavigate={navigateConsole}><OrdersPage /></ConsoleRoute>
   if (path === '/sign-in') return <SignInPage />
   if (path === '/sign-up') return <SignUpPage />
+  if (path === '/oauth/github') return <OAuthCallbackPage provider="github" />
+  if (path === '/oauth/oidc') return <OAuthCallbackPage provider="oidc" />
   if (path.startsWith('/models/')) {
     let modelName = ''
     try { modelName = decodeURIComponent(path.slice('/models/'.length)) } catch { /* Show not found for malformed encoding. */ }
