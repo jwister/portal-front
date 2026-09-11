@@ -95,12 +95,12 @@ export function DashboardPage() {
 
   // 双轴图把额度和请求量放在同一时间轴上，便于识别高请求但低消耗的调用模式。
   const trendOption = useMemo<EChartsOption>(() => ({
-    color: ['#147b57', '#6d8c74'],
+    color: ['#457a61', '#6d8c74'],
     grid: { top: 42, right: 40, bottom: 30, left: 52 },
     legend: { data: [t('dashboard.quotaSeries'), t('dashboard.requestSeries')], top: 0 },
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', boundaryGap: true, data: dailyUsage.map((item) => item.date.slice(5)) },
-    yAxis: [{ type: 'value', name: t('dashboard.quotaAxis'), axisLabel: { formatter: (value: number) => formatBalance(value, summary?.quotaPerUsd ?? 0) }, splitLine: { lineStyle: { color: '#e5ebe5' } } }, { type: 'value', name: t('dashboard.requestAxis'), splitLine: { show: false } }],
+    yAxis: [{ type: 'value', name: t('dashboard.quotaAxis'), axisLabel: { formatter: (value: number) => formatBalance(value, summary?.quotaPerUsd ?? 0) }, splitLine: { lineStyle: { color: '#e9ede9' } } }, { type: 'value', name: t('dashboard.requestAxis'), splitLine: { show: false } }],
     series: [
       { name: t('dashboard.quotaSeries'), type: 'bar', barMaxWidth: 24, data: dailyUsage.map((item) => item.quota), tooltip: { valueFormatter: (value) => formatBalance(formatChartValue(value), summary?.quotaPerUsd ?? 0) }, itemStyle: { borderRadius: [5, 5, 0, 0] } },
       { name: t('dashboard.requestSeries'), type: 'line', yAxisIndex: 1, smooth: true, data: dailyUsage.map((item) => item.requestCount), symbolSize: 7 },
@@ -108,18 +108,18 @@ export function DashboardPage() {
   }), [dailyUsage, t])
 
   const modelOption = useMemo<EChartsOption>(() => ({
-    color: ['#147b57', '#6d8c74', '#a17d32', '#879b7b', '#51745e', '#98a99a'],
+    color: ['#457a61', '#6d8c74', '#a17d32', '#879b7b', '#51745e', '#98a99a'],
     tooltip: { trigger: 'item', valueFormatter: (value) => formatBalance(formatChartValue(value), summary?.quotaPerUsd ?? 0) },
     legend: { bottom: 0, type: 'scroll' },
     series: [{ type: 'pie', radius: ['53%', '76%'], center: ['50%', '43%'], avoidLabelOverlap: true, label: { show: false }, data: topModels.map((item) => ({ name: getDisplayModelName(item.modelName, t('dashboard.otherModels')), value: item.quota })) }],
   }), [topModels, t])
 
   const tokenOption = useMemo<EChartsOption>(() => ({
-    color: ['#276c4e'],
+    color: ['#3f6b53'],
     grid: { top: 24, right: 20, bottom: 30, left: 52 },
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', boundaryGap: false, data: tokenUsage.map((item) => item.date.slice(5)) },
-    yAxis: { type: 'value', axisLabel: { formatter: (value: number) => formatTokens(value) }, splitLine: { lineStyle: { color: '#e5ebe5' } } },
+    yAxis: { type: 'value', axisLabel: { formatter: (value: number) => formatTokens(value) }, splitLine: { lineStyle: { color: '#e9ede9' } } },
     series: [{ name: t('dashboard.tokenUsage'), type: 'line', smooth: true, symbol: 'none', data: tokenUsage.map((item) => item.tokenUsage), tooltip: { valueFormatter: (value) => formatTokens(formatChartValue(value)) }, areaStyle: { color: 'rgba(39, 108, 78, .18)' }, lineStyle: { width: 3 } }],
   }), [tokenUsage, t])
 

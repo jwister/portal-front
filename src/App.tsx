@@ -1,20 +1,35 @@
-import { DashboardPage } from './features/console/DashboardPage'
-import { SignInPage } from './features/auth/SignInPage'
-import { SignUpPage } from './features/auth/SignUpPage'
-import { TokensPage } from './features/console/TokensPage'
-import { LogsPage } from './features/console/LogsPage'
-import { ProfilePage } from './features/console/ProfilePage'
-import { OrdersPage } from './features/orders/OrdersPage'
-import { PurchasePage } from './features/payments/PurchasePage'
-import { RechargePage } from './features/payments/RechargePage'
+import { Suspense, lazy, useEffect, useState, type ReactNode } from 'react'
+import { Skeleton } from '@douyinfe/semi-ui'
+import { useTranslation } from 'react-i18next'
 import { PublicHeader } from './components/PublicHeader'
-import { useEffect, useState, type ReactNode } from 'react'
 import { useAuthStatus } from './auth/use-auth-status'
 import { RemoteState } from './components/RemoteState'
 import { ConsoleLayout, type ConsoleKey } from './components/ConsoleLayout'
 import { HomePage } from './features/home/HomePage'
-import { ModelsPage } from './features/catalog/ModelsPage'
+import { SignInPage } from './features/auth/SignInPage'
+import { SignUpPage } from './features/auth/SignUpPage'
 import './i18n'
+
+/**
+ * Route chunks keep the first visit to a public page from downloading the console,
+ * payment and charting code. echarts only ships with the dashboard chunk.
+ */
+const ModelsPage = lazy(() => import('./features/catalog/ModelsPage').then(({ ModelsPage: Page }) => ({ default: Page })))
+const ModelDetailPage = lazy(() => import('./features/catalog/ModelDetailPage').then(({ ModelDetailPage: Page }) => ({ default: Page })))
+const DocsPage = lazy(() => import('./features/docs/DocsPage').then(({ DocsPage: Page }) => ({ default: Page })))
+const DashboardPage = lazy(() => import('./features/console/DashboardPage').then(({ DashboardPage: Page }) => ({ default: Page })))
+const TokensPage = lazy(() => import('./features/console/TokensPage').then(({ TokensPage: Page }) => ({ default: Page })))
+const LogsPage = lazy(() => import('./features/console/LogsPage').then(({ LogsPage: Page }) => ({ default: Page })))
+const ProfilePage = lazy(() => import('./features/console/ProfilePage').then(({ ProfilePage: Page }) => ({ default: Page })))
+const OrdersPage = lazy(() => import('./features/orders/OrdersPage').then(({ OrdersPage: Page }) => ({ default: Page })))
+const PurchasePage = lazy(() => import('./features/payments/PurchasePage').then(({ PurchasePage: Page }) => ({ default: Page })))
+const RechargePage = lazy(() => import('./features/payments/RechargePage').then(({ RechargePage: Page }) => ({ default: Page })))
+
+function RouteFallback() {
+  const { t } = useTranslation()
+  const label = t('catalog.loading')
+  return <div className="route-fallback" role="status" aria-label={label}><Skeleton active placeholder={<Skeleton.Paragraph rows={6} />} /><p>{label}</p></div>
+}
 
 function ConsoleRoute({ activeKey, children, onNavigate }: { activeKey: ConsoleKey, children: ReactNode, onNavigate: (path: string) => void }) {
   const status = useAuthStatus()
@@ -27,7 +42,7 @@ function ConsoleRoute({ activeKey, children, onNavigate }: { activeKey: ConsoleK
 
   if (status.kind === 'loading') return <RemoteState kind="loading" />
   if (status.kind === 'anonymous') return null
-  return <ConsoleLayout activeKey={activeKey} onNavigate={onNavigate}><div className="console-route-content" key={activeKey}>{children}</div></ConsoleLayout>
+  return <ConsoleLayout activeKey={activeKey} onNavigate={onNavigate}><div className="console-route-content" key={activeKey}><Suspense fallback={<RouteFallback />}>{children}</Suspense></div></ConsoleLayout>
 }
 
 export function App() {
@@ -52,9 +67,15 @@ export function App() {
   if (path === '/console/profile') return <ConsoleRoute activeKey="profile" onNavigate={navigateConsole}><ProfilePage /></ConsoleRoute>
   if (path === '/console/orders') return <ConsoleRoute activeKey="orders" onNavigate={navigateConsole}><OrdersPage /></ConsoleRoute>
   if (path === '/sign-in') return <SignInPage />
-  if (path === '/sign-up') return <SignUpPage onRegistered={() => window.location.assign('/sign-in')} />
-  if (path === '/models') return <div className="public-ledger-route" data-testid="public-ledger-route"><PublicHeader /><ModelsPage /></div>
-  if (path === '/purchase') return <div className="public-ledger-route" data-testid="public-ledger-route"><PublicHeader /><PurchasePage /></div>
-  if (path === '/') return <div className="ledger-public-page" data-testid="ledger-public-page"><PublicHeader /><HomePage /></div>
+  if (path === '/sign-up') return <SignUpPage />
+  if (path.startsWith('/models/')) {
+    let modelName = ''
+    try { modelName = decodeURIComponent(path.slice('/models/'.length)) } catch { /* Show not found for malformed encoding. */ }
+    return <div className="public-ledger-route"><PublicHeader /><Suspense fallback={<RouteFallback />}><ModelDetailPage key={modelName} modelName={modelName} /></Suspense></div>
+  }
+  if (path === '/docs' || path.startsWith('/docs/')) return <div className="public-ledger-route"><PublicHeader /><Suspense fallback={<RouteFallback />}><DocsPage path={path} /></Suspense></div>
+  if (path === '/models') return <div className="public-ledger-route" data-testid="public-ledger-route"><PublicHeader /><Suspense fallback={<RouteFallback />}><ModelsPage /></Suspense></div>
+  if (path === '/purchase') return <div className="public-ledger-route" data-testid="public-ledger-route"><PublicHeader /><Suspense fallback={<RouteFallback />}><PurchasePage /></Suspense></div>
+  if (path === '/') return <div className="ledger-public-page public-ledger-route" data-testid="ledger-public-page"><PublicHeader /><HomePage /></div>
   return <><PublicHeader /><main className="models-page"><h1>Not Found</h1></main></>
 }

@@ -4,6 +4,8 @@ import { Button, Form, Toast } from '@douyinfe/semi-ui'
 
 import { AuthApiError, getSafeReturnTo, signIn } from '../../api/auth'
 import '../../i18n'
+import { authSwitchUrl } from './auth-links'
+import { resolveBalanceDestination } from '../catalog/use-model'
 
 interface SignInPageProps {
   onAuthenticated?: () => void
@@ -22,7 +24,12 @@ export function SignInPage(props: SignInPageProps) {
     try {
       await signIn(username, password)
       if (props.onAuthenticated) props.onAuthenticated()
-      else window.location.assign(getSafeReturnTo(new URLSearchParams(window.location.search).get('returnTo')))
+      else {
+        const target = getSafeReturnTo(new URLSearchParams(window.location.search).get('returnTo'))
+        const url = new URL(target, window.location.origin)
+        const model = url.searchParams.get('model')
+        window.location.assign(url.pathname === '/console/recharge' && model ? await resolveBalanceDestination(model) : target)
+      }
     } catch (cause) {
       const message = cause instanceof AuthApiError ? cause.message : t('auth.error')
       setError(message)
@@ -56,7 +63,7 @@ export function SignInPage(props: SignInPageProps) {
           />
           {error && <p className="auth-error" role="alert">{error}</p>}
           <Button type="primary" theme="solid" htmlType="submit" loading={submitting}>{t('auth.submit')}</Button>
-          <p className="auth-switch">{t('auth.noAccount')} <a href="/sign-up">{t('register.submit')}</a></p>
+          <p className="auth-switch">{t('auth.noAccount')} <a href={authSwitchUrl('/sign-up')}>{t('register.submit')}</a></p>
         </Form>
       </section>
     </main>

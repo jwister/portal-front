@@ -3,3 +3,7 @@ dist/
 *.local
 *.log
 .DS_Store
+
+# IDE and local tooling state
+.idea/
+.codebuddy/

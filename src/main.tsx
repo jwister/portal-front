@@ -7,6 +7,9 @@ import { App } from './App'
 import './i18n'
 import './styles.css'
 import './styles/public-ledger.css'
+import './styles/catalog-docs.css'
+import './styles/site-theme.css'
+import './styles/home-reference.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

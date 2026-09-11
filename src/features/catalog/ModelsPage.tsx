@@ -1,313 +1,80 @@
-import { Button, Card, Empty, Input, Modal, Skeleton, Tag, Toast, Typography } from '@douyinfe/semi-ui'
-import { IconCopy, IconSearch, IconInfoCircle } from '@douyinfe/semi-icons'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Button } from '@douyinfe/semi-ui'
 import { useTranslation } from 'react-i18next'
-
 import '../../i18n'
-import { getPricing, type NewApiPricingResponse } from '../../api/portal'
-
-const { Title, Text } = Typography
-
-interface ModelDetailModalProps {
-  model: CatalogModel | null
-  visible: boolean
-  onClose: () => void
-}
-
-/** 仅服务于当前卡片布局的展示模型，始终由原始模型广场响应在浏览器内导出。 */
-interface CatalogModel {
-  name: string
-  vendor: string
-  groups: string[]
-  inputPrice: number | null
-  outputPrice: number | null
-  cachePrice: number | null
-  priceAvailable: boolean
-}
-
-function ModelDetailModal({ model, visible, onClose }: ModelDetailModalProps) {
-  const { t } = useTranslation()
-  const [copied, setCopied] = useState(false)
-
-  if (!model) return null
-
-  const handleCopyName = () => {
-    void navigator.clipboard.writeText(model.name)
-    setCopied(true)
-    Toast.success(t('models.nameCopied'))
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const initial = model.name.charAt(0).toUpperCase()
-
-  return (
-    <Modal
-      visible={visible}
-      onCancel={onClose}
-      footer={null}
-      width={480}
-      className="model-detail-modal"
-      closable={false}
-    >
-      {/* Header */}
-      <div className="model-detail-header">
-        <div className="model-detail-icon">
-          <span>{initial}</span>
-        </div>
-        <div className="model-detail-title">
-          <h2 className="model-detail-name">{model.name}</h2>
-          <div className="model-detail-meta">
-            <span className="model-detail-vendor">{model.vendor}</span>
-            <span className="model-detail-sep">·</span>
-            <div className="model-detail-groups">
-              {model.groups.map((group) => (
-                <span key={group} className="model-detail-group-tag">{group}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-        <button className="model-detail-close" onClick={onClose} aria-label="Close">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Pricing Section */}
-      <div className="model-detail-section">
-        <h3 className="model-detail-section-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-          </svg>
-          {t('models.pricing')}
-        </h3>
-        {model.priceAvailable ? (
-          <div className="model-detail-pricing">
-            <div className="model-detail-price-card">
-              <span className="model-detail-price-label">{t('models.input')}</span>
-              <span className="model-detail-price-value">${model.inputPrice}</span>
-              <span className="model-detail-price-unit">/1M</span>
-            </div>
-            <div className="model-detail-price-card">
-              <span className="model-detail-price-label">{t('models.output')}</span>
-              <span className="model-detail-price-value">${model.outputPrice}</span>
-              <span className="model-detail-price-unit">/1M</span>
-            </div>
-            {model.cachePrice !== null && (
-              <div className="model-detail-price-card model-detail-price-card--secondary">
-                <span className="model-detail-price-label">{t('models.cache')}</span>
-                <span className="model-detail-price-value">${model.cachePrice}</span>
-                <span className="model-detail-price-unit">/1M</span>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="model-detail-empty-pricing">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 8v4M12 16h.01" />
-            </svg>
-            <span>{t('models.priceUnavailable')}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Info Section */}
-      <div className="model-detail-section">
-        <h3 className="model-detail-section-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4M12 8h.01" />
-          </svg>
-          {t('models.groups')}
-        </h3>
-        <div className="model-detail-info-grid">
-          <div className="model-detail-info-item">
-            <span className="model-detail-info-label">{t('models.vendor')}</span>
-            <span className="model-detail-info-value">{model.vendor}</span>
-          </div>
-          <div className="model-detail-info-item">
-            <span className="model-detail-info-label">{t('models.groups')}</span>
-            <div className="model-detail-info-tags">
-              {model.groups.map((group) => (
-                <span key={group} className="model-detail-tag">{group}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="model-detail-actions">
-        <button className="model-detail-copy-btn" onClick={handleCopyName}>
-          {copied ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-            </svg>
-          )}
-          <span>{copied ? t('models.copied') : t('models.copyName')}</span>
-        </button>
-      </div>
-    </Modal>
-  )
-}
+import { compareModelsByVendor, modelHref, priceGroup, vendorRank } from './catalog-data'
+import { useCatalog } from './use-catalog'
+import { useModelNavigation } from './use-model'
+import { CatalogState, CopyButton, Discount, PriceList, VendorMark } from './CatalogShared'
 
 export function ModelsPage() {
   const { t } = useTranslation()
-  const [pricing, setPricing] = useState<NewApiPricingResponse | null>(null)
-  const [query, setQuery] = useState('')
-  const [selectedGroup, setSelectedGroup] = useState('all')
-  const [failed, setFailed] = useState(false)
-  const [selectedModel, setSelectedModel] = useState<CatalogModel | null>(null)
-  const [detailVisible, setDetailVisible] = useState(false)
-
-  useEffect(() => {
-    let active = true
-    void getPricing().then((response) => { if (active) setPricing(response) }).catch(() => { if (active) setFailed(true) })
-    return () => { active = false }
-  }, [])
-
-  const models = useMemo<CatalogModel[] | null>(() => {
+  const { pricing, models, failed, retry } = useCatalog()
+  const initial = new URLSearchParams(window.location.search)
+  const [query, setQuery] = useState(initial.get('q') ?? '')
+  const [type, setType] = useState(initial.get('type') ?? 'all')
+  const [vendor, setVendor] = useState(initial.get('vendor') ?? 'all')
+  const [group, setGroup] = useState(initial.get('group') ?? 'all')
+  const access = useModelNavigation()
+  function update(key: string, value: string, set: (value: string) => void) {
+    set(value)
+    const params = new URLSearchParams(window.location.search)
+    if (!value || value === 'all') params.delete(key); else params.set(key, value)
+    window.history.replaceState({}, '', '/models' + (params.size ? '?' + params : ''))
+  }
+  const clear = () => { setQuery(''); setType('all'); setVendor('all'); setGroup('all'); window.history.replaceState({}, '', '/models') }
+  /** Switching type retires a vendor that serves no model of that type. */
+  function selectType(kind: string) {
+    if (vendor !== 'all' && !models.some((m) => m.vendor === vendor && (kind === 'all' || m.type === kind))) update('vendor', 'all', setVendor)
+    update('type', kind, setType)
+  }
+  // Filter changes re-render on every keystroke, so derive the lists once per input change.
+  // Vendors follow the type filter: a chip that cannot return any model is hidden.
+  const vendors = useMemo(() => [...new Set(models.filter((m) => type === 'all' || m.type === type).map((m) => m.vendor))].sort((a, b) => vendorRank(a) - vendorRank(b) || a.localeCompare(b, 'zh')), [models, type])
+  const groups = useMemo(() => [...new Set(models.flatMap((m) => m.groups))].sort(), [models])
+  const types = useMemo(() => ['all', 'chat', 'embedding', 'image', 'video', ...(['audio', 'other'].filter((kind) => models.some((m) => m.type === kind)))], [models])
+  const filtered = useMemo(() => models.filter((m) => (type === 'all' || m.type === type) && (vendor === 'all' || m.vendor === vendor) && (group === 'all' || m.groups.includes(group)) && m.name.toLowerCase().includes(query.trim().toLowerCase())).sort(compareModelsByVendor), [models, type, vendor, group, query])
+  const bestRatio = useMemo(() => {
     if (!pricing) return null
-    const vendorNames = new Map(pricing.vendors.map((vendor) => [vendor.id, vendor.name]))
-    return pricing.data.map((model) => {
-      const inputPrice = model.quota_type === 1 ? model.model_price ?? null : model.model_ratio ?? null
-      const completionRatio = model.completion_ratio ?? 1
-      return {
-        name: model.model_name,
-        vendor: model.vendor_name ?? (model.vendor_id === undefined ? undefined : vendorNames.get(model.vendor_id)) ?? 'Independent',
-        groups: model.enable_groups ?? [],
-        inputPrice,
-        outputPrice: inputPrice === null ? null : inputPrice * completionRatio,
-        cachePrice: inputPrice === null || model.cache_ratio === undefined ? null : inputPrice * model.cache_ratio,
-        priceAvailable: inputPrice !== null,
-      }
+    const discountedRatios = filtered.flatMap((model) => {
+      const { ratio } = priceGroup(pricing, model, group)
+      return ratio !== null && ratio > 0 && ratio < 1 && model.prices.some((row) => row.base !== null && row.base > 0) ? [ratio] : []
     })
-  }, [pricing])
-
-  const handleCopyName = useCallback((name: string) => {
-    void navigator.clipboard.writeText(name)
-    Toast.success(t('models.nameCopied'))
-  }, [t])
-
-  const handleShowDetail = useCallback((model: CatalogModel) => {
-    setSelectedModel(model)
-    setDetailVisible(true)
-  }, [])
-
-  const handleCloseDetail = useCallback(() => {
-    setDetailVisible(false)
-    setSelectedModel(null)
-  }, [])
-
-  const groups = useMemo(() => {
-    if (!models) return []
-    const counts = new Map<string, number>()
-    models.forEach((model) => model.groups.forEach((group) => counts.set(group, (counts.get(group) ?? 0) + 1)))
-    return Array.from(counts.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => ({ name, count }))
-  }, [models])
-  const filtered = useMemo(() => (models ?? []).filter((item) =>
-    (selectedGroup === 'all' || item.groups.includes(selectedGroup)) && item.name.toLowerCase().includes(query.toLowerCase()),
-  ), [models, query, selectedGroup])
-
-  if (failed) return <main className="models-page"><Empty description={t('models.error')} /></main>
-  if (!models) return <main className="models-page"><Skeleton active placeholder={<Skeleton.Paragraph rows={12} />} /></main>
-
-  return (
-    <main className="models-page">
-      <section className="models-hero">
-        <div className="models-hero-copy" data-testid="models-hero-copy">
-          <Tag color="blue">{t('models.badge')}</Tag>
-          <Title heading={1}>{t('models.title')}</Title>
-          <Text type="tertiary">{t('models.copy', { count: models.length })}</Text>
-        </div>
-        <aside className="models-summary" data-testid="models-summary" aria-label={t('models.summaryLabel')}>
-          <div className="models-ledger-status" data-testid="models-ledger-status">
-            <span aria-hidden="true" />
-            {t('models.liveCatalog')}
-          </div>
-          <span className="models-summary-kicker">{t('models.liveCatalog')}</span>
-          <strong>{models.length.toString().padStart(2, '0')}</strong>
-          <span className="models-summary-label">{t('models.modelsAvailable')}</span>
-          <div className="models-summary-line"><span>{t('models.groupsIndexed')}</span><b>{groups.length}</b></div>
-        </aside>
-      </section>
-      <div className="models-layout">
-        <nav className="models-groups" aria-label={t('models.groupsLabel')}>
-          <button type="button" className={`models-group ${selectedGroup === 'all' ? 'is-selected' : ''}`} aria-pressed={selectedGroup === 'all'} onClick={() => setSelectedGroup('all')}>
-            <span>{t('models.allGroups')}</span><b>{models.length}</b>
-          </button>
-          {groups.map(({ name, count }) => <button key={name} type="button" className={`models-group ${selectedGroup === name ? 'is-selected' : ''}`} aria-pressed={selectedGroup === name} onClick={() => setSelectedGroup(name)}>
-            <span>{name}</span><b>{count}</b>
-          </button>)}
-        </nav>
-        <section className="models-results" aria-label={t('models.catalogLabel')}>
-          <div className="models-toolbar">
-            <span className="models-toolbar-label">{t('models.catalogLabel')}</span>
-            <Input prefix={<IconSearch />} placeholder={t('models.search')} value={query} onChange={setQuery} showClear />
-            <Text type="tertiary">{t('models.count', { count: filtered.length })}</Text>
-          </div>
-          {filtered.length === 0 ? <Empty description={t('models.empty')} /> : <section className="models-grid">
-            {filtered.map((model) => (
-              <Card
-                key={model.name}
-                className="model-card"
-                data-testid={`model-card-${model.name}`}
-                data-layout="catalog"
-                title={
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold">{model.name}</span>
-                  </div>
-                }
-                headerExtraContent={
-                  <div className="flex items-center gap-1">
-                    <Button
-                      theme="borderless"
-                      icon={<IconInfoCircle />}
-                      aria-label={t('models.showDetail')}
-                      onClick={() => handleShowDetail(model)}
-                    />
-                    <Button
-                      theme="borderless"
-                      icon={<IconCopy />}
-                      aria-label={t('models.copyName')}
-                      onClick={() => handleCopyName(model.name)}
-                    />
-                  </div>
-                }
-              >
-                <div className="model-card-content">
-                <div className="model-prices" data-testid={`model-card-${model.name}-pricing`}>
-                  {model.priceAvailable ? (
-                    <>
-                      <span>{t('models.input')} <b>${model.inputPrice}</b></span>
-                      <span>{t('models.output')} <b>${model.outputPrice}</b></span>
-                      {model.cachePrice !== null && <span>{t('models.cache')} <b>${model.cachePrice}</b></span>}
-                    </>
-                  ) : (
-                    <Text type="tertiary">{t('models.priceUnavailable')}</Text>
-                  )}
-                </div>
-                <div className="model-card-footer">
-                  <Tag size="small">{model.groups.join(' · ')}</Tag>
-                  <Text type="tertiary">{model.vendor}</Text>
-                </div>
-                </div>
-              </Card>
-            ))}
-          </section>}
-        </section>
+    return discountedRatios.length ? Math.min(...discountedRatios) : null
+  }, [filtered, pricing, group])
+  if (!pricing) return <CatalogState failed={failed} retry={retry} />
+  return <main className="zt-public zt-marketplace"><div className="zt-container">
+    <section className="zt-catalog-hero">
+      <div className="zt-market-copy" data-testid="models-hero-copy">
+        <span className="zt-eyebrow"><i aria-hidden="true" />{t('models.badge')}<span aria-hidden="true"> / ZTOKEN API</span></span>
+        <h1>{t('catalog.heroTitle')}<em>{t('catalog.heroAccent')}</em></h1>
+        <p>{t(bestRatio === null ? 'catalog.intro' : 'catalog.promoIntro')}</p>
+        <div className="zt-hero-actions"><a className="zt-explore" href="#model-catalog">{t('catalog.explore')}<span aria-hidden="true">↗</span></a><a href="/docs/guides/quick-start">{t('catalog.quickStart')} →</a></div>
+        <div className="zt-catalog-summary" data-testid="models-summary"><span data-testid="models-ledger-status">{t('models.liveCatalog')}</span><strong>{models.length}</strong><span>{t('models.modelsAvailable')}</span></div>
       </div>
-      <ModelDetailModal
-        model={selectedModel}
-        visible={detailVisible}
-        onClose={handleCloseDetail}
-      />
-    </main>
-  )
+      <aside className={'zt-promo-ticket' + (bestRatio === null ? ' is-neutral' : '')} data-testid="models-promotion">
+        <div className="zt-ticket-top"><span>{t(bestRatio === null ? 'models.title' : 'catalog.promoScope')}</span><span aria-hidden="true">✳</span></div>
+        {bestRatio !== null ? <><div className="zt-ticket-rate">{t('catalog.promoRate', { rate: Number((bestRatio * 10).toFixed(4)), percent: Number(((1 - bestRatio) * 100).toFixed(4)) })}</div><p className="zt-ticket-saving">{t('catalog.promoSaving', { percent: Number(((1 - bestRatio) * 100).toFixed(4)) })}</p></> : <><div className="zt-ticket-neutral">ONE API.<br />MORE IDEAS.</div><p className="zt-ticket-saving">{t('catalog.explore')}</p></>}
+        <div className="zt-ticket-bottom"><span>{t(bestRatio === null ? 'catalog.currency' : 'catalog.promoTerms')}</span><span className="zt-ticket-bars" aria-hidden="true" /></div>
+      </aside>
+    </section>
+    <section className="zt-filters" aria-label={t('catalog.filters')}>
+      <div className="zt-filter-top"><div className="zt-chips" role="group" aria-label={t('catalog.types')}>{types.map((kind) => <button key={kind} aria-pressed={kind === type} onClick={() => selectType(kind)}>{t('catalog.type.' + kind)}</button>)}</div><input type="search" aria-label={t('models.search')} placeholder={t('models.search')} value={query} onChange={(e) => update('q', e.target.value, setQuery)} /></div>
+      <div className="zt-chips zt-vendors" role="group" aria-label={t('models.vendor')}><button aria-pressed={vendor === 'all'} onClick={() => update('vendor', 'all', setVendor)}>{t('catalog.allVendors')}</button>{vendors.map((name) => <button key={name} aria-pressed={vendor === name} onClick={() => update('vendor', name, setVendor)}><VendorMark vendor={name} />{name}</button>)}</div>
+      <nav className="zt-chips zt-groups" aria-label={t('models.groupsLabel')}><span>{t('models.groups')}</span><button aria-pressed={group === 'all'} onClick={() => update('group', 'all', setGroup)}>{t('models.allGroups')}</button>{groups.map((name) => <button key={name} aria-pressed={group === name} onClick={() => update('group', name, setGroup)}>{name}</button>)}</nav>
+    </section>
+    <section id="model-catalog" aria-label={t('models.catalogLabel')}>
+      <div className="zt-results-bar"><p role="status">{t('models.count', { count: filtered.length })}</p><span>{t('catalog.currency')}</span>{(query || type !== 'all' || vendor !== 'all' || group !== 'all') && <Button theme="borderless" onClick={clear}>{t('catalog.clear')}</Button>}</div>
+      {access.error && <p className="zt-error" role="alert">{access.error}</p>}
+      {!filtered.length ? <div className="zt-empty"><h2>{t('models.empty')}</h2><Button onClick={clear}>{t('catalog.clear')}</Button></div> : <div className="zt-model-grid">{filtered.map((model) => <article className="zt-model-card" key={model.name} data-testid={'model-card-' + model.name} data-layout="catalog">
+        <Discount model={model} pricing={pricing} group={group} />
+        <div className="zt-card-meta"><VendorMark vendor={model.vendor} /><span>{model.vendor}</span><span className="zt-type">{t('catalog.type.' + model.type)}</span></div>
+        <h2><a className="zt-card-link" href={modelHref(model.name, group)}>{model.name}</a></h2>
+        <div className="zt-api-name"><code>{model.name}</code><CopyButton value={model.name} /></div>
+        <PriceList model={model} pricing={pricing} group={group} compact />
+        <footer><span>{t('catalog.viewPrice')} ↗</span><Button theme="solid" type="primary" disabled={access.pending} loading={access.pendingModelName === model.name} onClick={() => void access.start(model.name)}>{t('catalog.use')}</Button></footer>
+      </article>)}</div>}
+    </section>
+    <p className="zt-catalog-note">{t('catalog.priceNote')}</p>
+  </div></main>
 }

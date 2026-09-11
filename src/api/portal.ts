@@ -50,6 +50,15 @@ export interface NewApiPricingModel {
   completion_ratio?: number
   cache_ratio?: number
   quota_type?: number
+  create_cache_ratio?: number
+  supported_endpoint_types?: string[]
+  description?: string
+  model_type?: string
+  context_length?: number
+  billing_mode?: string
+  billing_expr?: string
+  billing_usage_schema?: Record<string, { type?: string; unit?: string; enum?: string[] }>
+  capabilities?: Record<string, boolean | string[]>
 }
 
 export interface NewApiVendor {
@@ -64,7 +73,7 @@ export interface NewApiPricingResponse {
   vendors: NewApiVendor[]
   group_ratio: Record<string, number>
   usable_group: Record<string, string>
-  supported_endpoint: Record<string, string[]>
+  supported_endpoint: Record<string, string[] | { path: string; method: string }>
   auto_groups: string[]
   pricing_version: string
 }

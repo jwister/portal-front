@@ -16,8 +16,26 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         '/api': {
-          target: env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8084',
+          target: env.VITE_API_PROXY_TARGET || 'https://pay.ztoken.cc',
           changeOrigin: true,
+          // The gateway sets cookies for its own domain, which a tunnelled / sandbox
+          // origin cannot store. Rewrite them to host-only so sign-in survives the proxy.
+          cookieDomainRewrite: '',
+        },
+      },
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          // Keep the heavy third-party libraries in their own files so they download in
+          // parallel with the app code and stay cached across deploys.
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined
+            if (id.includes('echarts') || id.includes('zrender')) return 'echarts'
+            if (id.includes('@douyinfe')) return 'semi'
+            if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react'
+            return undefined
+          },
         },
       },
     },

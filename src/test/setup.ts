@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import '@douyinfe/semi-ui/react19-adapter'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
+import { clearCatalogCache } from '../features/catalog/use-catalog'
 
 const values = new Map<string, string>()
 
@@ -56,4 +57,6 @@ Object.defineProperty(Range.prototype, 'getBoundingClientRect', {
   }),
 })
 
-afterEach(cleanup)
+// The catalog keeps a module-level cache for repeat visits; drop it so every test
+// starts from a clean network state.
+afterEach(() => { cleanup(); clearCatalogCache() })

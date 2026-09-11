@@ -4,6 +4,7 @@ import { Button, Form, Input, Popover, Toast } from '@douyinfe/semi-ui'
 
 import { AuthApiError, getCaptcha, sendEmailVerification, signUp } from '../../api/auth'
 import '../../i18n'
+import { authSwitchUrl } from './auth-links'
 
 interface SignUpPageProps {
   onRegistered?: () => void
@@ -55,7 +56,10 @@ export function SignUpPage(props: SignUpPageProps) {
       setCountdown(60)
       setCaptchaCode('')
     } catch (cause) {
-      const message = cause instanceof AuthApiError ? cause.message : t('register.verificationSendError')
+      // A 5xx here means the gateway (and typically the mail sender behind it) failed;
+      // surface a friendly message instead of the raw upstream/generic error.
+      const status = cause instanceof AuthApiError ? cause.status : 0
+      const message = cause instanceof AuthApiError && cause.status < 500 && cause.status !== 0 ? cause.message : t('register.verificationSendError')
       setError(message)
       Toast.error(message)
       await refreshCaptcha()
@@ -85,7 +89,7 @@ export function SignUpPage(props: SignUpPageProps) {
       if (props.onRegistered) {
         props.onRegistered()
       } else {
-        window.location.assign('/sign-in')
+        window.location.assign(authSwitchUrl('/sign-in'))
       }
     } catch (cause) {
       const message = cause instanceof AuthApiError ? cause.message : t('register.error')
@@ -139,7 +143,7 @@ export function SignUpPage(props: SignUpPageProps) {
           />
           {error && <p className="auth-error" role="alert">{error}</p>}
           <Button type="primary" theme="solid" htmlType="submit" loading={submitting}>{t('register.submit')}</Button>
-          <p className="auth-switch">{t('register.haveAccount')} <a href="/sign-in">{t('auth.submit')}</a></p>
+          <p className="auth-switch">{t('register.haveAccount')} <a href={authSwitchUrl('/sign-in')}>{t('auth.submit')}</a></p>
         </Form>
       </section>
     </main>
