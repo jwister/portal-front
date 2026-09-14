@@ -41,7 +41,7 @@ export function OAuthCallbackPage({ provider, onAuthenticated }: OAuthCallbackPa
   return (
     <main className="auth-page ledger-auth-page">
       <section className="auth-panel auth-callback-panel" aria-live="polite">
-        <a className="brand" href="/" aria-label="Ztoken"><span className="brand-mark" aria-hidden="true">Z</span><span>Ztoken</span></a>
+        <a className="brand" href="/" aria-label="ZToken"><img src="/logo1.png" alt="" /><span>ZToken</span></a>
         {failed ? <>
           <h1>{t('auth.oauthFailed')}</h1>
           <p role="alert">{t('auth.oauthFailed')}</p>

@@ -143,7 +143,6 @@
 .ledger-public-page .public-footer strong { color: var(--ledger-ink); }
 .ledger-auth-page .auth-page { background: transparent; }
 .ledger-auth-page .auth-panel { color: var(--ledger-ink); }
-.ledger-auth-page .brand-mark { background: var(--ledger-green); }
 .ledger-auth-page .semi-input-wrapper { border-color: var(--ledger-line); }
 .ledger-auth-page .semi-form-field-label { color: var(--ledger-ink); }
 .email-code-row { display: flex; align-items: flex-end; gap: 12px; }

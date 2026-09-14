@@ -89,7 +89,6 @@ button:not(:disabled),a[href] { cursor: pointer; }
 .paypal-checkout,
 .trc20-checkout { border-radius: 16px; }
 .auth-panel { animation: site-pop-in .45s cubic-bezier(.22,.8,.3,1) both; }
-.auth-panel .brand-mark { color: #fff; background: var(--brand-teal); border-radius: 7px; box-shadow: 0 7px 16px rgba(74,131,117,107,.22); }
 .auth-panel .eyebrow,
 .auth-switch a,
 .purchase-back,

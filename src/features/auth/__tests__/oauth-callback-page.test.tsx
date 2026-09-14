@@ -9,6 +9,13 @@ describe('OAuthCallbackPage', () => {
     window.history.replaceState({}, '', '/')
   })
 
+  it('uses the shared ZToken logo', () => {
+    render(<OAuthCallbackPage provider="github" />)
+
+    const brand = screen.getByRole('link', { name: 'ZToken' })
+    expect(brand.querySelector('img')).toHaveAttribute('src', '/logo1.png')
+  })
+
   it('completes the provider callback before entering the console', async () => {
     const onAuthenticated = vi.fn()
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))

@@ -282,7 +282,7 @@
   "docs.error.404": "Check for a duplicated /v1, the exact model name and whether the endpoint supports the model.",
   "docs.error.429": "Read the error and check account balance, key quota and concurrency or rate limits. Reduce request frequency if rate-limited.",
   "docs.error.5xx": "The service or upstream may be temporarily unavailable. Keep the request ID and check whether the original request completed before retrying.",
-  "brand.name": "Ztoken",
+  "brand.name": "ZToken",
   "nav.home": "Home",
   "nav.models": "Models",
   "nav.docs": "Docs",

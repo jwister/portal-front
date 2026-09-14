@@ -9,6 +9,13 @@ describe('SignUpPage', () => {
     vi.unstubAllGlobals()
   })
 
+  it('uses the shared ZToken logo', () => {
+    render(<SignUpPage />)
+
+    const brand = screen.getByRole('link', { name: 'ZToken' })
+    expect(brand.querySelector('img')).toHaveAttribute('src', '/logo1.png')
+  })
+
   it('posts a new email account to the portal registration endpoint', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn((path: string) => path === '/api/auth/captcha'

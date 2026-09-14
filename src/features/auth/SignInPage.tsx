@@ -87,7 +87,7 @@ export function SignInPage(props: SignInPageProps) {
   return (
     <main className="auth-page ledger-auth-page" data-testid="ledger-auth-page">
       <section className="auth-panel" aria-labelledby="sign-in-title">
-        <a className="brand" href="/" aria-label="Ztoken"><span className="brand-mark" aria-hidden="true">Z</span><span>Ztoken</span></a>
+        <a className="brand" href="/" aria-label="ZToken"><img src="/logo1.png" alt="" /><span>ZToken</span></a>
         <p className="eyebrow">ZT / ACCESS</p>
         <h1 id="sign-in-title">{t('auth.title')}</h1>
         <p>{t('auth.copy')}</p>

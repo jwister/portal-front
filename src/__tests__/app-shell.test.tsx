@@ -14,6 +14,8 @@ describe('portal application shell', () => {
   it('shows public navigation and the primary console action', () => {
     render(<App />)
 
+    const brand = screen.getByRole('link', { name: 'ZToken' })
+    expect(brand.querySelector('img')).toHaveAttribute('src', '/logo1.png')
     expect(screen.getAllByRole('link', { name: 'Models' })[0]).toBeVisible()
     expect(screen.getAllByRole('link', { name: 'Purchase' })[0]).toBeVisible()
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeVisible()

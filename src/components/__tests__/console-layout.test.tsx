@@ -11,6 +11,8 @@ describe('ConsoleLayout', () => {
   it('renders readable console navigation with the active item selected', () => {
     render(<ConsoleLayout activeKey="dashboard"><div>content</div></ConsoleLayout>)
 
+    const brand = screen.getByRole('link', { name: 'ZToken' })
+    expect(brand.querySelector('img')).toHaveAttribute('src', '/logo1.png')
     const navigation = screen.getByRole('navigation', { name: '控制台导航' })
     expect(navigation).toBeVisible()
     expect(within(navigation).getByText('仪表盘')).toBeVisible()

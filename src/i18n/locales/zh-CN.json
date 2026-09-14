@@ -282,7 +282,7 @@
   "docs.error.404": "确认路径未重复 /v1，模型名称与目录一致，接口支持所选模型。",
   "docs.error.429": "查看具体错误，检查账户余额、密钥额度以及并发或频率限制。限流时降低请求频率。",
   "docs.error.5xx": "服务或上游暂时异常。保留请求 ID，稍后重试；先检查原请求是否已完成。",
-  "brand.name": "Ztoken",
+  "brand.name": "ZToken",
   "nav.home": "首页",
   "nav.models": "模型",
   "nav.docs": "文档",

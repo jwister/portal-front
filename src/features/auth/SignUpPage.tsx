@@ -103,7 +103,7 @@ export function SignUpPage(props: SignUpPageProps) {
   return (
     <main className="auth-page ledger-auth-page" data-testid="ledger-auth-page">
       <section className="auth-panel" aria-labelledby="sign-up-title">
-        <a className="brand" href="/" aria-label="Ztoken"><span className="brand-mark" aria-hidden="true">Z</span><span>Ztoken</span></a>
+        <a className="brand" href="/" aria-label="ZToken"><img src="/logo1.png" alt="" /><span>ZToken</span></a>
         <p className="eyebrow">ZT / CREATE</p>
         <h1 id="sign-up-title">{t('register.title')}</h1>
         <p>{t('register.copy')}</p>

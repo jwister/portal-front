@@ -41,7 +41,7 @@ export function ConsoleLayout(props: ConsoleLayoutProps) {
   return (
     <Layout className="console-shell">
       <Layout.Sider className="console-sider" style={{ flex: '0 0 180px', width: 180 }}>
-        <a className="console-brand" href="/"><img src="/small-logo.png" alt="" /><strong>{t('brand.name')}</strong></a>
+        <a className="console-brand" href="/"><img src="/logo1.png" alt="" /><strong>{t('brand.name')}</strong></a>
         <nav aria-label={t('console.navigation')}><Nav mode="vertical" selectedKeys={[props.activeKey]} onSelect={({ itemKey }) => {
           const path = destinations[itemKey as ConsoleKey]
           if (props.onNavigate) props.onNavigate(path)
