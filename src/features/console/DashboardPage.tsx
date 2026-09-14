@@ -193,7 +193,7 @@ export function DashboardPage() {
           ? <DashboardChart title={t('dashboard.modelsTitle')} summary={t('dashboard.modelsSummary')} accessibleDescription={modelsAccessibleDescription} option={modelOption} />
           : <RemoteState kind="empty" />}
         {tokenUsage.length > 0
-          ? <DashboardChart title={t('dashboard.tokensTitle')} summary={t('dashboard.tokensSummary')} accessibleDescription={tokensAccessibleDescription} option={tokenOption} />
+          ? <DashboardChart title={t('dashboard.tokensTitle', { days: range === '7d' ? 7 : 30 })} summary={t('dashboard.tokensSummary')} accessibleDescription={tokensAccessibleDescription} option={tokenOption} />
           : <RemoteState kind="empty" />}
       </div>
     </main>

@@ -475,7 +475,7 @@
   "dashboard.modelsTitle": "Top 5 models by quota",
   "dashboard.modelsSummary": "Share of consumed quota",
   "dashboard.otherModels": "Other models",
-  "dashboard.tokensTitle": "Last 7 days token usage",
+  "dashboard.tokensTitle": "Last {{days}} days token usage",
   "dashboard.tokensSummary": "Tokens processed per day",
   "dashboard.quotaSeries": "Quota",
   "dashboard.requestSeries": "Requests",
