@@ -13,7 +13,8 @@ export function detectPortalLanguage(browserLanguage: string | undefined): Porta
 }
 
 export function resolveInitialLanguage(languages: readonly string[]): PortalLanguage {
-  const stored = localStorage.getItem(LOCALE_STORAGE_KEY)
+  let stored: string | null = null
+  try { stored = typeof localStorage === 'undefined' ? null : localStorage.getItem(LOCALE_STORAGE_KEY) } catch { /* Storage can be disabled in private browsing. */ }
   if (stored === 'en' || stored === 'zh-CN') return stored
   return detectPortalLanguage(languages[0])
 }
@@ -34,5 +35,15 @@ void i18n.use(initReactI18next).init({
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
 })
+
+if (typeof document !== 'undefined') {
+  const updateMetadata = () => {
+    document.documentElement.lang = i18n.language
+    document.title = i18n.t('site.title')
+    document.querySelector('meta[name="description"]')?.setAttribute('content', i18n.t('site.description'))
+  }
+  i18n.on('languageChanged', updateMetadata)
+  updateMetadata()
+}
 
 export default i18n

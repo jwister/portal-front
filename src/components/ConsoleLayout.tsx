@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { signOut, type AuthProfile } from '../api/auth'
+import { type AuthProfile } from '../api/auth'
 import { getDashboard, type DashboardSummary } from '../api/portal'
 import { useAuthStatus } from '../auth/use-auth-status'
 import { LanguageMenu } from './LanguageMenu'
+import { AccountMenu } from './AccountMenu'
 import { ConsoleIcon } from './ConsoleIcon'
 import brandLogo from '../assets/brand-logo.webp'
 
@@ -17,8 +18,6 @@ export function ConsoleLayout({ activeKey, children, onNavigate, profile }: Cons
   const account = profile ?? (status.kind === 'authenticated' ? status.profile : undefined)
   const accountName = account?.username ?? t('console.account')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [signingOut, setSigningOut] = useState(false)
-  const [error, setError] = useState(false)
   const [balance, setBalance] = useState<DashboardSummary | null>(null)
   const topbar = useRef<HTMLElement>(null)
   const closeMenus = () => topbar.current?.querySelectorAll('details[open]').forEach((menu) => menu.removeAttribute('open'))
@@ -73,12 +72,6 @@ export function ConsoleLayout({ activeKey, children, onNavigate, profile }: Cons
     {(Object.keys(destinations) as ConsoleKey[]).map((key) => <a key={key} href={destinations[key]} aria-current={key === activeKey ? 'page' : undefined} onClick={(event) => navigate(event, destinations[key])}><ConsoleIcon name={key} /><span>{t(`console.${key}`)}</span></a>)}
   </nav>
   const brand = <a className="zt-console-brand" href="/" aria-label="ZToken"><img src={brandLogo} alt="" width="32" height="32" /><strong>ZToken</strong></a>
-  const handleSignOut = async () => {
-    if (signingOut) return
-    setSigningOut(true); setError(false)
-    try { await signOut(); window.location.assign('/') }
-    catch { setError(true); setSigningOut(false) }
-  }
   return <div className="zt-console console-shell">
     <a className="zt-console-skip" href="#console-main">{t('console.skipContent')}</a>
     <aside className="zt-console-sidebar">
@@ -93,7 +86,7 @@ export function ConsoleLayout({ activeKey, children, onNavigate, profile }: Cons
         <div className="zt-console-topbar-actions">
           <LanguageMenu />
           <a className="zt-console-balance" href="/console/recharge" aria-label={t('console.currentBalance', { balance:balanceText })} onClick={(event) => navigate(event, '/console/recharge')}><ConsoleIcon name="recharge" /><span>{balanceText}</span></a>
-          <details className="zt-console-account" name="console-account-menu"><summary aria-label={t('auth.avatarLabel', { username: accountName })}><span className="zt-console-avatar" aria-hidden="true" data-initial={accountName.charAt(0).toUpperCase()} /><strong className="zt-console-username" title={accountName}>{accountName}</strong><ConsoleIcon name="chevron" /></summary><div className="zt-console-account-panel"><a href="/console/profile" onClick={(event) => navigate(event, '/console/profile')}><ConsoleIcon name="profile" />{t('console.profile')}</a><button type="button" disabled={signingOut} onClick={() => void handleSignOut()}><ConsoleIcon name="logout" />{t('auth.signOut')}</button>{error && <p role="alert">{t('auth.signOutError')}</p>}</div></details>
+          <AccountMenu username={accountName} onNavigate={navigate} />
         </div>
       </header>
       <div className="zt-console-content" id="console-main" ref={content} tabIndex={-1}>{children}</div>

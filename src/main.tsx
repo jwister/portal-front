@@ -1,14 +1,15 @@
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 
 
 import { App } from './App'
 import './i18n'
 import './styles/base.css'
 import './styles/home-reference.css'
+import { scheduleSupportChat } from './support/load-chat'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+const root = document.getElementById('root')!
+const app = <StrictMode><App /></StrictMode>
+if (root.dataset.prerendered === 'true') hydrateRoot(root, app)
+else createRoot(root).render(app)
+scheduleSupportChat()

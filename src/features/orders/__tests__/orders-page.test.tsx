@@ -65,7 +65,7 @@ describe('OrdersPage', () => {
     render(<OrdersPage />)
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Go to recharge/ })).toBeVisible()
+      expect(screen.getByRole('link', { name: /Go to recharge/ })).toBeVisible()
     })
     expect(screen.queryByText('Order management is coming soon.')).not.toBeInTheDocument()
   })

@@ -11,7 +11,7 @@ const ConsoleRoutes = lazy(() => import('./ConsoleRoutes').then(({ ConsoleRoutes
 
 export function App() {
   const { t } = useTranslation()
-  const [path, setPath] = useState(() => window.location.pathname)
+  const [path, setPath] = useState(() => typeof window === 'undefined' ? '/' : window.location.pathname)
   const isConsoleRoute = /^\/console\/(dashboard|recharge|tokens|logs|profile|orders)$/.test(path)
   const consoleStatus = useAuthStatus(isConsoleRoute)
   useEffect(() => {

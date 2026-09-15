@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node deploy/prerender.mjs && node deploy/verify-build.mjs",
     "test": "vitest run"
   },
   "dependencies": {

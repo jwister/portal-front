@@ -27,15 +27,6 @@
 .zt-console-language,.zt-console-menu-toggle { display:grid; place-items:center; min-width:44px; min-height:44px; border:0; border-radius:9px; background:transparent; color:var(--console-ink); }
 .zt-console-language:hover,.zt-console-menu-toggle:hover { background:var(--console-soft); }
 .zt-console-menu-toggle { display:none; }
-.zt-console-account { position:relative; }
-.zt-console-account summary { list-style:none; cursor:pointer; min-width:44px; min-height:44px; display:grid; place-items:center; border-radius:50%; }
-.zt-console-account summary::-webkit-details-marker { display:none; }
-.zt-console-account summary span { display:grid; place-items:center; width:36px; height:36px; border-radius:50%; color:#106b4c; background:#e2eee6; font-weight:650; }
-.zt-console-account-panel { position:absolute; right:0; top:calc(100% + 8px); width:220px; padding:14px; border:1px solid var(--console-line); border-radius:14px; box-shadow:0 12px 36px #18312814; background:#fff; display:grid; gap:6px; }
-.zt-console-account-panel strong { overflow-wrap:anywhere; padding:6px 8px; }
-.zt-console-account-panel a,.zt-console-account-panel button { display:flex; align-items:center; gap:10px; padding:10px 8px; min-height:44px; border:0; border-radius:7px; background:transparent; text-align:left; color:var(--console-ink); }
-.zt-console-account-panel a:hover,.zt-console-account-panel button:hover { background:var(--console-soft); }
-.zt-console-account-panel p { color:#b42318; font-size:13px; }
 .zt-console-content { max-width:1600px; margin:auto; padding:32px clamp(20px,3vw,48px) 112px; min-width:0; outline:none; }
 .zt-console-content > div > main { min-width:0; }
 .zt-console.console-shell .console-page-header { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:28px; }
@@ -187,7 +178,9 @@ body:has(.zt-console) .semi-modal-close { min-width:44px; min-height:44px; }
 .zt-console.console-shell .console-identity-avatar { width:64px; height:64px; font-size:28px; }
 @media(max-width:700px) { .zt-console.console-shell .console-identity-card { gap:14px; align-items:flex-start; }.zt-console.console-shell .console-identity-avatar { width:48px; height:48px; font-size:22px; }.zt-console.console-shell .console-identity-copy h2 { font-size:19px; } }
 
-.zt-console .order-payment { display:inline-flex; align-items:center; gap:6px; }.zt-console .amount-selector h2,.zt-console .payment-method-grid h2 { font-size:18px; line-height:1.4; margin-bottom:14px; }.zt-console .payment-method-card input { accent-color:#147b57; width:18px; height:18px; }
+.zt-console .order-payment { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.zt-console .order-payment .payment-method-logo { flex-shrink:0; }
+.zt-console .amount-selector h2,.zt-console .payment-method-grid h2 { font-size:18px; line-height:1.4; margin-bottom:14px; }.zt-console .payment-method-card input { accent-color:#147b57; width:18px; height:18px; }
 
 @media(min-width:901px) { .zt-console.console-shell .logs-table-wrap { overflow-x:auto; }.logs-table-wrap .console-responsive-table { min-width:1000px; } }
 
@@ -199,9 +192,6 @@ body:has(.zt-console) .semi-modal-close { min-width:44px; min-height:44px; }
 .zt-console-content .console-profile-page { width:100%; max-width:760px; margin-inline:auto; }
 .zt-console-content .recharge-page { width:100%; max-width:850px; margin-inline:auto; }
 .zt-console .zt-console-topbar-actions { gap:18px; }
-.zt-console .zt-console-account summary { display:flex; align-items:center; gap:9px; min-height:44px; border-radius:9px; padding:4px; }
-.zt-console .zt-console-username { font-size:14px; font-weight:600; max-width:140px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-.zt-console .zt-console-account summary > svg,.zt-language-menu summary > svg:last-child { width:14px; height:14px; color:#61746a; }
 .zt-console-balance { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:8px 12px; background:#eef4f0; border:1px solid #dbe5de; border-radius:9px; color:#126745; font-weight:650; font-variant-numeric:tabular-nums; white-space:nowrap; }
 @media(max-width:700px) {
  .zt-console .zt-console-topbar { display:grid; grid-template-columns:minmax(0,1fr) auto; height:auto; padding:6px 16px 10px; gap:4px 8px; }
@@ -211,21 +201,18 @@ body:has(.zt-console) .semi-modal-close { min-width:44px; min-height:44px; }
  .zt-language-menu summary { padding-right:4px; }
  .zt-console-balance { grid-column:1; grid-row:2; justify-self:start; padding:8px; max-width:100%; min-width:0; }
  .zt-console-balance span { overflow:hidden; text-overflow:ellipsis; }
- .zt-console-account { grid-column:2; grid-row:2; justify-self:end; }
- .zt-console .zt-console-account summary { gap:6px; }
- .zt-console .zt-console-account summary .zt-console-avatar { width:30px; height:30px; }
- .zt-console .zt-console-username { max-width:90px; font-size:13px; }
+ .zt-account-menu { grid-column:2; grid-row:2; justify-self:end; }
 }
 
 .zt-console-topbar-title { min-width:0; }.zt-console-topbar-title > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.zt-console-menu-toggle { flex-shrink:0; }
 
 /* Short interaction feedback; no animation library or continuous card effects. */
 .zt-console :is(a,button,summary,input):focus-visible { outline:2px solid #147b57; outline-offset:3px; }
-.zt-console :is(.zt-console-account,.zt-language-menu)[open] summary > svg:last-child { transform:rotate(180deg); }
+.zt-console .zt-language-menu[open] summary > svg:last-child { transform:rotate(180deg); }
 @media(prefers-reduced-motion:no-preference) {
  .zt-console :is(.zt-console-nav a,.zt-console-balance,.console-button,.semi-button,.amount-grid .semi-button,.payment-method-card,.zt-console-menu-toggle) { transition:transform 160ms ease,background-color 160ms ease,border-color 160ms ease,color 160ms ease; }
- .zt-console :is(.zt-console-account,.zt-language-menu) summary > svg:last-child { transition:transform 180ms ease; }
- .zt-console :is(.zt-console-account,.zt-language-menu)[open] > div { transform-origin:top right; animation:console-menu-in 160ms cubic-bezier(.2,.8,.2,1); }
+ .zt-console .zt-language-menu summary > svg:last-child { transition:transform 180ms ease; }
+ .zt-console .zt-language-menu[open] > div { transform-origin:top right; animation:console-menu-in 160ms cubic-bezier(.2,.8,.2,1); }
  .zt-console-mobile-menu[open] { animation:console-drawer-in 220ms cubic-bezier(.2,.8,.2,1); }
  .zt-console-mobile-menu[open]::backdrop { animation:console-backdrop-in 180ms ease; }
  .zt-console :is(.zt-console-balance,.console-button,.semi-button,.amount-grid .semi-button,.zt-console-menu-toggle):not(:disabled):active { transform:scale(.97); }
@@ -283,7 +270,6 @@ body:has(.zt-console) .semi-modal-close { min-width:44px; min-height:44px; }
 .zt-console.console-shell .console-button-quiet { border-color:transparent; background:#f1f5f2; color:#52675c; }
 .zt-console .console-button:disabled { opacity:.6; cursor:wait; }
 .zt-console .zt-console-nav a { text-transform:none; letter-spacing:normal; }
-.zt-console .zt-console-account summary:hover { background:#eef4f0; }
 .zt-console.console-shell :is(.profile-form,.console-table-wrap,.console-filter-bar) { box-shadow:none!important; }
 .zt-console.console-shell .semi-button-primary.semi-button-solid { background:#147b57; border-color:#147b57; color:#fff; box-shadow:none; }
 .zt-console.console-shell .semi-button-primary.semi-button-solid:hover { background:#0d6144; border-color:#0d6144; box-shadow:none; }
@@ -310,7 +296,6 @@ body:has(.zt-console) .semi-modal .semi-input-wrapper:focus-within { border-colo
  .zt-console .console-form-footer > button { width:100%; }
 }
 
-.zt-console-avatar::before { content:attr(data-initial); }
 .console-empty { display:grid; justify-items:center; gap:12px; padding:48px 20px; border:1px solid #dbe5de; border-radius:14px; background:#fff; color:#61746a; text-align:center; }
 .console-empty > svg { width:28px; height:28px; }
 .console-pagination { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:14px; margin-top:24px; color:#61746a; font-size:13px; }
@@ -366,3 +351,8 @@ body:has(.console-date-dialog[open]) { overflow:hidden; }
  .console-date-dialog .console-calendar-day { height:42px; }
  .zt-console .console-choice summary,.zt-console .console-date-trigger { font-size:16px; }
 }
+
+.zt-console .orders-empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; min-height:200px; padding:32px 24px; border:1px solid var(--console-line); border-radius:14px; background:#fff; text-align:center; }
+.zt-console .orders-empty-state p { margin:0; color:var(--console-muted); line-height:1.7; }
+.zt-console .orders-empty-recharge { align-self:center; background:var(--console-green); border-color:var(--console-green); color:#fff; }
+.zt-console .orders-empty-recharge:hover { background:#0d6144; }

@@ -1,3 +1,5 @@
+import { loadSupportChat } from './load-chat'
+
 interface TidioApi {
   on(event: 'ready' | 'open' | 'close', callback: () => void): void
   open(): void
@@ -12,7 +14,7 @@ declare global { interface Window { tidioChatApi?: TidioApi } }
 let ready = false
 let chatOpen = false
 let installed: TidioApi | undefined
-const mobile = window.matchMedia('(max-width: 800px)')
+const mobile = typeof window === 'undefined' ? undefined : window.matchMedia('(max-width: 800px)')
 
 // Tidio's desktop widget keeps a fixed width even in a narrow desktop window.
 // Keep this adapter inside its open shadow root; never depend on generated classes.
@@ -40,7 +42,7 @@ function fitChatViewport() {
 function syncVisibility() {
   if (!ready) return
   fitChatViewport()
-  if (mobile.matches && !chatOpen) window.tidioChatApi?.hide()
+  if (mobile?.matches && !chatOpen) window.tidioChatApi?.hide()
   else window.tidioChatApi?.show()
 }
 
@@ -54,20 +56,26 @@ function configure() {
   api.on('open', () => { chatOpen = true; document.body.dataset.chatOpen = 'true'; fitChatViewport() })
   api.on('close', () => {
     chatOpen = false; delete document.body.dataset.chatOpen; syncVisibility()
-    if (mobile.matches) document.querySelector<HTMLButtonElement>('.contact-chat-trigger')?.focus()
+    if (mobile?.matches) document.querySelector<HTMLButtonElement>('.contact-chat-trigger')?.focus()
   })
   syncVisibility()
   window.dispatchEvent(new Event('ztoken:chat-ready'))
 }
 
-document.addEventListener('tidioChat-ready', configure)
-if (window.tidioChatApi?.getStatus?.()) configure()
-else window.tidioChatApi?.on('ready', configure)
-mobile.addEventListener('change', syncVisibility)
-window.visualViewport?.addEventListener('resize', fitChatViewport)
+if (typeof window !== 'undefined') {
+  document.addEventListener('tidioChat-ready', configure)
+  if (window.tidioChatApi?.getStatus?.()) configure()
+  else window.tidioChatApi?.on('ready', configure)
+  mobile?.addEventListener('change', syncVisibility)
+  let resizeFrame = 0
+  window.visualViewport?.addEventListener('resize', () => {
+    if (!chatOpen || resizeFrame) return
+    resizeFrame = requestAnimationFrame(() => { resizeFrame = 0; fitChatViewport() })
+  })
+}
 
 export function openSupportChat(): boolean {
-  if (!ready || !window.tidioChatApi) return false
+  if (!ready || !window.tidioChatApi) { loadSupportChat(); return false }
   // A restored conversation can already be open internally while its launcher is
   // hidden, so open() does not necessarily emit a new open event.
   chatOpen = true

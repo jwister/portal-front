@@ -26,7 +26,7 @@ describe('PublicHeader', () => {
     expect(screen.queryByRole('link', { name: '控制台' })).not.toBeInTheDocument()
   })
 
-  it('keeps account details hidden until the avatar is hovered', async () => {
+  it('opens the shared account actions on click and restores focus on Escape', async () => {
     const user = userEvent.setup()
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ authenticated: true, profile: { id: 7, username: 'alice' } }), { status: 200 })))
 
@@ -35,28 +35,34 @@ describe('PublicHeader', () => {
     expect(await screen.findByRole('button', { name: '控制台' })).toBeVisible()
     const avatar = screen.getByLabelText('alice 的用户头像')
     expect(avatar).toBeVisible()
-    await user.hover(avatar)
+    expect(screen.getByText('alice')).toBeVisible()
+    expect(avatar.closest('details')).not.toHaveAttribute('open')
+    await user.click(avatar)
     expect(screen.getByText('alice')).toBeVisible()
     expect(screen.getByRole('button', { name: '退出登录' })).toBeVisible()
     expect(screen.queryByRole('link', { name: '控制台' })).not.toBeInTheDocument()
     expect(screen.queryByText('创建账户')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '个人资料' })).toHaveAttribute('href', '/console/profile')
+    await user.keyboard('{Escape}')
+    expect(avatar.closest('details')).not.toHaveAttribute('open')
+    expect(avatar).toHaveFocus()
   })
 
-  it('signs out and reloads the page from the authenticated account cluster', async () => {
+  it('signs out and returns home from the shared account menu', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ authenticated: true, profile: { id: 7, username: 'alice' } }), { status: 200 }))
       .mockResolvedValueOnce(new Response(null, { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
-    const reload = vi.fn()
-    vi.stubGlobal('location', { ...window.location, reload })
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
 
     render(<PublicHeader />)
     const avatar = await screen.findByLabelText('alice 的用户头像')
-    await user.hover(avatar)
+    await user.click(avatar)
     await user.click(screen.getByRole('button', { name: '退出登录' }))
 
-    await waitFor(() => expect(reload).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/'))
     expect(fetchMock).toHaveBeenLastCalledWith('/api/auth/sign-out', expect.objectContaining({ method: 'POST', credentials: 'include' }))
   })
 })

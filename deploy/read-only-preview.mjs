@@ -26,7 +26,10 @@ http.createServer(async(req,res)=>{
   if(url.pathname==='/api/console/tokens')return json({items:tokens,page:1,pageSize:50,total:3});
   if(url.pathname==='/api/console/logs/stats')return json({quota:124000,rpm:42,tpm:18000});
   if(url.pathname==='/api/console/logs')return json({items:logs.filter(x=>!url.searchParams.get('modelName')||x.modelName.includes(url.searchParams.get('modelName'))),page:1,pageSize:50,total:6});
-  if(url.pathname==='/api/payments/orders')return json({items:orders,page:1,pageSize:20,total:4});
+  if(url.pathname==='/api/payments/orders'){
+   const empty=new URL(req.headers.referer||'http://preview.local').searchParams.get('preview')==='empty-orders';
+   return json({items:empty?[]:orders,page:1,pageSize:20,total:empty?0:orders.length});
+  }
   // Only public catalog reads. No cookies, credentials, arbitrary targets or account APIs.
   if(['/api/catalog/pricing','/api/catalog/status','/api/catalog/perf-metrics','/api/catalog/perf-metrics/summary'].includes(url.pathname)){
    const key=url.pathname+url.search;let item=cache.get(key);

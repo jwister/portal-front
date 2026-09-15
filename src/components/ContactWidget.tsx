@@ -20,13 +20,14 @@ function SupportIcon({ name }: { name: SupportIconName }) {
 export function ContactWidget() {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 800px)').matches)
+  const [mobile, setMobile] = useState(false)
   const [chatPending, setChatPending] = useState(false)
   const [chatError, setChatError] = useState(false)
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
     const query = window.matchMedia('(max-width: 800px)')
     const change = () => { setMobile(query.matches); setOpen(false); setChatPending(false) }
+    change()
     query.addEventListener('change', change)
     return () => query.removeEventListener('change', change)
   }, [])
@@ -44,9 +45,11 @@ export function ContactWidget() {
   useEffect(() => {
     if (!chatPending) return
     const ready = () => { if (openSupportChat()) { setChatPending(false); setOpen(false) } }
+    const failed = () => { setChatPending(false); setChatError(true) }
     window.addEventListener('ztoken:chat-ready', ready)
+    window.addEventListener('ztoken:chat-error', failed)
     const timeout = window.setTimeout(() => { setChatPending(false); setChatError(true) }, 12000)
-    return () => { window.removeEventListener('ztoken:chat-ready', ready); window.clearTimeout(timeout) }
+    return () => { window.removeEventListener('ztoken:chat-ready', ready); window.removeEventListener('ztoken:chat-error', failed); window.clearTimeout(timeout) }
   }, [chatPending])
   const root = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)

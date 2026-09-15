@@ -1,5 +1,5 @@
 import { ResponsiveTable as Table } from '../../components/ResponsiveTable'
-import { Button, Card, Empty, Pagination, Space, Tag, Typography } from '@douyinfe/semi-ui'
+import { Button, Pagination, Space, Tag, Typography } from '@douyinfe/semi-ui'
 import { IconAlertCircle, IconClock, IconCreditCard, IconRefresh, IconTickCircle } from '@douyinfe/semi-icons'
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -9,6 +9,7 @@ import '../../i18n'
 import { ConsolePageHeader } from '../../components/ConsolePageHeader'
 import { MetricCard } from '../../components/MetricCard'
 import { RemoteState } from '../../components/RemoteState'
+import { ConsoleIcon } from '../../components/ConsoleIcon'
 import {
   formatQuota,
   formatUsd,
@@ -102,18 +103,10 @@ export function OrdersPage() {
     return (
       <main>
         <ConsolePageHeader title={t('orders.title')} description={t('orders.description')} />
-        <Card>
-          <Empty description={t('orders.empty')}>
-            <Button
-              theme="solid"
-              type="primary"
-              icon={<IconRefresh />}
-              onClick={() => window.location.assign('/console/recharge')}
-            >
-              {t('orders.recharge')}
-            </Button>
-          </Empty>
-        </Card>
+        <section className="orders-empty-state">
+          <p>{t('orders.empty')}</p>
+          <a className="console-button orders-empty-recharge" href="/console/recharge"><ConsoleIcon name="recharge" />{t('orders.recharge')}</a>
+        </section>
       </main>
     )
   }
@@ -138,8 +131,10 @@ export function OrdersPage() {
       title: t('orders.method'),
       dataIndex: 'method' as const,
       render: (value: string) => value === 'PAYPAL'
-        ? <span className="order-payment"><img className="payment-method-logo" src="/Paypal.png" alt="" />PayPal</span>
-        : value,
+        ? <span className="order-payment"><img className="payment-method-logo" src="/Paypal.png" alt="" width="28" height="28" />PayPal</span>
+        : value === 'USDT_TRC20'
+          ? <span className="order-payment"><img className="payment-method-logo" src="/Tron.png" alt="" width="28" height="28" />TRC20 USDT</span>
+          : value,
     },
     {
       title: t('orders.status'),

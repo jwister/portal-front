@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      manifest: true,
+      assetsInlineLimit: 0,
       rollupOptions: {
         output: {
           // Keep the heavy third-party libraries in their own files so they download in
