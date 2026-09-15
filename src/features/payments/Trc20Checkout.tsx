@@ -1,6 +1,7 @@
 import { Button, Input, Typography } from '@douyinfe/semi-ui'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import './trc20-checkout.css'
 
 import { formatQuota, formatUsd, getPaymentOrder, getTrc20PaymentStatus, submitTrc20Txid, type PaymentOrder, type Trc20PaymentInstruction } from '../../api/portal'
 

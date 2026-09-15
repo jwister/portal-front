@@ -480,7 +480,7 @@
   "models.catalogLabel": "MODEL CATALOG",
   "purchase.title": "Purchase balance",
   "purchase.copy": "Choose an amount, confirm payment, then wait for your balance to be credited.",
-  "purchase.footnote": "Payments are processed in USD; quota is credited only after PayPal confirms the payment and your NewAPI account responds.",
+  "purchase.footnote": "Orders are priced in USD. Credit becomes available after payment is confirmed and added to your ZToken account.",
   "console.dashboard": "Dashboard",
   "console.recharge": "Recharge balance",
   "console.tokens": "Token management",

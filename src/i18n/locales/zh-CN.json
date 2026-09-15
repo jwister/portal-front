@@ -480,7 +480,7 @@
   "models.catalogLabel": "模型目录",
   "purchase.title": "购买余额",
   "purchase.copy": "选择金额，确认支付后，等待额度到账。",
-  "purchase.footnote": "支付以美元结算；只有 PayPal 确认收款并 NewAPI 账户响应成功后，额度才会到账。",
+  "purchase.footnote": "订单以美元计价；付款确认并完成 ZToken 账户入账后，额度即可使用。",
   "console.dashboard": "仪表盘",
   "console.recharge": "余额充值",
   "console.tokens": "令牌管理",
