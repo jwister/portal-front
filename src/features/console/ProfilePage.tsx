@@ -1,11 +1,11 @@
-import { Avatar, Button, Input, Select, Space, Toast, Typography } from '@douyinfe/semi-ui'
-import { IconMail, IconUserCircle, IconUserSetting } from '@douyinfe/semi-icons'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import i18n from '../../i18n'
 import { ConsolePageHeader } from '../../components/ConsolePageHeader'
 import { RemoteState } from '../../components/RemoteState'
+import { ConsoleIcon } from '../../components/ConsoleIcon'
+import { ChoiceField } from '../../components/ChoiceField'
 import { getProfile, updateProfile, type Profile } from '../../api/portal'
 
 /** 从显示名或用户名取首字符，供账户身份卡展示且不引入额外头像数据。 */
@@ -20,6 +20,7 @@ export function ProfilePage() {
   const [language, setLanguage] = useState('en')
   const [failed, setFailed] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [feedback, setFeedback] = useState<'success' | 'error' | null>(null)
 
   const load = () => {
     setFailed(false)
@@ -36,16 +37,17 @@ export function ProfilePage() {
   }, [])
 
   const save = () => {
-    if (!profile) return
+    if (!profile || saving) return
     setSaving(true)
+    setFeedback(null)
     void updateProfile({ displayName: displayName.trim(), language }).then((next) => {
       setProfile(next)
       setDisplayName(next.displayName)
       setLanguage(next.language ?? language)
       void i18n.changeLanguage(next.language ?? language)
-      Toast.success(t('profile.saveSuccess'))
+      setFeedback('success')
     }).catch(() => {
-      Toast.error(t('profile.saveError'))
+      setFeedback('error')
     }).finally(() => setSaving(false))
   }
 
@@ -53,29 +55,27 @@ export function ProfilePage() {
   if (!profile) return <RemoteState kind="loading" />
 
   return (
-    <main>
+    <main className="console-profile-page">
       <ConsolePageHeader title={t('profile.title')} description={t('profile.description')} />
       <section className="console-identity-card" aria-labelledby="profile-identity-title">
-        <Avatar size="extra-large" className="console-identity-avatar">{profileInitial(profile)}</Avatar>
+        <span className="console-identity-avatar" aria-hidden="true">{profileInitial(profile)}</span>
         <div className="console-identity-copy">
-          <Typography.Text id="profile-identity-title" strong>{t('profile.identity')}</Typography.Text>
-          <Typography.Title heading={3}>{profile.displayName || profile.username}</Typography.Title>
-          <span><IconUserCircle aria-hidden="true" />{profile.username}</span>
-          <span><IconMail aria-hidden="true" />{profile.email}</span>
+          <span id="profile-identity-title" className="console-eyebrow">{t('profile.identity')}</span>
+          <h2>{profile.displayName || profile.username}</h2>
+          <span className="console-identity-email">{profile.email}</span>
         </div>
       </section>
       <section className="profile-form" aria-labelledby="profile-preferences-title">
-        <Typography.Title id="profile-preferences-title" heading={5}><IconUserSetting aria-hidden="true" /> {t('profile.preferences')}</Typography.Title>
-        <label htmlFor="profile-username">{t('profile.username')}<Input id="profile-username" value={profile.username} disabled /></label>
-        <Typography.Text type="tertiary">{t('profile.readOnly')}</Typography.Text>
-        <label htmlFor="profile-email">{t('profile.email')}<Input id="profile-email" value={profile.email} disabled /></label>
-        <Typography.Text type="tertiary">{t('profile.readOnly')}</Typography.Text>
-        <label htmlFor="profile-display-name">{t('profile.displayName')}<Input id="profile-display-name" value={displayName} onChange={setDisplayName} /></label>
-        <label>{t('profile.language')}<Select value={language} onChange={(value) => setLanguage(String(value))} optionList={[
-          { label: t('profile.english'), value: 'en' },
-          { label: t('profile.chinese'), value: 'zh-CN' },
-        ]} /></label>
-        <Space><Button theme="solid" type="primary" loading={saving} onClick={save}>{t('profile.save')}</Button></Space>
+        <h2 id="profile-preferences-title"><ConsoleIcon name="profile" />{t('profile.preferences')}</h2>
+        <form onSubmit={(event) => { event.preventDefault(); save() }}>
+          <div className="console-profile-fields">
+            <label className="console-field" htmlFor="profile-username"><span>{t('profile.username')}<small>{t('profile.readOnly')}</small></span><input id="profile-username" value={profile.username} disabled /></label>
+            <label className="console-field" htmlFor="profile-email"><span>{t('profile.email')}<small>{t('profile.readOnly')}</small></span><input id="profile-email" value={profile.email} disabled /></label>
+            <label className="console-field" htmlFor="profile-display-name"><span>{t('profile.displayName')}</span><input id="profile-display-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>
+            <ChoiceField label={t('profile.language')} value={language} onChange={setLanguage} options={[{value:'en',label:t('profile.english')},{value:'zh-CN',label:t('profile.chinese')}]} />
+          </div>
+          <footer className="console-form-footer"><button className="console-button console-button-primary" type="submit" disabled={saving}>{saving && <span className="console-loading-ring" aria-hidden="true" />}{t('profile.save')}</button>{feedback && <p className={`console-form-feedback is-${feedback}`} role={feedback === 'error' ? 'alert' : 'status'}>{t(feedback === 'success' ? 'profile.saveSuccess' : 'profile.saveError')}</p>}</footer>
+        </form>
       </section>
     </main>
   )

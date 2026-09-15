@@ -1,17 +1,14 @@
-import { Avatar, Button, Nav, Space, Toast } from '@douyinfe/semi-ui'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-
 import { useAuthStatus } from '../auth/use-auth-status'
+import { authenticatedLink } from '../auth/auth-links'
 import { signOut } from '../api/auth'
-import { prefetchCatalog } from '../features/catalog/use-catalog'
-import i18n, { setStoredLanguage } from '../i18n'
+import { LanguageMenu } from './LanguageMenu'
+import logo from '../assets/brand-logo.webp'
 
-function navigate(path: string): void { window.location.assign(path) }
-
-/** Warm the route chunk (and the catalog data) while the pointer rests on a nav link. */
 function prefetchRoute(path: string): void {
   if (path === '/models') {
-    prefetchCatalog()
+    void import('../features/catalog/use-catalog').then(({ prefetchCatalog }) => prefetchCatalog())
     void import('../features/catalog/ModelsPage')
   } else if (path.startsWith('/docs')) {
     void import('../features/docs/DocsPage')
@@ -23,27 +20,41 @@ function prefetchRoute(path: string): void {
 export function PublicHeader() {
   const { t } = useTranslation()
   const status = useAuthStatus()
-  const nextLanguage = i18n.language.startsWith('zh') ? 'en' : 'zh-CN'
-  const navLink = (path: string, label: string) => <a href={path} onMouseEnter={() => prefetchRoute(path)} onFocus={() => prefetchRoute(path)}>{label}</a>
+  const [error, setError] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const header = useRef<HTMLElement>(null)
+  const menuButton = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!menuOpen) return
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus() } }
+    const outside = (event: PointerEvent) => { if (event.target instanceof Node && !header.current?.contains(event.target)) setMenuOpen(false) }
+    document.addEventListener('keydown', close)
+    document.addEventListener('pointerdown', outside)
+    return () => { document.removeEventListener('keydown', close); document.removeEventListener('pointerdown', outside) }
+  }, [menuOpen])
+  const account = status.kind === 'authenticated' ? status.profile : null
   const navItems = [
-    { itemKey: '/', text: navLink('/', t('nav.home')) },
-    { itemKey: '/models', text: navLink('/models', t('nav.models')) },
-    { itemKey: '/docs/guides/quick-start', text: navLink('/docs/guides/quick-start', t('nav.docs')) },
-    { itemKey: '/purchase', text: navLink('/purchase', t('nav.purchase')) },
+    ['/', t('nav.home')], ['/models', t('nav.models')],
+    ['/docs/guides/quick-start', t('nav.docs')], ['/purchase', t('nav.purchase')],
   ]
   const handleSignOut = async () => {
-    try {
-      await signOut()
-      window.location.reload()
-    } catch {
-      Toast.error(t('auth.signOutError'))
-    }
+    setSigningOut(true)
+    setError(false)
+    try { await signOut(); window.location.reload() }
+    catch { setError(true) }
+    finally { setSigningOut(false) }
   }
-  const account = status.kind === 'authenticated' ? status.profile : null
-  const footer = status.kind === 'authenticated'
-    ? <Space spacing="tight" className="public-header-actions"><Button theme="borderless" aria-label={nextLanguage === 'zh-CN' ? '中文' : 'English'} onClick={() => setStoredLanguage(nextLanguage)}>{nextLanguage === 'zh-CN' ? '中文' : 'EN'}</Button><Button theme="solid" type="primary" onClick={() => navigate('/console/dashboard')}>{t('nav.console')}</Button><div className="public-account"><Avatar size="small" className="public-avatar" aria-label={t('auth.avatarLabel', { username: account?.username ?? '' })} tabIndex={0}>{account?.username.charAt(0).toUpperCase()}</Avatar><div className="public-account-menu"><span className="public-username">{account?.username}</span><Button theme="borderless" className="public-logout" onClick={() => void handleSignOut()}>{t('auth.signOut')}</Button></div></div></Space>
-    : <Space spacing="tight" className="public-header-actions"><Button theme="borderless" aria-label={nextLanguage === 'zh-CN' ? '中文' : 'English'} onClick={() => setStoredLanguage(nextLanguage)}>{nextLanguage === 'zh-CN' ? '中文' : 'EN'}</Button><Button theme="solid" type="primary" loading={status.kind === 'loading'} onClick={() => navigate('/sign-in')}>{t('auth.submit')}</Button></Space>
-  return <header className="public-header"><Nav mode="horizontal" className="public-nav" header={<a className="semi-brand" href="/" aria-label="ZToken"><img src="/logo1.png" alt="" />ZToken</a>} items={navItems}
-    onSelect={({ itemKey }) => { const path = String(itemKey); if (path.startsWith('http')) window.open(path, '_blank', 'noopener,noreferrer'); else navigate(path) }}
-    footer={footer} /><nav className="public-mobile-nav" aria-label={t('nav.main')}>{navItems.map((item) => <span key={item.itemKey}>{item.text}</span>)}</nav></header>
+  return <header ref={header} className={`public-header public-site-header${menuOpen ? ' site-menu-open' : ''}`}>
+    <a className="site-brand" href="/" aria-label="ZToken"><img src={logo} alt="" width="26" height="26" />ZToken</a>
+    <nav id="public-navigation" className="site-links" aria-label={t('nav.main')}>{navItems.map(([path, label]) => <a key={path} {...(path === '/purchase' ? authenticatedLink(status, path) : { href: path })} onMouseEnter={() => { if (window.matchMedia('(hover: hover)').matches) prefetchRoute(path) }} aria-current={(path === '/' ? window.location.pathname === '/' : window.location.pathname.startsWith(path.split('/').slice(0, 2).join('/'))) ? 'page' : undefined}>{label}</a>)}{menuOpen && account && <div className="site-mobile-account"><a href="/console/profile">{t('console.profile')}</a><button type="button" disabled={signingOut} onClick={() => void handleSignOut()}>{t('auth.signOut')}</button></div>}</nav>
+    <div className="site-actions">
+      <LanguageMenu />
+      <button type="button" className="site-primary" aria-busy={status.kind === 'loading'} onClick={() => window.location.assign(account ? '/console/dashboard' : '/sign-in')}>{t(account ? 'nav.console' : 'auth.submit')}</button>
+      {account && <div className="public-account"><button type="button" className="site-avatar" aria-label={t('auth.avatarLabel', { username: account.username })}>{account.username.charAt(0).toUpperCase()}</button><div className="public-account-menu"><span className="public-username">{account.username}</span><button type="button" disabled={signingOut} onClick={() => void handleSignOut()}>{t('auth.signOut')}</button></div></div>}
+      <button ref={menuButton} type="button" className="site-mobile-menu-toggle" aria-label={t(menuOpen ? 'nav.closeMenu' : 'nav.openMenu')} aria-expanded={menuOpen} aria-controls="public-navigation" onClick={() => setMenuOpen(!menuOpen)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d={menuOpen ? 'm6 6 12 12M6 18 18 6' : 'M4 6h16M4 12h16M4 18h16'} /></svg></button>
+    </div>
+    {error && <p className="site-header-error" role="alert">{t('auth.signOutError')}</p>}
+  </header>
+
 }

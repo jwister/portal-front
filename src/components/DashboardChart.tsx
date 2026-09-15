@@ -1,64 +1,63 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { EChartsOption } from 'echarts'
-import * as echarts from 'echarts/core'
-import { BarChart, LineChart, PieChart } from 'echarts/charts'
-import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
-import { CanvasRenderer } from 'echarts/renderers'
+import type { EChartsType } from 'echarts/core'
+import { useTranslation } from 'react-i18next'
 
-// 控制台仅展示柱状、折线和环形三类图表，按需注册可避免把未使用的 ECharts 图表代码打进首屏资源。
-echarts.use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
+interface DashboardChartProps { title: string; summary?: string; accessibleDescription: string; option: EChartsOption }
 
-interface DashboardChartProps {
-  title: string
-  summary?: string
-  accessibleDescription: string
-  option: EChartsOption
-}
-
-/**
- * 统一承载仪表盘数据图表，负责 ECharts 生命周期、容器尺寸变化和减少动态效果偏好的兼容。
- * 页面只需提供业务数据转换后的 option，避免各图表重复编写释放与缩放逻辑。
- */
 export function DashboardChart({ title, summary, accessibleDescription, option }: DashboardChartProps) {
   const elementRef = useRef<HTMLDivElement>(null)
+  const chartRef = useRef<EChartsType | null>(null)
+  const optionRef = useRef(option)
+  const [failed, setFailed] = useState(false)
+  const [revision, setRevision] = useState(0)
+  const { t } = useTranslation()
+  optionRef.current = option
 
   useEffect(() => {
     const element = elementRef.current
-    if (!element) return undefined
-
-    // 无 Canvas 文本测量能力的 SSR/测试环境不能安全绘制图表；保留语义容器，交由浏览器环境完成渲染。
+    if (!element) return
     const context = document.createElement('canvas').getContext('2d')
-    if (!context || typeof context.measureText !== 'function') return undefined
-
-    const chart = echarts.init(element)
-    // 用户选择减少动态效果时关闭 ECharts 入场动画，避免造成不必要的视觉干扰。
-    const reducedMotion = typeof window.matchMedia === 'function'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    chart.setOption({ ...option, animation: !reducedMotion }, { notMerge: true })
-
-    // 侧栏伸缩、窗口变化与响应式栅格都会改变图表可用宽度，因此观察实际容器而非只监听 window。
-    const observer = typeof ResizeObserver === 'undefined'
-      ? undefined
-      : new ResizeObserver(() => chart.resize())
-    observer?.observe(element)
-    const resize = () => chart.resize()
-    window.addEventListener('resize', resize)
-
-    return () => {
-      observer?.disconnect()
-      window.removeEventListener('resize', resize)
-      chart.dispose()
+    if (!context || typeof context.measureText !== 'function') return
+    let disposed = false
+    let started = false
+    let frame = 0
+    let observer: ResizeObserver | undefined
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updateMotion = () => chartRef.current?.setOption({ animation: !motion.matches })
+    const resize = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(() => chartRef.current?.resize()) }
+    const start = async () => {
+      if (started) return
+      started = true
+      try {
+        const { initChart } = await import('./chart-runtime')
+        if (disposed) return
+        chartRef.current = initChart(element, undefined, { devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2) })
+        chartRef.current.setOption({ ...optionRef.current, animation: !motion.matches, animationDuration: 250 }, { notMerge: true })
+        if (typeof ResizeObserver !== 'undefined') { observer = new ResizeObserver(resize); observer.observe(element) }
+        else window.addEventListener('resize', resize)
+        motion.addEventListener?.('change', updateMotion)
+      } catch { if (!disposed) setFailed(true) }
     }
+    const visibility = typeof IntersectionObserver === 'undefined' ? undefined : new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) { visibility?.disconnect(); void start() }
+    }, { rootMargin: '160px' })
+    if (visibility) visibility.observe(element)
+    else void start()
+    return () => {
+      disposed = true; visibility?.disconnect(); observer?.disconnect(); cancelAnimationFrame(frame)
+      window.removeEventListener('resize', resize); motion.removeEventListener?.('change', updateMotion)
+      chartRef.current?.dispose(); chartRef.current = null
+    }
+  }, [revision])
+  useEffect(() => {
+    chartRef.current?.setOption({ ...option, animation: !window.matchMedia('(prefers-reduced-motion: reduce)').matches }, { notMerge: true })
   }, [option])
 
-  return (
-    <section className="dashboard-chart" role="region" aria-label={title}>
-      <header className="dashboard-chart-header">
-        <h3>{title}</h3>
-        {summary && <span>{summary}</span>}
-      </header>
-      <p className="dashboard-chart-accessible-description">{accessibleDescription}</p>
-      <div ref={elementRef} className="dashboard-chart-canvas" />
-    </section>
-  )
+  return <section className="dashboard-chart" role="region" aria-label={title}>
+    <header className="dashboard-chart-header"><h2>{title}</h2>{summary && <span>{summary}</span>}</header>
+    <p className="dashboard-chart-accessible-description">{accessibleDescription}</p>
+    {failed && <button className="console-button" type="button" onClick={() => { setFailed(false); setRevision((value) => value + 1) }}>{t('common.retry')}</button>}
+    <div ref={elementRef} className="dashboard-chart-canvas" />
+  </section>
 }

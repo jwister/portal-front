@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { App } from '../App'
+import brandLogo from '../assets/brand-logo.webp'
 import i18n, { LOCALE_STORAGE_KEY } from '../i18n'
 
 describe('portal application shell', () => {
@@ -15,7 +16,7 @@ describe('portal application shell', () => {
     render(<App />)
 
     const brand = screen.getByRole('link', { name: 'ZToken' })
-    expect(brand.querySelector('img')).toHaveAttribute('src', '/logo1.png')
+    expect(brand.querySelector('img')).toHaveAttribute('src', brandLogo)
     expect(screen.getAllByRole('link', { name: 'Models' })[0]).toBeVisible()
     expect(screen.getAllByRole('link', { name: 'Purchase' })[0]).toBeVisible()
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeVisible()
@@ -27,16 +28,18 @@ describe('portal application shell', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: '中文' }))
+    await user.click(screen.getByLabelText('Choose language: English'))
+    await user.click(screen.getByRole('button', { name: '简体中文' }))
 
     expect(localStorage.getItem(LOCALE_STORAGE_KEY)).toBe('zh-CN')
     expect(screen.getAllByRole('link', { name: '模型' })[0]).toBeVisible()
   })
 
-  it('mounts the ledger system on public and authentication routes', () => {
+  it('mounts the ledger system on public and authentication routes', { timeout: 30000 }, async () => {
     window.history.pushState({}, '', '/sign-in')
     const { unmount } = render(<App />)
-    expect(screen.getByTestId('ledger-auth-page')).toBeVisible()
+    await act(async () => { await vi.dynamicImportSettled() })
+    expect(await screen.findByTestId('ledger-auth-page', {}, { timeout: 10000 })).toBeVisible()
 
     unmount()
     window.history.pushState({}, '', '/')
@@ -44,12 +47,13 @@ describe('portal application shell', () => {
     expect(screen.getByTestId('ledger-public-page')).toBeVisible()
   })
 
-  it('scopes the ledger treatment to catalog and purchase routes', () => {
+  it('scopes the ledger treatment to catalog and purchase routes', { timeout: 30000 }, async () => {
     window.history.pushState({}, '', '/models')
 
     render(<App />)
 
-    expect(screen.getByTestId('public-ledger-route')).toBeVisible()
+    await act(async () => { await vi.dynamicImportSettled() })
+    expect(await screen.findByTestId('public-ledger-route')).toBeVisible()
   })
 
   it('renders the console dashboard at its direct route', { timeout: 30000 }, async () => {
@@ -72,6 +76,7 @@ describe('portal application shell', () => {
 
     // The dashboard ships as its own route chunk (echarts included), so the first
     // import can take longer than the default 1s wait inside the test environment.
+    await act(async () => { await vi.dynamicImportSettled() })
     expect(await screen.findByRole('heading', { name: 'Console overview' }, { timeout: 10000 })).toBeVisible()
   })
 
@@ -91,7 +96,8 @@ describe('portal application shell', () => {
 
     render(<App />)
 
-    expect(screen.getByTestId('public-ledger-route')).toBeVisible()
+    await act(async () => { await vi.dynamicImportSettled() })
+    expect(await screen.findByTestId('public-ledger-route')).toBeVisible()
     expect(await screen.findByRole('link', { name: 'gpt-5-mini' }, { timeout: 20000 })).toBeVisible()
   })
 })

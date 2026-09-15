@@ -10,7 +10,9 @@ describe('catalog browsing and pricing', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('zh-CN')
     window.history.replaceState({}, '', '/models')
-    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify(pricingFixture)))))
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url) => Promise.resolve(new Response(JSON.stringify(
+      url === '/api/auth/status' ? { authenticated: false, profile: null } : pricingFixture,
+    )))))
   })
   afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState({}, '', '/') })
 
@@ -72,7 +74,7 @@ describe('catalog browsing and pricing', () => {
     await user.click(within(card).getByRole('button', { name: '立即使用' }))
     await waitFor(() => expect(assign).toHaveBeenCalledTimes(1))
     const destination = new URL(assign.mock.calls[0][0], 'https://example.test')
-    expect(destination.pathname).toBe('/sign-up')
+    expect(destination.pathname).toBe('/sign-in')
     expect(destination.searchParams.get('returnTo')).toBe('/console/recharge?model=deepseek-test')
   })
 
@@ -105,7 +107,12 @@ describe('catalog browsing and pricing', () => {
   })
 
   it('shows missing and failed models and can retry a failed catalog', async () => {
-    vi.mocked(fetch).mockRejectedValueOnce(new Error('offline'))
+    let catalogFailed = false
+    vi.mocked(fetch).mockImplementation((url) => {
+      if (url === '/api/auth/status') return Promise.resolve(new Response(JSON.stringify({ authenticated: false, profile: null })))
+      if (!catalogFailed) { catalogFailed = true; return Promise.reject(new Error('offline')) }
+      return Promise.resolve(new Response(JSON.stringify(pricingFixture)))
+    })
     render(<ModelDetailPage modelName="missing" />)
     await screen.findByRole('alert')
     await userEvent.click(screen.getByRole('button', { name: '重试' }))

@@ -125,9 +125,18 @@ export async function sendEmailVerification(email: string, captchaId: string, ca
   await request(`/api/auth/verification?email=${encodeURIComponent(email)}&captchaId=${encodeURIComponent(captchaId)}&captchaCode=${encodeURIComponent(captchaCode)}`)
 }
 
-export async function getAuthStatus(): Promise<AuthStatus> {
-  const response = await request('/api/auth/status')
-  return await response.json() as AuthStatus
+let pendingStatus: Promise<AuthStatus> | undefined
+
+/** Share concurrent checks without caching a session after the request completes. */
+export function getAuthStatus(): Promise<AuthStatus> {
+  if (!pendingStatus) {
+    pendingStatus = request('/api/auth/status').then(async (response) => {
+      const status = await response.json() as AuthStatus
+      if (typeof status?.authenticated !== 'boolean') throw new AuthApiError(genericError, 0)
+      return status
+    }).finally(() => { pendingStatus = undefined })
+  }
+  return pendingStatus
 }
 
 export async function signOut(): Promise<void> {

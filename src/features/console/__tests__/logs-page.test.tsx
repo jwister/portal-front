@@ -23,7 +23,7 @@ describe('LogsPage', () => {
       return Promise.resolve(new Response(JSON.stringify({
         page: 1,
         pageSize: 50,
-        total: 1,
+        total: 51,
         items: [{ id: 1, createdAt: 1710000000, type: 2, content: 'completed', tokenName: 'server', modelName: 'gpt-4o', quota: 120, promptTokens: 100, completionTokens: 20, useTime: 50, stream: false, requestId: 'req-1' }],
       }), { status: 200 }))
     })
@@ -39,6 +39,14 @@ describe('LogsPage', () => {
     await user.type(screen.getByLabelText('Model name'), 'gpt-4.1')
     await user.click(screen.getByRole('button', { name: 'Apply filters' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('modelName=gpt-4.1'), expect.anything()))
+    await user.click(screen.getByText('All types', { exact:true, selector:'summary span' }))
+    await user.click(screen.getByRole('option', { name:'Error' }))
+    await user.click(screen.getByRole('button', { name:'Apply filters' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('type=5'), expect.anything()))
+    await waitFor(()=>expect(screen.getByRole('button',{name:'Next'})).toBeEnabled())
+    expect(screen.getByRole('button',{name:'Previous'})).toBeDisabled()
+    await user.click(screen.getByRole('button',{name:'Next'}))
+    await waitFor(()=>expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('page=2'),expect.anything()))
   })
 
   it('localizes token breakdown and timing labels after switching languages', async () => {

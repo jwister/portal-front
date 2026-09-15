@@ -1,64 +1,107 @@
-import { Avatar, Button, Layout, Nav, Space, Toast } from '@douyinfe/semi-ui'
-import { IconBell, IconCreditCard, IconExit, IconHistory, IconHome, IconKey, IconUser, IconList } from '@douyinfe/semi-icons'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-
-import { signOut } from '../api/auth'
+import { signOut, type AuthProfile } from '../api/auth'
+import { getDashboard, type DashboardSummary } from '../api/portal'
 import { useAuthStatus } from '../auth/use-auth-status'
-import i18n, { setStoredLanguage } from '../i18n'
+import { LanguageMenu } from './LanguageMenu'
+import { ConsoleIcon } from './ConsoleIcon'
+import brandLogo from '../assets/brand-logo.webp'
 
 export type ConsoleKey = 'dashboard' | 'recharge' | 'tokens' | 'logs' | 'profile' | 'orders'
+interface ConsoleLayoutProps { activeKey: ConsoleKey; children: ReactNode; onNavigate?: (path: string) => void; profile?: AuthProfile }
+const destinations: Record<ConsoleKey, string> = { dashboard: '/console/dashboard', recharge: '/console/recharge', tokens: '/console/tokens', logs: '/console/logs', profile: '/console/profile', orders: '/console/orders' }
 
-interface ConsoleLayoutProps {
-  activeKey: ConsoleKey
-  children: ReactNode
-  onNavigate?: (path: string) => void
-}
-
-const destinations: Record<ConsoleKey, string> = {
-  dashboard: '/console/dashboard',
-  recharge: '/console/recharge',
-  tokens: '/console/tokens',
-  logs: '/console/logs',
-  profile: '/console/profile',
-  orders: '/console/orders',
-}
-
-export function ConsoleLayout(props: ConsoleLayoutProps) {
-  const { t } = useTranslation()
-  const status = useAuthStatus()
-  const accountName = status.kind === 'authenticated' ? status.profile.username : t('console.account')
-  const nextLanguage = i18n.language.startsWith('zh') ? 'en' : 'zh-CN'
-  const labels: Record<ConsoleKey, string> = { dashboard: t('console.dashboard'), recharge: t('console.recharge'), tokens: t('console.tokens'), logs: t('console.logs'), profile: t('console.profile'), orders: t('console.orders') }
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      window.location.assign('/')
-    } catch {
-      Toast.error(t('auth.signOutError'))
-    }
+export function ConsoleLayout({ activeKey, children, onNavigate, profile }: ConsoleLayoutProps) {
+  const { t, i18n } = useTranslation()
+  const status = useAuthStatus(!profile)
+  const account = profile ?? (status.kind === 'authenticated' ? status.profile : undefined)
+  const accountName = account?.username ?? t('console.account')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+  const [error, setError] = useState(false)
+  const [balance, setBalance] = useState<DashboardSummary | null>(null)
+  const topbar = useRef<HTMLElement>(null)
+  const closeMenus = () => topbar.current?.querySelectorAll('details[open]').forEach((menu) => menu.removeAttribute('open'))
+  useEffect(() => {
+    if (!account) return
+    let active = true
+    const refresh = () => { void getDashboard().then((next) => { if (active) setBalance(next) }).catch(() => { if (active) setBalance(null) }) }
+    const update = (event: Event) => setBalance((event as CustomEvent<DashboardSummary>).detail)
+    window.addEventListener('ztoken:balance-updated', update)
+    window.addEventListener('focus', refresh)
+    refresh()
+    return () => { active = false; window.removeEventListener('ztoken:balance-updated', update); window.removeEventListener('focus', refresh) }
+  }, [account?.id, activeKey])
+  useEffect(() => {
+    const outside = (event: PointerEvent) => { if (event.target instanceof Node && !topbar.current?.contains(event.target)) closeMenus() }
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') { const menu = topbar.current?.querySelector('details[open]'); closeMenus(); menu?.querySelector('summary')?.focus() } }
+    document.addEventListener('pointerdown', outside); document.addEventListener('keydown', escape)
+    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape) }
+  }, [])
+  const dialog = useRef<HTMLDialogElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const content = useRef<HTMLDivElement>(null)
+  const initialPage = useRef(true)
+  const balanceText = balance && Number.isFinite(balance.availableQuota) && Number.isFinite(balance.quotaPerUsd) && balance.quotaPerUsd > 0
+    ? '$' + new Intl.NumberFormat(i18n.language, { minimumFractionDigits:2, maximumFractionDigits:2 }).format(balance.availableQuota / balance.quotaPerUsd) : '$—'
+  useEffect(() => {
+    if (!menuOpen) return
+    if (dialog.current?.showModal) dialog.current.showModal()
+    else dialog.current?.setAttribute('open', '')
+    return () => trigger.current?.focus()
+  }, [menuOpen])
+  useEffect(() => {
+    if (initialPage.current) { initialPage.current = false; return }
+    content.current?.focus()
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    // Animate only navigation, so the initial paint and form state are unaffected.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const animation = content.current?.animate?.(
+      [{ opacity: 0.6, transform: 'translateY(6px)' }, { opacity: 1, transform: 'translateY(0)' }],
+      { duration: 200, easing: 'cubic-bezier(.2,.8,.2,1)' },
+    )
+    return () => animation?.cancel()
+  }, [activeKey])
+  const navigate = (event: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0 || !onNavigate) return
+    event.preventDefault()
+    setMenuOpen(false)
+    closeMenus()
+    onNavigate(path)
   }
-  return (
-    <Layout className="console-shell">
-      <Layout.Sider className="console-sider" style={{ flex: '0 0 180px', width: 180 }}>
-        <a className="console-brand" href="/"><img src="/logo1.png" alt="" /><strong>{t('brand.name')}</strong></a>
-        <nav aria-label={t('console.navigation')}><Nav mode="vertical" selectedKeys={[props.activeKey]} onSelect={({ itemKey }) => {
-          const path = destinations[itemKey as ConsoleKey]
-          if (props.onNavigate) props.onNavigate(path)
-          else window.location.assign(path)
-        }} items={[
-          { itemKey: 'dashboard', text: labels.dashboard, icon: <IconHome /> },
-          { itemKey: 'recharge', text: labels.recharge, icon: <IconCreditCard /> },
-          { itemKey: 'tokens', text: labels.tokens, icon: <IconKey /> },
-          { itemKey: 'logs', text: labels.logs, icon: <IconHistory /> },
-          { itemKey: 'profile', text: labels.profile, icon: <IconUser /> },
-          { itemKey: 'orders', text: labels.orders, icon: <IconList /> },
-        ]} /></nav>
-      </Layout.Sider>
-      <Layout>
-        <Layout.Header className="console-topbar"><h1>{labels[props.activeKey]}</h1><Space spacing="tight"><Button theme="borderless" aria-label={nextLanguage === 'zh-CN' ? '中文' : 'English'} onClick={() => setStoredLanguage(nextLanguage)}>{nextLanguage === 'zh-CN' ? '中文' : 'EN'}</Button><Button theme="borderless" icon={<IconBell />} aria-label={t('console.notifications')} /><div className="console-account public-account"><Avatar size="small" className="public-avatar" aria-label={t('auth.avatarLabel', { username: accountName })} tabIndex={0}>{accountName.charAt(0).toUpperCase()}</Avatar><div className="public-account-menu"><span className="public-username"><IconUser aria-hidden="true" />{accountName}</span><Button theme="borderless" className="public-logout" icon={<IconExit aria-hidden="true" />} onClick={() => void handleSignOut()}>{t('auth.signOut')}</Button></div></div></Space></Layout.Header>
-        <Layout.Content className="console-content">{props.children}</Layout.Content>
-      </Layout>
-    </Layout>
-  )
+  const navigation = <nav aria-label={t('console.navigation')} className="zt-console-nav">
+    {(Object.keys(destinations) as ConsoleKey[]).map((key) => <a key={key} href={destinations[key]} aria-current={key === activeKey ? 'page' : undefined} onClick={(event) => navigate(event, destinations[key])}><ConsoleIcon name={key} /><span>{t(`console.${key}`)}</span></a>)}
+  </nav>
+  const brand = <a className="zt-console-brand" href="/" aria-label="ZToken"><img src={brandLogo} alt="" width="32" height="32" /><strong>ZToken</strong></a>
+  const handleSignOut = async () => {
+    if (signingOut) return
+    setSigningOut(true); setError(false)
+    try { await signOut(); window.location.assign('/') }
+    catch { setError(true); setSigningOut(false) }
+  }
+  return <div className="zt-console console-shell">
+    <a className="zt-console-skip" href="#console-main">{t('console.skipContent')}</a>
+    <aside className="zt-console-sidebar">
+      {brand}
+      <p className="zt-console-nav-caption">{t('console.workspace')}</p>
+      {navigation}
+      <div className="zt-console-sidebar-footer"><a href="/docs"><ConsoleIcon name="docs" />{t('auth.readDocs')}</a><a href="/models"><ConsoleIcon name="arrow" />{t('console.exploreModels')}</a></div>
+    </aside>
+    <div className="zt-console-workspace">
+      <header className="zt-console-topbar" ref={topbar}>
+        <div className="zt-console-topbar-title"><button ref={trigger} className="zt-console-menu-toggle" type="button" aria-expanded={menuOpen} aria-label={t('console.openNavigation')} onClick={() => setMenuOpen(true)}><ConsoleIcon name="menu" /></button><span>{t(`console.${activeKey}`)}</span></div>
+        <div className="zt-console-topbar-actions">
+          <LanguageMenu />
+          <a className="zt-console-balance" href="/console/recharge" aria-label={t('console.currentBalance', { balance:balanceText })} onClick={(event) => navigate(event, '/console/recharge')}><ConsoleIcon name="recharge" /><span>{balanceText}</span></a>
+          <details className="zt-console-account" name="console-account-menu"><summary aria-label={t('auth.avatarLabel', { username: accountName })}><span className="zt-console-avatar" aria-hidden="true" data-initial={accountName.charAt(0).toUpperCase()} /><strong className="zt-console-username" title={accountName}>{accountName}</strong><ConsoleIcon name="chevron" /></summary><div className="zt-console-account-panel"><a href="/console/profile" onClick={(event) => navigate(event, '/console/profile')}><ConsoleIcon name="profile" />{t('console.profile')}</a><button type="button" disabled={signingOut} onClick={() => void handleSignOut()}><ConsoleIcon name="logout" />{t('auth.signOut')}</button>{error && <p role="alert">{t('auth.signOutError')}</p>}</div></details>
+        </div>
+      </header>
+      <div className="zt-console-content" id="console-main" ref={content} tabIndex={-1}>{children}</div>
+    </div>
+    {menuOpen && <dialog ref={dialog} className="zt-console-mobile-menu" onClick={(event) => { if (event.target !== event.currentTarget) return; const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) { setMenuOpen(false) } }} aria-label={t('console.navigation')} onCancel={(event) => { event.preventDefault(); setMenuOpen(false) }}>
+      <header>{brand}<button type="button" aria-label={t('console.closeNavigation')} onClick={() => setMenuOpen(false)}><ConsoleIcon name="close" /></button></header>
+      {navigation}
+      <a className="zt-console-mobile-docs" href="/docs"><ConsoleIcon name="docs" />{t('auth.readDocs')}</a>
+    </dialog>}
+  </div>
 }

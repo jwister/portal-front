@@ -47,10 +47,10 @@ describe('OrdersPage', () => {
 
     expect(screen.getByText('$25.50')).toBeVisible()
     expect(screen.getByText('12,750,000')).toBeVisible()
-    expect(screen.getByAltText('PayPal')).toBeVisible()
+    expect(screen.getByText('PayPal')).toBeVisible()
     expect(screen.getByText('Completed orders (this page)')).toBeVisible()
     expect(screen.getByText('Pending orders (this page)')).toBeVisible()
-    expect(screen.getByText('Total orders').closest('.metric-card')).toHaveTextContent('8')
+    expect(screen.getByText('Total orders').closest('section')).toHaveTextContent('8')
     expect(fetchMock).toHaveBeenCalledWith('/api/payments/orders?page=1&pageSize=20', expect.objectContaining({
       credentials: 'include',
     }))

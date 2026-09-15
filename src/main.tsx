@@ -1,14 +1,10 @@
 import { StrictMode } from 'react'
-import '@douyinfe/semi-ui/react19-adapter'
 import { createRoot } from 'react-dom/client'
 
 
 import { App } from './App'
 import './i18n'
-import './styles.css'
-import './styles/public-ledger.css'
-import './styles/catalog-docs.css'
-import './styles/site-theme.css'
+import './styles/base.css'
 import './styles/home-reference.css'
 
 createRoot(document.getElementById('root')!).render(

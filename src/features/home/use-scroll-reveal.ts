@@ -1,13 +1,7 @@
-import { useLayoutEffect, type RefObject } from 'react'
+import { useEffect, type RefObject } from 'react'
 
-/**
- * Blocks of the public home page that fade and slide in as they scroll into view,
- * mirroring the landing effect used on ztoken.cc. The hidden state is applied in a
- * layout effect so the first paint never shows the elements un-animated.
- */
+/** Animate below-the-fold blocks without delaying the hero or measuring layout. */
 const REVEAL_SELECTORS = [
-  '.reference-hero-copy',
-  '.reference-code-card',
   '.reference-heading',
   '.reference-step',
   '.reference-trust > div',
@@ -36,10 +30,10 @@ interface RevealUnit {
 }
 
 export function useScrollReveal(root: RefObject<HTMLElement | null>): void {
-  useLayoutEffect(() => {
+  useEffect(() => {
     const container = root.current
     // Without the observer (or in tests) everything stays visible as rendered.
-    if (!container || typeof IntersectionObserver === 'undefined') return
+    if (!container || typeof IntersectionObserver === 'undefined' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
 
     const elements = Array.from(container.querySelectorAll<HTMLElement>(REVEAL_SELECTORS))
     if (!elements.length) return
@@ -79,16 +73,14 @@ export function useScrollReveal(root: RefObject<HTMLElement | null>): void {
       }
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' })
 
-    for (const unit of units) {
-      // Anything already on screen shows immediately instead of waiting for a scroll.
-      const onScreen = unit.triggers.some((trigger) => {
-        const rect = trigger.getBoundingClientRect()
-        return rect.top < window.innerHeight && rect.bottom > 0
-      })
-      if (onScreen) for (const item of unit.items) item.classList.add('is-visible')
-      else for (const trigger of unit.triggers) observer.observe(trigger)
-    }
+    for (const unit of units) for (const trigger of unit.triggers) observer.observe(trigger)
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      for (const element of elements) {
+        element.classList.remove('reveal-on-scroll', 'is-visible')
+        element.style.removeProperty('transition-delay')
+      }
+    }
   }, [root])
 }

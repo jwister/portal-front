@@ -1,3 +1,8 @@
+import githubIcon from '../../assets/github.webp'
+import googleIcon from '../../assets/google.webp'
+import mailIcon from '../../assets/mail.webp'
+import { useAuthStatus } from '../../auth/use-auth-status'
+import { authenticatedLink } from '../../auth/auth-links'
 import { useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 
@@ -132,14 +137,24 @@ function LineIcon({ name }: { name: FeatureIcon }) {
 
 export function HomePage() {
   const { t } = useTranslation()
+  const auth = useAuthStatus()
   const [activeDemo, setActiveDemo] = useState(0)
   const demo = apiDemos[activeDemo]
   const pageRef = useRef<HTMLElement>(null)
   useScrollReveal(pageRef)
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setActiveDemo((activeDemo + 1) % apiDemos.length), 4200)
-    return () => window.clearTimeout(timer)
+    // On phones, automatic example changes can move the content below the card.
+    // Keep switching manual there, and respect reduced-motion preferences.
+    const manualOnly = window.matchMedia?.('(max-width: 720px), (prefers-reduced-motion: reduce)')
+    let timer: number | undefined
+    const schedule = () => {
+      window.clearTimeout(timer)
+      if (!manualOnly?.matches) timer = window.setTimeout(() => setActiveDemo((activeDemo + 1) % apiDemos.length), 4200)
+    }
+    schedule()
+    manualOnly?.addEventListener('change', schedule)
+    return () => { window.clearTimeout(timer); manualOnly?.removeEventListener('change', schedule) }
   }, [activeDemo])
   const steps = [
     [t('home.stepOne'), t('home.stepOneCopy'), 'account'],
@@ -179,7 +194,7 @@ export function HomePage() {
               <small>{t('home.creditGift')}</small>
             </div>
             <div className="reference-hero-actions">
-              <a className="reference-primary" href="/sign-up">{t('home.start')}</a>
+              <a className="reference-primary" {...authenticatedLink(auth, '/console/dashboard')}>{t('home.start')}</a>
               <a className="reference-hero-link" href="/models">{t('home.viewPrices')}</a>
             </div>
           </div>
@@ -204,16 +219,16 @@ export function HomePage() {
             <h3>{title}</h3>
             <p>{copy}</p>
             {kind === 'account' && <div className="reference-mini-buttons">
-              <a href="/sign-in"><img src="/github.png" alt="" />GitHub</a>
-              <a href="/sign-in"><img src="/google.png" alt="" />Google</a>
-              <a href="/sign-in"><img src="/mail.png" alt="" />{t('auth.email')}</a>
+              <a href="/sign-in"><img src={githubIcon} alt="" width="14" height="14" loading="lazy" decoding="async" />GitHub</a>
+              <a href="/sign-in"><img src={googleIcon} alt="" width="14" height="14" loading="lazy" decoding="async" />Google</a>
+              <a href="/sign-in"><img src={mailIcon} alt="" width="14" height="14" loading="lazy" decoding="async" />{t('auth.email')}</a>
             </div>}
             {kind === 'balance' && <div className="reference-mini-balance">$ <strong>1.00</strong><small>{t('home.creditFlexible')}</small></div>}
             {kind === 'key' && <code className="reference-mini-key">sk-************************</code>}
           </article>)}
         </div>
         <p className="reference-credit-note">{t('home.creditGift')}</p>
-        <div className="reference-actions"><a className="reference-primary" href="/sign-up">{t('home.start')}</a><a className="reference-secondary" href="/models">{t('home.viewPrices')}</a></div>
+        <div className="reference-actions"><a className="reference-primary" {...authenticatedLink(auth, '/console/dashboard')}>{t('home.start')}</a><a className="reference-secondary" href="/models">{t('home.viewPrices')}</a></div>
       </section>
 
       <section className="reference-trust" aria-label={t('home.trustLabel')}>
@@ -235,7 +250,7 @@ export function HomePage() {
               <span className="reference-price">{t('home.modelPrice', { prices })}</span>
               <span className="reference-source">{t('home.modelSource', { source })}</span>
               <b className="reference-discount">{t('home.modelDiscount')}</b>
-              <a href="/purchase">{t('home.buyNow')}</a>
+              <a {...authenticatedLink(auth, '/purchase')}>{t('home.buyNow')}</a>
             </div>)}
           </article>)}
         </div>

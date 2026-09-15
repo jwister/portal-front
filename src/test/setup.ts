@@ -60,3 +60,8 @@ Object.defineProperty(Range.prototype, 'getBoundingClientRect', {
 // The catalog keeps a module-level cache for repeat visits; drop it so every test
 // starts from a clean network state.
 afterEach(() => { cleanup(); clearCatalogCache() })
+
+Object.defineProperty(window, 'matchMedia', {
+ configurable:true, writable:true,
+ value:(query:string) => ({ matches:false, media:query, onchange:null, addListener:() => {}, removeListener:() => {}, addEventListener:() => {}, removeEventListener:() => {}, dispatchEvent:() => false }),
+})

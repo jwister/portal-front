@@ -115,8 +115,17 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>
 }
 
+let pendingDashboard: Promise<DashboardSummary> | undefined
+
 export function getDashboard(): Promise<DashboardSummary> {
-  return requestJson('/api/console/dashboard')
+  // The header and dashboard share concurrent reads, without caching old balances.
+  if (!pendingDashboard) {
+    pendingDashboard = requestJson<DashboardSummary>('/api/console/dashboard').then((summary) => {
+      window.dispatchEvent(new CustomEvent('ztoken:balance-updated', { detail: summary }))
+      return summary
+    }).finally(() => { pendingDashboard = undefined })
+  }
+  return pendingDashboard
 }
 
 /** 获取指定时间范围的个人用量分析；范围被限制为服务端支持的两个安全选项。 */

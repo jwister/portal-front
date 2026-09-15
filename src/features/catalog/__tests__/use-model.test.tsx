@@ -26,7 +26,7 @@ describe('model access destination', () => {
     vi.mocked(getAuthStatus).mockResolvedValue(anonymous)
     const model = 'vendor/model?returnTo=https://example.com&variant=高清'
     const destination = new URL(await resolveModelDestination(model), 'https://portal.example')
-    expect(destination.pathname).toBe('/sign-up')
+    expect(destination.pathname).toBe('/sign-in')
     const returnTo = new URL(destination.searchParams.get('returnTo')!, destination.origin)
     expect(returnTo.origin).toBe(destination.origin)
     expect(returnTo.pathname).toBe('/console/recharge')

@@ -71,7 +71,7 @@
 .reference-code-tabs button[aria-selected=true] { color: #eff9f5; background: #1b382f; }
 .reference-code-tabs button[aria-selected=true]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #5bd0aa; animation: reference-tab-progress 4.2s linear both; }
 .reference-code-panel { animation: reference-code-in .3s ease both; }
-.reference-code-status { display: flex; justify-content: space-between; gap: 16px; padding: 18px 24px; border-bottom: 1px solid #40544b; font-size: 12px; font-family: var(--home-mono); line-height: normal; }
+.reference-code-status { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 18px 24px; border-bottom: 1px solid #40544b; font-size: 12px; font-family: var(--home-mono); line-height: normal; overflow-wrap: anywhere; }
 .reference-code-status b { color: #7de38c; margin-right: 10px; }
 .reference-code-status em { color: #8ee497; font-style: normal; }
 .reference-code-body { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; min-height: 250px; padding: 25px; }
@@ -140,6 +140,7 @@
   .reference-model-row { grid-template-columns: 44px minmax(140px,1fr) 1fr .7fr auto; }.reference-source { display: none; }
 }
 @media (max-width: 720px) {
+  .reference-code-tabs button[aria-selected=true]::after { animation: none; }
   .reference-home { padding-top: 104px; }
   .reference-hero { min-height: auto; padding: 80px 22px 60px; text-align: center; }
   .reference-hero h1 { margin: auto; font-size: clamp(2.25rem,11vw,3.25rem); }.reference-hero h1 span { margin: 8px auto 0; }
@@ -168,3 +169,5 @@
 @media (prefers-reduced-motion: reduce) { .reference-home * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 @keyframes reference-code-in { from { opacity: .35; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 @keyframes reference-tab-progress { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
+
+@media(max-width:800px) { .reference-home { padding-top:64px; }.reference-hero h1 { text-wrap:balance; }.reference-home { padding-bottom:84px; }.reference-code-tabs button { min-height:44px; } }

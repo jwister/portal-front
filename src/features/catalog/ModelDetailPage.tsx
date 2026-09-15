@@ -1,3 +1,6 @@
+import { isDocumentedSeedance } from '../docs/seedance-api'
+import { useAuthStatus } from '../../auth/use-auth-status'
+import { authenticatedLink } from '../../auth/auth-links'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCatalog } from './use-catalog'
@@ -117,6 +120,7 @@ function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: 
 
 export function ModelDetailPage({ modelName }: { modelName: string }) {
   const { t } = useTranslation()
+  const auth = useAuthStatus()
   const { pricing, models, failed, retry } = useCatalog()
   const [group, setGroup] = useState(new URLSearchParams(window.location.search).get('group') ?? 'all')
   if (!pricing) return <CatalogState failed={failed} retry={retry} />
@@ -124,7 +128,7 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
   if (!model) return <main className="zt-public zt-state"><h1>{t('catalog.notFound')}</h1><a href="/models">{t('catalog.back')}</a></main>
   const { ratio, name } = priceGroup(pricing, model, group)
   const headline = cardPriceRows(model).slice(0, 2)
-  const docsHref = `/docs/guides/quick-start?${new URLSearchParams({ model: model.name })}`
+  const docsHref = `${isDocumentedSeedance(model.name) ? '/docs/api/seedance' : '/docs/guides/quick-start'}?${new URLSearchParams({ model: model.name })}`
   return <main className="zt-public zt-detail"><div className="zt-container">
     <a className="zt-back" href="/models">← {t('catalog.back')}</a>
     <header className="zt-detail-header" id="overview">
@@ -147,7 +151,7 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
         </dl>
       </div>
       <div className="zt-detail-actions">
-        <a className="zt-buy" href="/purchase">{t('catalog.buyNow')}</a>
+        <a className="zt-buy" {...authenticatedLink(auth, '/purchase')}>{t('catalog.buyNow')}</a>
         <a href={docsHref}>{t('catalog.integrationDocs')} ↗</a>
       </div>
     </header>

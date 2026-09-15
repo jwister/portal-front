@@ -1,12 +1,13 @@
 import { defineConfig } from 'vitest/config'
 import { loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import { routePreload } from './deploy/route-preload'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '')
 
   return {
-    plugins: [react()],
+    plugins: [react(), routePreload()],
     // Keep the existing asset folder as Vite's static public directory so
     // /small-logo.png is also available from the packaged Spring Boot app.
     publicDir: 'src/public',

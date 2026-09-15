@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Button } from '@douyinfe/semi-ui'
+import { AuthLayout } from './AuthLayout'
 import { useTranslation } from 'react-i18next'
 
 import { completeOAuth } from '../../api/auth'
+import { consumeOAuthReturn } from './auth-links'
+import { resolveBalanceDestination } from '../catalog/use-model'
 import '../../i18n'
 
 interface OAuthCallbackPageProps {
@@ -31,26 +33,28 @@ export function OAuthCallbackPage({ provider, onAuthenticated }: OAuthCallbackPa
       return
     }
     void completeOAuth(provider, { code, state, error, errorDescription })
-      .then(() => {
+      .then(async () => {
+        const target = consumeOAuthReturn(provider, state)
         if (onAuthenticated) onAuthenticated()
-        else window.location.replace('/console/dashboard')
+        else {
+          const url = new URL(target, window.location.origin)
+          const model = url.searchParams.get('model')
+          window.location.replace(url.pathname === '/console/recharge' && model ? await resolveBalanceDestination(model) : target)
+        }
       })
       .catch(() => setFailed(true))
   }, [onAuthenticated, provider])
 
   return (
-    <main className="auth-page ledger-auth-page">
-      <section className="auth-panel auth-callback-panel" aria-live="polite">
-        <a className="brand" href="/" aria-label="ZToken"><img src="/logo1.png" alt="" /><span>ZToken</span></a>
+    <AuthLayout title={t(failed ? 'auth.oauthFailed' : 'auth.oauthLoading')}>
+      <div aria-live="polite">
         {failed ? <>
-          <h1>{t('auth.oauthFailed')}</h1>
           <p role="alert">{t('auth.oauthFailed')}</p>
-          <Button type="primary" theme="solid" htmlType="button" onClick={() => window.location.replace('/sign-in')}>{t('auth.submit')}</Button>
+          <button className="zt-auth-primary" type="button" onClick={() => window.location.replace('/sign-in')}>{t('auth.submit')}</button>
         </> : <>
-          <h1>{t('auth.oauthLoading')}</h1>
-          <p>{t('auth.oauthLoading')}</p>
+          <p className="zt-auth-callback" role="status"><span className="zt-auth-spinner" aria-hidden="true" />{t('auth.oauthLoading')}</p>
         </>}
-      </section>
-    </main>
+      </div>
+    </AuthLayout>
   )
 }

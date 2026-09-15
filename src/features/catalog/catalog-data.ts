@@ -1,3 +1,4 @@
+import { isDocumentedSeedance } from '../docs/seedance-api'
 import type { NewApiPricingModel, NewApiPricingResponse } from '../../api/portal'
 
 export type ModelType = 'chat' | 'embedding' | 'image' | 'video' | 'audio' | 'other'
@@ -61,7 +62,8 @@ export function catalogModels(pricing: NewApiPricingResponse): CatalogModel[] {
       else if (/^cdance/i.test(raw.model_name)) vendor = 'CDance'
       else vendor = 'Independent'
     }
-    const endpoints = (raw.supported_endpoint_types ?? []).flatMap((key) => {
+    // The live catalog labels these video aliases as OpenAI chat; use the documented gateway route.
+    const endpoints = isDocumentedSeedance(raw.model_name) ? ['/v1/videos'] : (raw.supported_endpoint_types ?? []).flatMap((key) => {
       const endpoint = pricing.supported_endpoint?.[key]
       return endpoint && !Array.isArray(endpoint) && endpoint.path.startsWith('/') ? [endpoint.path] : []
     })

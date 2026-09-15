@@ -1,4 +1,5 @@
-import { Button, Empty, Input, Modal, Pagination, Space, Table, Tag, Toast, Tooltip, Typography } from '@douyinfe/semi-ui'
+import { ResponsiveTable as Table } from '../../components/ResponsiveTable'
+import { Button, Empty, Input, Modal, Pagination, Space, Tag, Toast, Tooltip, Typography } from '@douyinfe/semi-ui'
 import { IconEdit, IconEyeOpened, IconPlus, IconRefresh, IconDelete, IconCopy, IconCreditCard, IconKey, IconPause, IconPlay, IconTickCircle } from '@douyinfe/semi-icons'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -185,6 +186,7 @@ export function TokensPage() {
     { title: t('tokens.quota'), dataIndex: 'remainingQuota', render: (value: number, token: TokenSummary) => token.unlimited ? t('tokens.unlimited') : formatUsdQuota(value) },
     {
       title: t('tokens.actions'),
+      key: 'actions',
       render: (_: unknown, token: TokenSummary) => (
         <Space spacing="tight">
           <Tooltip content={t('tokens.reveal')}><Button theme="borderless" icon={<IconEyeOpened />} aria-label={t('tokens.reveal')} onClick={() => reveal(token)} /></Tooltip>

@@ -1,5 +1,4 @@
-import { Button, ButtonGroup } from '@douyinfe/semi-ui'
-import { IconCoinMoney, IconCreditCard, IconPulse, IconRefresh, IconServer } from '@douyinfe/semi-icons'
+import { ConsoleIcon } from '../../components/ConsoleIcon'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { EChartsOption } from 'echarts'
@@ -96,28 +95,28 @@ export function DashboardPage() {
   // 双轴图把额度和请求量放在同一时间轴上，便于识别高请求但低消耗的调用模式。
   const trendOption = useMemo<EChartsOption>(() => ({
     color: ['#457a61', '#6d8c74'],
-    grid: { top: 42, right: 40, bottom: 30, left: 52 },
-    legend: { data: [t('dashboard.quotaSeries'), t('dashboard.requestSeries')], top: 0 },
-    tooltip: { trigger: 'axis' },
+    grid: { top: 56, right: 18, bottom: 16, left: 10, containLabel: true },
+    legend: { type: 'scroll', data: [t('dashboard.quotaSeries'), t('dashboard.requestSeries')], top: 0 },
+    tooltip: { trigger: 'axis', confine: true },
     xAxis: { type: 'category', boundaryGap: true, data: dailyUsage.map((item) => item.date.slice(5)) },
     yAxis: [{ type: 'value', name: t('dashboard.quotaAxis'), axisLabel: { formatter: (value: number) => formatBalance(value, summary?.quotaPerUsd ?? 0) }, splitLine: { lineStyle: { color: '#e9ede9' } } }, { type: 'value', name: t('dashboard.requestAxis'), splitLine: { show: false } }],
     series: [
       { name: t('dashboard.quotaSeries'), type: 'bar', barMaxWidth: 24, data: dailyUsage.map((item) => item.quota), tooltip: { valueFormatter: (value) => formatBalance(formatChartValue(value), summary?.quotaPerUsd ?? 0) }, itemStyle: { borderRadius: [5, 5, 0, 0] } },
       { name: t('dashboard.requestSeries'), type: 'line', yAxisIndex: 1, smooth: true, data: dailyUsage.map((item) => item.requestCount), symbolSize: 7 },
     ],
-  }), [dailyUsage, t])
+  }), [dailyUsage, summary?.quotaPerUsd, t])
 
   const modelOption = useMemo<EChartsOption>(() => ({
     color: ['#457a61', '#6d8c74', '#a17d32', '#879b7b', '#51745e', '#98a99a'],
-    tooltip: { trigger: 'item', valueFormatter: (value) => formatBalance(formatChartValue(value), summary?.quotaPerUsd ?? 0) },
+    tooltip: { trigger: 'item', confine: true, valueFormatter: (value) => formatBalance(formatChartValue(value), summary?.quotaPerUsd ?? 0) },
     legend: { bottom: 0, type: 'scroll' },
     series: [{ type: 'pie', radius: ['53%', '76%'], center: ['50%', '43%'], avoidLabelOverlap: true, label: { show: false }, data: topModels.map((item) => ({ name: getDisplayModelName(item.modelName, t('dashboard.otherModels')), value: item.quota })) }],
-  }), [topModels, t])
+  }), [topModels, summary?.quotaPerUsd, t])
 
   const tokenOption = useMemo<EChartsOption>(() => ({
     color: ['#3f6b53'],
-    grid: { top: 24, right: 20, bottom: 30, left: 52 },
-    tooltip: { trigger: 'axis' },
+    grid: { top: 24, right: 18, bottom: 16, left: 10, containLabel: true },
+    tooltip: { trigger: 'axis', confine: true },
     xAxis: { type: 'category', boundaryGap: false, data: tokenUsage.map((item) => item.date.slice(5)) },
     yAxis: { type: 'value', axisLabel: { formatter: (value: number) => formatTokens(value) }, splitLine: { lineStyle: { color: '#e9ede9' } } },
     series: [{ name: t('dashboard.tokenUsage'), type: 'line', smooth: true, symbol: 'none', data: tokenUsage.map((item) => item.tokenUsage), tooltip: { valueFormatter: (value) => formatTokens(formatChartValue(value)) }, areaStyle: { color: 'rgba(39, 108, 78, .18)' }, lineStyle: { width: 3 } }],
@@ -157,28 +156,28 @@ export function DashboardPage() {
       description={t('dashboard.description')}
       actions={
         <>
-          <ButtonGroup aria-label={t('dashboard.rangeLabel')}>
-            <Button theme={range === '7d' ? 'solid' : 'light'} type="primary" onClick={() => changeRange('7d')}>{t('dashboard.sevenDays')}</Button>
-            <Button theme={range === '30d' ? 'solid' : 'light'} type="primary" onClick={() => changeRange('30d')}>{t('dashboard.thirtyDays')}</Button>
-          </ButtonGroup>
-          <Button icon={<IconRefresh />} onClick={refresh}>{t('dashboard.refresh')}</Button>
+          <div className="console-range-switch" role="group" aria-label={t('dashboard.rangeLabel')}>
+            <button type="button" aria-pressed={range === '7d'} onClick={() => changeRange('7d')}>{t('dashboard.sevenDays')}</button>
+            <button type="button" aria-pressed={range === '30d'} onClick={() => changeRange('30d')}>{t('dashboard.thirtyDays')}</button>
+          </div>
+          <button type="button" className="console-button" onClick={refresh}><ConsoleIcon name="refresh" />{t('dashboard.refresh')}</button>
         </>
       }
     />
   )
 
   if (failed) return <main>{pageHeader}<RemoteState kind="error" onRetry={load} /></main>
-  if (!summary || !analytics) return <main>{pageHeader}<RemoteState kind="loading" /></main>
+  if (!summary || !analytics) return <main>{pageHeader}<div role="status" aria-label={t('dashboard.loading')} className="console-skeleton"><div className="metric-grid console-summary-grid" aria-hidden="true">{Array.from({ length:4 }, (_, index) => <section className="console-metric" key={index}><span /><strong /></section>)}</div><div className="dashboard-analytics-grid" aria-hidden="true">{Array.from({ length:3 }, (_, index) => <section className="dashboard-chart" key={index}><span /><div /></section>)}</div></div></main>
 
   return (
     <main className="ledger-console-page" data-testid="ledger-console-page">
       {pageHeader}
       <div className="metric-grid console-summary-grid">
-        <MetricCard icon={<IconCoinMoney />} tone="blue" label={t('dashboard.balance')} value={formatBalance(summary.availableQuota, summary.quotaPerUsd)} />
-        <MetricCard icon={<IconCreditCard />} tone="rose" label={t('dashboard.used')} value={formatBalance(summary.usedQuota, summary.quotaPerUsd)} />
-        <MetricCard icon={<IconServer />} tone="mint" label={t('dashboard.requests')} value={formatMetric(summary.requestCount)} />
+        <MetricCard icon={<ConsoleIcon name="recharge" />} tone="blue" label={t('dashboard.balance')} value={formatBalance(summary.availableQuota, summary.quotaPerUsd)} />
+        <MetricCard icon={<ConsoleIcon name="orders" />} tone="rose" label={t('dashboard.used')} value={formatBalance(summary.usedQuota, summary.quotaPerUsd)} />
+        <MetricCard icon={<ConsoleIcon name="tokens" />} tone="mint" label={t('dashboard.requests')} value={formatMetric(summary.requestCount)} />
         <MetricCard
-          icon={<IconPulse />}
+          icon={<ConsoleIcon name="activity" />}
           tone="amber"
           label={t('dashboard.tokenUsage')}
           value={summary.tokenUsage === null ? t('dashboard.unavailable') : formatTokens(summary.tokenUsage)}

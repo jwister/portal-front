@@ -1,3 +1,4 @@
+import { isDocumentedSeedance, seedanceExamples } from '../docs/seedance-api'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CopyButton } from './CatalogShared'
@@ -6,6 +7,7 @@ import type { CatalogModel } from './catalog-data'
 export const MODEL_BASE_URL = 'https://api.ztoken.cc/v1'
 /** Anthropic-style clients expect the host without the OpenAI `/v1` suffix. */
 export const MODEL_HOST = MODEL_BASE_URL.replace(/\/v1$/, '')
+export const modelEndpointUrl = (endpoint: string) => `${MODEL_HOST}${endpoint.startsWith('/v1/') || endpoint.startsWith('/v1beta/') ? endpoint : `/v1${endpoint}`}`
 
 const LANGUAGES = ['Python', 'Node.js', 'Shell'] as const
 type Language = (typeof LANGUAGES)[number]
@@ -27,6 +29,7 @@ function endpointFamily(endpoint: string): string {
 
 /** Produce a copy-paste example for one endpoint in the requested language. */
 function exampleCode(endpoint: string, model: string, lang: Language): string {
+  if (isDocumentedSeedance(model)) return seedanceExamples(model)[lang === 'Shell' ? 'cURL' : lang === 'Node.js' ? 'JavaScript' : 'Python']
   const family = endpointFamily(endpoint)
   const messages = [{ role: 'user', content: 'Hello!' }]
 
@@ -73,15 +76,15 @@ function exampleCode(endpoint: string, model: string, lang: Language): string {
   }
 
   // Generic fallback for any other endpoint family (video, Gemini, future protocols).
-  if (lang === 'Python') return `import requests\n\nresponse = requests.post(\n    "${MODEL_BASE_URL}${endpoint}",\n    headers={"Authorization": "Bearer YOUR_API_KEY"},\n    json={"model": ${json(model)}},\n)\n\nprint(response.json())`
-  if (lang === 'Node.js') return `const response = await fetch("${MODEL_BASE_URL}${endpoint}", {\n  method: "POST",\n  headers: { Authorization: "Bearer YOUR_API_KEY", "Content-Type": "application/json" },\n  body: JSON.stringify({ model: ${json(model)} }),\n});\n\nconsole.log(await response.json());`
-  return `curl ${MODEL_BASE_URL}${endpoint} \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d ${shellJson({ model })}`
+  if (lang === 'Python') return `import requests\n\nresponse = requests.post(\n    "${modelEndpointUrl(endpoint)}",\n    headers={"Authorization": "Bearer YOUR_API_KEY"},\n    json={"model": ${json(model)}},\n)\n\nprint(response.json())`
+  if (lang === 'Node.js') return `const response = await fetch("${modelEndpointUrl(endpoint)}", {\n  method: "POST",\n  headers: { Authorization: "Bearer YOUR_API_KEY", "Content-Type": "application/json" },\n  body: JSON.stringify({ model: ${json(model)} }),\n});\n\nconsole.log(await response.json());`
+  return `curl ${modelEndpointUrl(endpoint)} \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d ${shellJson({ model })}`
 }
 
 /** Example code + API reference block, mirroring the upstream detail page. */
 export function ModelExamples({ model }: { model: CatalogModel }) {
   const { t } = useTranslation()
-  const endpoints = model.endpoints.length ? model.endpoints : ['/v1/chat/completions']
+  const endpoints = isDocumentedSeedance(model.name) ? ['/v1/videos'] : model.endpoints.length ? model.endpoints : ['/v1/chat/completions']
   const [endpoint, setEndpoint] = useState(endpoints[0])
   const [language, setLanguage] = useState<Language>('Python')
   const code = exampleCode(endpoint, model.name, language)
@@ -90,10 +93,11 @@ export function ModelExamples({ model }: { model: CatalogModel }) {
       <h2>{t('catalog.examplesTitle', { model: model.name })}</h2>
       <a className="zt-buy" href="/console/tokens">{t('catalog.getApiKey')}</a>
     </div>
+    {isDocumentedSeedance(model.name) && <p><a href={`/docs/api/seedance?model=${encodeURIComponent(model.name)}`}>{t('docs.title.seedance')} →</a></p>}
     <p>{t('catalog.examples.intro1')}</p>
     <p>{t('catalog.examples.intro2')}</p>
     <p>{t('catalog.examples.intro3')}</p>
-    <div className="zt-endpoint-heading"><span>{t('catalog.supportedEndpoints')}</span><CopyButton value={`${MODEL_BASE_URL}${endpoint}`} label={t('catalog.copyEndpoint')} /></div>
+    <div className="zt-endpoint-heading"><span>{t('catalog.supportedEndpoints')}</span><CopyButton value={`${modelEndpointUrl(endpoint)}`} label={t('catalog.copyEndpoint')} /></div>
     <p className="zt-muted">{t('catalog.switchEndpointHint')}</p>
     <div className="zt-chips" role="group" aria-label={t('catalog.supportedEndpoints')}>
       {endpoints.map((ep) => <button key={ep} aria-pressed={ep === endpoint} onClick={() => setEndpoint(ep)}>{ep}</button>)}

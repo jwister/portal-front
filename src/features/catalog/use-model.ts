@@ -18,7 +18,7 @@ export async function resolveModelDestination(modelName?: string): Promise<strin
 
   const rechargeUrl = modelConsoleUrl('/console/recharge', modelName)
   if (!auth.authenticated) {
-    return `/sign-up?${new URLSearchParams({ returnTo: rechargeUrl })}`
+    return `/sign-in?${new URLSearchParams({ returnTo: rechargeUrl })}`
   }
 
   return resolveBalanceDestination(modelName)

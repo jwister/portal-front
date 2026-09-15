@@ -1,3 +1,6 @@
+import githubIcon from '../../../assets/github.webp'
+import googleIcon from '../../../assets/google.webp'
+import mailIcon from '../../../assets/mail.webp'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -19,6 +22,7 @@ class MockIntersectionObserver {
 describe('HomePage', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('zh-CN')
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ authenticated: false, profile: null })))))
   })
 
   afterEach(() => {
@@ -34,7 +38,7 @@ describe('HomePage', () => {
     expect(screen.getByText('注册账号')).toBeVisible()
     expect(screen.getByText('购买额度')).toBeVisible()
     expect(screen.getByText('获取 API Key')).toBeVisible()
-    expect(screen.getAllByRole('link', { name: '开始使用' })[0]).toHaveAttribute('href', '/sign-up')
+    expect(screen.getAllByRole('link', { name: '开始使用' })[0]).toHaveAttribute('href', '/sign-in?returnTo=%2Fconsole%2Fdashboard')
   })
 
   it('starts the assurance and metric bands at the same time', () => {
@@ -75,9 +79,9 @@ describe('HomePage', () => {
 
     const accountStep = screen.getByText('注册账号').closest('article') as HTMLElement
     const shortcuts: [string, string][] = [
-      ['GitHub', '/github.png'],
-      ['Google', '/google.png'],
-      [i18n.t('auth.email'), '/mail.png'],
+      ['GitHub', githubIcon],
+      ['Google', googleIcon],
+      [i18n.t('auth.email'), mailIcon],
     ]
     for (const [name, logo] of shortcuts) {
       const link = within(accountStep).getByRole('link', { name })
@@ -97,5 +101,18 @@ describe('HomePage', () => {
     act(() => vi.advanceTimersByTime(4200))
     expect(screen.getByRole('tab', { name: 'Gemini' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tabpanel')).toHaveTextContent('/v1beta/models/{model}:generateContent')
+  })
+
+  it('keeps phone examples stable until the visitor switches tabs', () => {
+    vi.useFakeTimers()
+    vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+    try {
+      render(<HomePage />)
+      act(() => vi.advanceTimersByTime(12600))
+      expect(screen.getByRole('tab', { name: 'Chat' })).toHaveAttribute('aria-selected', 'true')
+      fireEvent.click(screen.getByRole('tab', { name: 'Gemini' }))
+      act(() => vi.advanceTimersByTime(8400))
+      expect(screen.getByRole('tab', { name: 'Gemini' })).toHaveAttribute('aria-selected', 'true')
+    } finally { vi.unstubAllGlobals() }
   })
 })

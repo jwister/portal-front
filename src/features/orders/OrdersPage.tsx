@@ -1,4 +1,5 @@
-import { Button, Card, Empty, Space, Table, Tag, Typography } from '@douyinfe/semi-ui'
+import { ResponsiveTable as Table } from '../../components/ResponsiveTable'
+import { Button, Card, Empty, Pagination, Space, Tag, Typography } from '@douyinfe/semi-ui'
 import { IconAlertCircle, IconClock, IconCreditCard, IconRefresh, IconTickCircle } from '@douyinfe/semi-icons'
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -55,12 +56,13 @@ function statusTag(status: PaymentOrderStatus): { color: string; label: string; 
 export function OrdersPage() {
   const { t } = useTranslation()
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
+  const [page, setPage] = useState(1)
 
   const load = async () => {
     setState({ kind: 'loading' })
     try {
-      const page = await getPaymentOrders(1, 20)
-      setState({ kind: 'ready', page })
+      const result = await getPaymentOrders(page, 20)
+      setState({ kind: 'ready', page: result })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       setState({ kind: 'error', message })
@@ -69,7 +71,7 @@ export function OrdersPage() {
 
   useEffect(() => {
     void load()
-  }, [])
+  }, [page])
 
   if (state.kind === 'loading') {
     return (
@@ -136,7 +138,7 @@ export function OrdersPage() {
       title: t('orders.method'),
       dataIndex: 'method' as const,
       render: (value: string) => value === 'PAYPAL'
-        ? <img className="payment-method-logo" src="/Paypal.png" alt="PayPal" />
+        ? <span className="order-payment"><img className="payment-method-logo" src="/Paypal.png" alt="" />PayPal</span>
         : value,
     },
     {
@@ -187,6 +189,7 @@ export function OrdersPage() {
           pagination={false}
         />
       </div>
+      {total > 20 && <Pagination currentPage={page} pageSize={20} total={total} onPageChange={setPage} />}
     </main>
   )
 }

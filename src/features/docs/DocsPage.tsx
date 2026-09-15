@@ -1,3 +1,4 @@
+import { SeedanceSection } from './SeedanceSection'
 import { useEffect, useState } from 'react'
 import { Button } from '@douyinfe/semi-ui'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +19,7 @@ const articles = [
   { path: '/docs/account', key: 'account', group: 'guides', sections: ['account', 'balance', 'key'] },
   { path: '/docs/billing', key: 'billing', group: 'guides', sections: ['tokens', 'requests', 'video', 'discounts'] },
   { path: '/docs/api', key: 'api', group: 'api', sections: ['apiProtocols', 'apiModels', 'apiRequest', 'apiParams', 'apiStreaming', 'apiEmbeddings', 'apiImages', 'apiAudio', 'apiVideo', 'apiAnthropic', 'apiGoogle', 'apiErrors'] },
+  { path: '/docs/api/seedance', key: 'seedance', group: 'api', sections: ['seedanceOverview', 'seedanceCreate', 'seedanceContent', 'seedancePoll', 'seedanceAssets', 'seedanceErrors'] },
   { path: '/docs/troubleshooting', key: 'errors', group: 'guides', sections: ['errors', 'support'] },
   { path: '/docs/faq', key: 'faq', group: 'guides', sections: ['authKey', 'quota', 'modelMissing', 'priceCalc', 'contact'] },
 ]
@@ -144,6 +146,7 @@ function ErrorTable() {
 
 function SectionBody({ id }: { id: string }) {
   const { t } = useTranslation()
+  if (id.startsWith('seedance')) return <SeedanceSection id={id} />
   return <>
     <p>{t(`docs.body.${id}`)}</p>
     {id === 'account' && <div className="zt-doc-links"><a href="/sign-up">{t('register.submit')} →</a><a href="/sign-in">{t('auth.submit')} →</a></div>}
@@ -234,7 +237,8 @@ function SectionBody({ id }: { id: string }) {
     {id === 'apiEmbeddings' && <Code language="cURL" value={`curl ${MODEL_BASE_URL}/embeddings \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "model": "YOUR_EMBEDDING_MODEL",\n    "input": "Text to embed"\n  }'`} />}
     {id === 'apiImages' && <Code language="cURL" value={`curl ${MODEL_BASE_URL}/images/generations \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "model": "YOUR_IMAGE_MODEL",\n    "prompt": "A sunset over the mountains",\n    "n": 1,\n    "size": "1024x1024"\n  }'`} />}
     {id === 'apiAudio' && <Code language="cURL" value={`curl ${MODEL_BASE_URL}/audio/speech \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "model": "YOUR_TTS_MODEL",\n    "input": "Text to speak",\n    "voice": "alloy"\n  }' \\\n  --output speech.mp3`} />}
-    {id === 'apiVideo' && <Code language="cURL" value={`curl ${MODEL_BASE_URL}/videos \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -F "model=YOUR_VIDEO_MODEL" \\\n  -F "prompt=A cat running across the grass" \\\n  -F "duration=5"`} />}
+    {id === 'apiVideo' && <a href="/docs/api/seedance">{t('docs.title.seedance')} →</a>}
+    {['support', 'contact'].includes(id) && <a href="mailto:support.01@ztoken.cc">support.01@ztoken.cc</a>}
     {id === 'apiAnthropic' && <Code language="cURL" value={`curl ${MODEL_HOST}/v1/messages \\\n  -H "x-api-key: YOUR_API_KEY" \\\n  -H "anthropic-version: 2023-06-01" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "model": "YOUR_MODEL",\n    "max_tokens": 256,\n    "messages": [{ "role": "user", "content": "Hello" }]\n  }'`} />}
     {id === 'apiGoogle' && <Code language="cURL" value={`curl ${MODEL_BASE_URL}/models/YOUR_MODEL:generateContent \\\n  -H "x-goog-api-key: YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "contents": [{ "parts": [{ "text": "Hello" }] }]\n  }'`} />}
     {id === 'apiErrors' && <ErrorTable />}

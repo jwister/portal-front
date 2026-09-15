@@ -3,14 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Same typeface as the production landing page; swap keeps first paint instant. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kode+Mono:wght@400..700&display=swap" />
+    <link rel="icon" type="image/webp" href="/src/assets/brand-logo.webp" />
     <title>Ztoken</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Load the original Tidio bubble as the page opens, before the visitor clicks it. -->
+    <script>
+      document.addEventListener('tidioChat-ready', function () {
+        // Match the homepage primary buttons while keeping Tidio's native bubble.
+        window.tidioChatApi.setColorPalette('#147b57');
+      }, { once: true });
+    </script>
+    <script async fetchpriority="low" src="https://code.tidio.co/7brexwzms4ux33ccp9hadopj9d3evnq7.js"></script>
   </body>
 </html>

@@ -27,9 +27,9 @@ describe('TokensPage', () => {
 
     expect(await screen.findByText('server')).toBeVisible()
     // 令牌额度表格采用美元金额展示，而不是内部 quota 整数。
-    expect(screen.getAllByText('$0.00').some((element) => element.tagName === 'TD')).toBe(true)
+    expect(screen.getAllByText('$0.00').some((element) => element.closest('td') !== null)).toBe(true)
     expect(screen.getByText('Active')).toBeVisible()
-    expect(screen.getByText('API Key')).toBeVisible()
+    expect(screen.getByRole('columnheader', {name:'API Key'})).toBeVisible()
     expect(screen.getByText('sk-abcd********wxyz')).toBeVisible()
     expect(screen.queryByText('sk-full-secret')).not.toBeInTheDocument()
   })
@@ -82,7 +82,7 @@ describe('TokensPage', () => {
 
     expect(await screen.findByText('Active tokens (this page)')).toBeVisible()
     expect(screen.getByText('Limited quota remaining (this page)')).toBeVisible()
-    expect(screen.getByText('Total tokens').closest('.metric-card')).toHaveTextContent('7')
+    expect(screen.getByText('Total tokens').closest('section')).toHaveTextContent('7')
   })
 
   it('creates a token through the Portal BFF and refreshes the list', async () => {

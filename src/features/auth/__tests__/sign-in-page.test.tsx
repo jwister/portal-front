@@ -1,3 +1,4 @@
+import brandLogo from '../../../assets/brand-logo.webp'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -13,7 +14,7 @@ describe('SignInPage', () => {
     render(<SignInPage />)
 
     const brand = screen.getByRole('link', { name: 'ZToken' })
-    expect(brand.querySelector('img')).toHaveAttribute('src', '/logo1.png')
+    expect(brand.querySelector('img')).toHaveAttribute('src', brandLogo)
   })
 
   it('posts entered credentials to the portal login endpoint', async () => {
@@ -79,10 +80,11 @@ describe('SignInPage', () => {
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
     const submitButton = screen.getByRole('button', { name: 'Sign in' })
     expect(fetchMock).toHaveBeenCalled()
-    // Semi renders a loading button with a spin icon and loading class while awaiting.
-    expect(submitButton).toHaveClass('semi-button-loading')
+    // Prevent duplicate submissions and expose the pending state accessibly.
+    expect(submitButton).toBeDisabled()
+    expect(submitButton).toHaveAttribute('aria-busy', 'true')
     resolveFetch(new Response(null, { status: 204 }))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Sign in' })).not.toHaveClass('semi-button-loading'))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Sign in' })).toHaveAttribute('aria-busy', 'false'))
   })
 
   it('requests a one-time state before starting GitHub OAuth', async () => {
@@ -112,5 +114,31 @@ describe('SignInPage', () => {
       method: 'POST', credentials: 'include',
     }))
     expect(onOAuthNavigate).toHaveBeenCalledWith(expect.stringContaining('state=flow-token'))
+  })
+
+  it('focuses the first invalid field without attempting a login', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(<SignInPage />)
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(screen.getByLabelText('Username')).toHaveFocus()
+    expect(screen.getByLabelText('Username')).toHaveAttribute('aria-invalid', 'true')
+    expect(fetchMock.mock.calls.every(([path]) => path === '/api/auth/oauth/providers')).toBe(true)
+  })
+
+  it('reveals and hides the password without submitting the form', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(<SignInPage />)
+    const password = screen.getByLabelText('Password')
+    await user.type(password, 'example-password')
+    await user.click(screen.getByRole('button', { name: 'Show Password' }))
+    expect(password).toHaveAttribute('type', 'text')
+    expect(password).toHaveValue('example-password')
+    await user.click(screen.getByRole('button', { name: 'Hide Password' }))
+    expect(password).toHaveAttribute('type', 'password')
+    expect(fetchMock.mock.calls.every(([path]) => path === '/api/auth/oauth/providers')).toBe(true)
   })
 })

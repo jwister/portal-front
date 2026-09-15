@@ -1,11 +1,14 @@
+import brandLogo from '../../../assets/brand-logo.webp'
 import { render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { OAuthCallbackPage } from '../OAuthCallbackPage'
+import { rememberOAuthReturn } from '../auth-links'
 
 describe('OAuthCallbackPage', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+    sessionStorage.clear()
     window.history.replaceState({}, '', '/')
   })
 
@@ -13,7 +16,7 @@ describe('OAuthCallbackPage', () => {
     render(<OAuthCallbackPage provider="github" />)
 
     const brand = screen.getByRole('link', { name: 'ZToken' })
-    expect(brand.querySelector('img')).toHaveAttribute('src', '/logo1.png')
+    expect(brand.querySelector('img')).toHaveAttribute('src', brandLogo)
   })
 
   it('completes the provider callback before entering the console', async () => {
@@ -41,5 +44,17 @@ describe('OAuthCallbackPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('OAuth sign-in could not be completed.')
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it.each(['github', 'oidc'] as const)('returns to purchase after %s login', async (provider) => {
+    window.history.replaceState({}, '', '/sign-in?returnTo=%2Fpurchase')
+    rememberOAuthReturn(provider, 'purchase-flow')
+    window.history.replaceState({}, '', `/oauth/${provider}?code=provider-code&state=purchase-flow`)
+    const replace = vi.fn()
+    vi.stubGlobal('location', { ...window.location, replace })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })))
+    render(<OAuthCallbackPage provider={provider} />)
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/purchase'))
+    expect(sessionStorage.getItem(`ztoken.oauth.returnTo:${provider}:purchase-flow`)).toBeNull()
   })
 })

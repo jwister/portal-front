@@ -1,4 +1,3 @@
-import { Typography } from '@douyinfe/semi-ui'
 import type { ReactNode } from 'react'
 
 interface ConsolePageHeaderProps {
@@ -11,8 +10,8 @@ export function ConsolePageHeader({ title, description, actions }: ConsolePageHe
   return (
     <header className="console-page-header">
       <div>
-        <Typography.Title heading={2}>{title}</Typography.Title>
-        {description && <Typography.Paragraph type="tertiary">{description}</Typography.Paragraph>}
+        <h1>{title}</h1>
+        {description && <p>{description}</p>}
       </div>
       {actions && <div className="console-page-header-actions">{actions}</div>}
     </header>

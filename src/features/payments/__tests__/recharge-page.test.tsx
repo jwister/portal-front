@@ -8,7 +8,7 @@ import { RechargePage } from '../RechargePage'
 describe('RechargePage', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('en')
-    vi.stubGlobal('fetch', vi.fn())
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url) => url === '/api/auth/status' ? Promise.resolve(new Response(JSON.stringify({ authenticated: true, profile: { id: 1, username: 'test' } }))) : Promise.reject(new Error('Order request recorded'))))
   })
 
   afterEach(() => {
@@ -33,8 +33,8 @@ describe('RechargePage', () => {
     await user.click(screen.getByRole('button', { name: '$50' }))
     await user.click(screen.getByRole('button', { name: 'Confirm payment' }))
 
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    const [, init] = fetchMock.mock.calls[0]
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    const [, init] = fetchMock.mock.calls[1]
     const body = String((init as RequestInit).body)
     expect(body).toContain('"amount":"50"')
     expect(body).toContain('"method":"PAYPAL"')

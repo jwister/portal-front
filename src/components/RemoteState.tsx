@@ -1,4 +1,3 @@
-import { Button, Empty, Spin, Typography } from '@douyinfe/semi-ui'
 import { useTranslation } from 'react-i18next'
 
 import '../i18n'
@@ -16,8 +15,8 @@ export function RemoteState({ kind, onRetry }: RemoteStateProps) {
   if (kind === 'loading') {
     return (
       <div className="remote-state" role="status" aria-live="polite">
-        <Spin />
-        <Typography.Text>{t('common.loading')}</Typography.Text>
+        <span className="console-loading-ring" aria-hidden="true" />
+        <span>{t('common.loading')}</span>
       </div>
     )
   }
@@ -25,15 +24,15 @@ export function RemoteState({ kind, onRetry }: RemoteStateProps) {
   if (kind === 'error') {
     return (
       <div className="remote-state" role="alert">
-        <Typography.Text type="danger">{t('common.loadError')}</Typography.Text>
-        {onRetry && <Button theme="solid" type="primary" onClick={onRetry}>{t('common.retry')}</Button>}
+        <p>{t('common.loadError')}</p>
+        {onRetry && <button className="console-button" type="button" onClick={onRetry}>{t('common.retry')}</button>}
       </div>
     )
   }
 
   return (
     <div className="remote-state">
-      <Empty description={t('common.empty')} />
+      <p>{t('common.empty')}</p>
     </div>
   )
 }
