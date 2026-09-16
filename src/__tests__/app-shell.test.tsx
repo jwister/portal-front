@@ -80,6 +80,22 @@ describe('portal application shell', () => {
     expect(await screen.findByRole('heading', { name: 'Console overview' }, { timeout: 10000 })).toBeVisible()
   })
 
+  it('renders the authenticated payment completion route directly', { timeout: 30000 }, async () => {
+    window.history.pushState({}, '', '/console/payment-complete?orderNo=PO-PAID-1')
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((path: string) => {
+      if (path === '/api/auth/status') return Promise.resolve(new Response(JSON.stringify({ authenticated: true, profile: { id: 7, username: 'alice' } })))
+      if (path === '/api/payments/orders/PO-PAID-1') return Promise.resolve(new Response(JSON.stringify({
+        orderNo: 'PO-PAID-1', amountUsdMinor: 2550, quotaToCredit: 12_750_000, method: 'PAYPAL', status: 'PAID',
+        expiresAt: '2026-09-02T01:00:00Z', confirmedAt: null, creditedAt: null, createdAt: '2026-09-02T00:00:00Z',
+      })))
+      return Promise.reject(new Error(`Unexpected request: ${path}`))
+    }))
+
+    render(<App />)
+    await act(async () => { await vi.dynamicImportSettled() })
+    expect(await screen.findByRole('heading', { name: 'Payment complete' }, { timeout: 10000 })).toBeVisible()
+  })
+
   it('renders the lazy catalog route with its ledger shell', { timeout: 30000 }, async () => {
     window.history.pushState({}, '', '/models')
     // A fresh Response per call: the header and the catalog both read the same fetch.

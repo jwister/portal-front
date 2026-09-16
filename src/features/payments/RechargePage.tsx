@@ -15,7 +15,11 @@ export function RechargePage() {
 
   const completed = useCallback((next: PaymentOrder) => {
     setOrder(next)
-    if (next.status === 'PAID') void getDashboard().catch(() => {})
+    // 仅在服务端确认实际到账后才跳转完成页，避免中间状态误报支付成功。
+    if (next.status === 'PAID') {
+      void getDashboard().catch(() => {})
+      window.location.assign(`/console/payment-complete?${new URLSearchParams({ orderNo: next.orderNo })}`)
+    }
   }, [])
 
   return (

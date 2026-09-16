@@ -5,6 +5,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../../i18n'
 import { RechargePage } from '../RechargePage'
 
+let completionHandler: ((order: { orderNo: string; status: string }) => void) | undefined
+
+vi.mock('../PayPalCheckout', () => ({
+  PayPalCheckout: ({ onCompleted }: { onCompleted: (order: { orderNo: string; status: string }) => void }) => {
+    completionHandler = onCompleted
+    return <div>PayPal checkout</div>
+  },
+}))
+
 describe('RechargePage', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('en')
@@ -13,6 +22,7 @@ describe('RechargePage', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    completionHandler = undefined
   })
 
   it('shows the shared amount selector with PayPal and TRC20 icon options', async () => {
@@ -38,5 +48,36 @@ describe('RechargePage', () => {
     const body = String((init as RequestInit).body)
     expect(body).toContain('"amount":"50"')
     expect(body).toContain('"method":"PAYPAL"')
+  })
+
+  it('opens the completion page only after the server reports the order as paid', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+    vi.mocked(fetch).mockImplementation((url) => {
+      if (url === '/api/auth/status') {
+        return Promise.resolve(new Response(JSON.stringify({ authenticated: true, profile: { id: 1, username: 'test' } })))
+      }
+      if (url === '/api/payments/orders') {
+        return Promise.resolve(new Response(JSON.stringify({
+          orderNo: 'PO-1',
+          status: 'WAITING_PAYMENT',
+          method: 'PAYPAL',
+          amountUsdMinor: 5000,
+          quotaToCredit: 5000000,
+        })))
+      }
+      return Promise.reject(new Error('Order request recorded'))
+    })
+    const user = userEvent.setup()
+    render(<RechargePage />)
+
+    await user.click(screen.getByRole('button', { name: '$50' }))
+    await user.click(screen.getByRole('button', { name: 'Confirm payment' }))
+    await screen.findByText('PayPal checkout')
+    completionHandler?.({ orderNo: 'PO-1', status: 'CONFIRMED' })
+    expect(assign).not.toHaveBeenCalled()
+
+    completionHandler?.({ orderNo: 'PO-1', status: 'PAID' })
+    expect(assign).toHaveBeenCalledWith('/console/payment-complete?orderNo=PO-1')
   })
 })
