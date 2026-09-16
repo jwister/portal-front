@@ -342,7 +342,7 @@
   "auth.error": "Your sign-in details could not be verified.",
   "auth.signOut": "Sign out",
   "auth.signOutError": "Sign out failed. Please try again.",
-  "auth.avatarLabel": "{{username}}'s profile avatar",
+  "auth.avatarLabel": "account menu",
   "auth.required": "This field is required.",
   "auth.emailInvalid": "Please enter a valid email address.",
   "auth.noAccount": "No account yet?",

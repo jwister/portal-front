@@ -39,12 +39,14 @@ export function AccountMenu({ username, onNavigate }: {
   }
 
   return <details ref={menu} className="zt-account-menu" name="console-account-menu">
-    <summary aria-label={t('auth.avatarLabel', { username })}>
+    <summary>
       <span className="zt-account-avatar" aria-hidden="true">{username.charAt(0).toUpperCase()}</span>
       <strong className="zt-account-name" title={username}>{username}</strong>
+      <span className="zt-sr-only">{t('auth.avatarLabel')}</span>
       <ConsoleIcon name="chevron" />
     </summary>
     <div className="zt-account-panel">
+      <a href="/console/dashboard" onClick={(event) => { menu.current?.removeAttribute('open'); onNavigate?.(event, '/console/dashboard') }}><ConsoleIcon name="dashboard" />{t('nav.console')}</a>
       <a href="/console/profile" onClick={(event) => { menu.current?.removeAttribute('open'); onNavigate?.(event, '/console/profile') }}><ConsoleIcon name="profile" />{t('console.profile')}</a>
       <button type="button" disabled={signingOut} aria-busy={signingOut} onClick={() => void handleSignOut()}><ConsoleIcon name="logout" />{t('auth.signOut')}</button>
       {error && <p role="alert">{t('auth.signOutError')}</p>}

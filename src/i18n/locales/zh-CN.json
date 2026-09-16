@@ -342,7 +342,7 @@
   "auth.error": "无法验证你的登录信息。",
   "auth.signOut": "退出登录",
   "auth.signOutError": "退出登录失败，请稍后重试。",
-  "auth.avatarLabel": "{{username}} 的用户头像",
+  "auth.avatarLabel": "的账户菜单",
   "auth.required": "此项为必填。",
   "auth.emailInvalid": "请输入有效的邮箱地址。",
   "auth.noAccount": "还没有账户？",

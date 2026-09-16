@@ -3,6 +3,7 @@ import googleIcon from '../../assets/google.webp'
 import mailIcon from '../../assets/mail.webp'
 import { useAuthStatus } from '../../auth/use-auth-status'
 import { authenticatedLink } from '../../auth/auth-links'
+import { vendorLogoUrl } from '../catalog/vendor-logos'
 import { useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 
@@ -135,6 +136,15 @@ function LineIcon({ name }: { name: FeatureIcon }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
 }
 
+/** The vendor's own mark. These sit below the fold, so they load lazily; the fixed
+ *  box keeps the table row from shifting once they arrive. */
+function VendorLogo({ vendor }: { vendor: string }) {
+  const logo = vendorLogoUrl(vendor)
+  return <span className="reference-vendor" aria-hidden="true">{logo
+    ? <img src={logo} alt="" width="22" height="22" loading="lazy" decoding="async" />
+    : vendor.slice(0, 1)}</span>
+}
+
 export function HomePage() {
   const { t } = useTranslation()
   const auth = useAuthStatus()
@@ -245,7 +255,7 @@ export function HomePage() {
           {modelGroups.map((group) => <article className="reference-model-group" key={group.title}>
             <h3>{t(group.title)}</h3>
             {group.models.map(([vendor, model, prices, source]) => <div className="reference-model-row" key={model}>
-              <span className={`reference-vendor reference-vendor-${vendor.toLowerCase()}`}>{vendor.slice(0, 1)}</span>
+              <VendorLogo vendor={vendor} />
               <p><small>{vendor}</small><strong>{model}</strong></p>
               <span className="reference-price">{t('home.modelPrice', { prices })}</span>
               <span className="reference-source">{t('home.modelSource', { source })}</span>

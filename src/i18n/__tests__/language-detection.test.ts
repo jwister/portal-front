@@ -15,6 +15,18 @@ describe('portal language selection', () => {
     expect(resolveInitialLanguage(['de-DE'])).toBe('en')
   })
 
+  it('prefers the browser language over the fallback when no choice is stored', () => {
+    expect(resolveInitialLanguage(['zh-TW', 'en'])).toBe('zh-CN')
+    expect(resolveInitialLanguage(['en-GB'])).toBe('en')
+    expect(resolveInitialLanguage([])).toBe('en')
+  })
+
+  it('lets a stored choice override the browser language', () => {
+    setStoredLanguage('en')
+
+    expect(resolveInitialLanguage(['zh-CN'])).toBe('en')
+  })
+
   it('persists an explicit language choice', () => {
     setStoredLanguage('en')
 

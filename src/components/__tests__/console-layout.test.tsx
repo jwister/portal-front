@@ -27,7 +27,7 @@ describe('ConsoleLayout', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ authenticated: true, profile: { id: 7, username: 'alice' } }), { status: 200 })))
     render(<ConsoleLayout activeKey="dashboard"><div>content</div></ConsoleLayout>)
 
-    const avatar = await screen.findByLabelText('alice 的用户头像')
+    const avatar = (await screen.findByText('的账户菜单')).closest('summary')!
     await user.click(avatar)
     expect(screen.getByText('alice')).toBeVisible()
     expect(screen.getByRole('button', { name: '退出登录' })).toBeVisible()

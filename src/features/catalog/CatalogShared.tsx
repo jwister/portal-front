@@ -4,17 +4,11 @@ import { IconCopy } from '@douyinfe/semi-icons'
 import { Button, Skeleton } from '@douyinfe/semi-ui'
 import { cardPriceRows, formatPrice, priceGroup, type CatalogModel } from './catalog-data'
 import type { NewApiPricingResponse } from '../../api/portal'
+import { vendorLogoUrl } from './vendor-logos'
 
-const logos: Record<string, string> = {
-  OpenAI: 'openai', Anthropic: 'claude-color', DeepSeek: 'deepseek-color', Google: 'gemini-color',
-  '智谱': 'zhipu-color', Zhipu: 'zhipu-color', '字节跳动': 'doubao-color', ByteDance: 'doubao-color',
-  '阿里巴巴': 'qwen-color', Moonshot: 'moonshot', Meta: 'meta-color', Mistral: 'mistral-color',
-  MiniMax: 'minimax-color', '百度': 'wenxin-color', xAI: 'xai', '即梦': 'jimeng-color', Cohere: 'cohere-color',
-  '腾讯': 'hunyuan-color', Cloudflare: 'cloudflare-color', '零一万物': 'yi-color', Jina: 'jina', '讯飞': 'spark-color',
-}
 export function VendorMark({ vendor }: { vendor: string }) {
-  const logo = logos[vendor]
-  return <span className="zt-vendor-mark" aria-hidden="true">{logo ? <img src={`/vendors/${logo}.svg`} alt="" /> : vendor.slice(0, 2)}</span>
+  const logo = vendorLogoUrl(vendor)
+  return <span className="zt-vendor-mark" aria-hidden="true">{logo ? <img src={logo} alt="" /> : vendor.slice(0, 2)}</span>
 }
 export function CopyButton({ value, label }: { value: string; label?: string }) {
   const { t } = useTranslation()

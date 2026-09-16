@@ -1,23 +1,23 @@
 /* The checkout owns its light palette, including when loaded directly in the console. */
-.trc20-checkout.trc20-checkout { color:#183128; background:#fff; border-color:#dbe5de; }
+.trc20-checkout.trc20-checkout { color:#0f172a; background:#fff; border-color:#dde6f4; }
 .trc20-checkout .trc20-checkout-summary { display:grid; gap:8px; border-bottom:0; padding-bottom:0; }
-.trc20-checkout .trc20-checkout-summary h3 { margin:0; color:#183128; font:650 clamp(20px,3vw,26px)/1.4 system-ui,sans-serif; }
-.trc20-checkout .trc20-checkout-summary p { margin:0; color:#52675c; line-height:1.6; }
-.trc20-checkout .trc20-checkout-summary .trc20-kicker { color:#126745; }
-.trc20-checkout .trc20-checkout-summary .trc20-checkout-status { color:#126745; font-size:14px; font-weight:600; }
+.trc20-checkout .trc20-checkout-summary h3 { margin:0; color:#0f172a; font:650 clamp(20px,3vw,26px)/1.4 system-ui,sans-serif; }
+.trc20-checkout .trc20-checkout-summary p { margin:0; color:#475569; line-height:1.6; }
+.trc20-checkout .trc20-checkout-summary .trc20-kicker { color:#1d4ed8; }
+.trc20-checkout .trc20-checkout-summary .trc20-checkout-status { color:#1d4ed8; font-size:14px; font-weight:600; }
 .trc20-checkout .trc20-checkout-status:is([data-status='CREDIT_FAILED'],[data-status='CREDIT_UNKNOWN']) { color:#8a4b08; }
 .trc20-checkout .trc20-checkout-status:is([data-status='EXPIRED'],[data-status='CANCELLED']) { color:#b42318; }
-.trc20-checkout .trc20-instruction { border-color:#dbe5de; }
-.trc20-checkout .trc20-instruction > div > span { color:#52675c; }
-.trc20-checkout .trc20-instruction strong,.trc20-checkout .trc20-instruction code { min-width:0; color:#183128; font-size:14px; line-height:1.6; overflow-wrap:anywhere; }
+.trc20-checkout .trc20-instruction { border-color:#dde6f4; }
+.trc20-checkout .trc20-instruction > div > span { color:#475569; }
+.trc20-checkout .trc20-instruction strong,.trc20-checkout .trc20-instruction code { min-width:0; color:#0f172a; font-size:14px; line-height:1.6; overflow-wrap:anywhere; }
 .trc20-checkout .trc20-instruction strong { font-size:18px; font-variant-numeric:tabular-nums; }
-.trc20-checkout .trc20-instruction .semi-button { min-height:44px; color:#126745; }
+.trc20-checkout .trc20-instruction .semi-button { min-height:44px; color:#1d4ed8; }
 .trc20-checkout .trc20-instruction .semi-button span { color:inherit; }
-.trc20-checkout .trc20-instruction .semi-button:hover { background:#eef4f0; }
-.trc20-checkout .trc20-txid .semi-button { min-height:44px; background:#147b57; border-color:#147b57; color:#fff; }
-.trc20-checkout .trc20-txid .semi-button:not(:disabled):hover { background:#0d6144; }
-.trc20-checkout .trc20-txid .semi-button:disabled { background:#e6ece8; border-color:#dbe5de; color:#61746a; }
-.trc20-checkout > .semi-typography { color:#52675c; }
+.trc20-checkout .trc20-instruction .semi-button:hover { background:#eff6ff; }
+.trc20-checkout .trc20-txid .semi-button { min-height:44px; background:#2563eb; border-color:#2563eb; color:#fff; }
+.trc20-checkout .trc20-txid .semi-button:not(:disabled):hover { background:#1d4ed8; }
+.trc20-checkout .trc20-txid .semi-button:disabled { background:#e2e8f0; border-color:#dde6f4; color:#475569; }
+.trc20-checkout > .semi-typography { color:#475569; }
 @media(max-width:600px) {
   .trc20-checkout .trc20-instruction > div { grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; }
   .trc20-checkout .trc20-instruction > div > span { grid-column:1 / -1; }

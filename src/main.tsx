@@ -7,9 +7,11 @@ import './i18n'
 import './styles/base.css'
 import './styles/home-reference.css'
 import { scheduleSupportChat } from './support/load-chat'
+import { scheduleTracking } from './support/load-tracking'
 
 const root = document.getElementById('root')!
 const app = <StrictMode><App /></StrictMode>
 if (root.dataset.prerendered === 'true') hydrateRoot(root, app)
 else createRoot(root).render(app)
 scheduleSupportChat()
+scheduleTracking()
