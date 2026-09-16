@@ -27,7 +27,7 @@ function fitChatViewport() {
   const style = document.createElement('style')
   style.id = 'ztoken-mobile-chat'
   style.textContent = `
-    #tidio-chat-root { --custom-action-color:#147b57!important; --custom-action-color-contrast:#fff!important; }
+    #tidio-chat-root { --custom-action-color:#2563eb!important; --custom-action-color-contrast:#fff!important; }
     @media(max-width:800px) {
       #tidio-chat-root { inset:0!important; margin:0!important; width:100%!important; max-width:100%!important; height:var(--support-height,100dvh)!important; }
       #tidio-chat-root .chat { left:12px!important; right:12px!important; bottom:calc(80px + env(safe-area-inset-bottom))!important; width:calc(100% - 24px)!important; max-width:none!important; height:calc(var(--support-height,100dvh) - 96px - env(safe-area-inset-bottom))!important; max-height:calc(var(--support-height,100dvh) - 96px - env(safe-area-inset-bottom))!important; }
@@ -51,7 +51,7 @@ function configure() {
   if (!api || api === installed) return
   installed = api
   ready = true
-  api.setColorPalette('#147b57')
+  api.setColorPalette('#2563eb')
   api.setFeatures({ widgetLabelStatus: false })
   api.on('open', () => { chatOpen = true; document.body.dataset.chatOpen = 'true'; fitChatViewport() })
   api.on('close', () => {

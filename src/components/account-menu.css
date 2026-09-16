@@ -1,20 +1,20 @@
-.zt-account-menu { position:relative; min-width:0; color:#183128; font:500 14px/1.5 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif; }
+.zt-account-menu { position:relative; min-width:0; color:#0f172a; font:500 14px/1.5 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif; }
 .zt-account-menu summary { display:flex; align-items:center; gap:9px; min-height:44px; padding:4px; border-radius:9px; cursor:pointer; list-style:none; }
 .zt-account-menu summary::-webkit-details-marker { display:none; }
-.zt-account-menu summary:hover,.zt-account-menu[open] summary { background:#eef4f0; }
-.zt-account-avatar { display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; border-radius:50%; background:#e2eee6; color:#106b4c; font-weight:650; }
+.zt-account-menu summary:hover,.zt-account-menu[open] summary { background:#eff6ff; }
+/* Shape comes from the sitewide avatar rule in base.css. */
 .zt-account-name { max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; font-weight:600; }
-.zt-account-menu summary > svg { width:14px; height:14px; flex-shrink:0; color:#61746a; }
+.zt-account-menu summary > svg { width:14px; height:14px; flex-shrink:0; color:#475569; }
 .zt-account-menu[open] summary > svg { transform:rotate(180deg); }
-.zt-account-panel { position:absolute; top:calc(100% + 8px); right:0; z-index:3; display:grid; gap:6px; width:220px; max-width:calc(100vw - 32px); padding:10px; border:1px solid #dbe5de; border-radius:14px; background:#fff; box-shadow:0 12px 36px #18312814; }
-.zt-account-panel a,.zt-account-panel button,.site-actions .zt-account-panel button { display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:10px 12px; border:0; border-radius:7px; background:transparent; color:#183128; text-align:left; font:inherit; }
+.zt-account-panel { position:absolute; top:calc(100% + 8px); right:0; z-index:3; display:grid; gap:6px; width:220px; max-width:calc(100vw - 32px); padding:10px; border:1px solid #dde6f4; border-radius:14px; background:#fff; box-shadow:0 12px 36px #0f172a14; }
+.zt-account-panel a,.zt-account-panel button,.site-actions .zt-account-panel button { display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:10px 12px; border:0; border-radius:7px; background:transparent; color:#0f172a; text-align:left; font:inherit; }
 .zt-account-panel svg { width:20px; height:20px; flex-shrink:0; }
-.zt-account-panel a:hover,.zt-account-panel button:hover { background:#eef4f0; }
+.zt-account-panel a:hover,.zt-account-panel button:hover { background:#eff6ff; }
 .zt-account-panel button:disabled { opacity:.6; cursor:wait; }
 .zt-account-panel p { margin:4px 8px; color:#b42318; font-size:13px; }
 @media(max-width:700px) {
   .zt-account-menu summary { gap:6px; }
-  .zt-account-avatar { width:30px; height:30px; }
+  .zt-account-avatar { --avatar-size:30px; }
   .zt-account-name { max-width:90px; font-size:13px; }
 }
 @media(prefers-reduced-motion:no-preference) {

@@ -87,7 +87,7 @@ describe('DashboardPage', () => {
     expect(screen.getByRole('region', { name: '30-day usage trend' })).toBeVisible()
     expect(screen.getByRole('region', { name: 'Top 5 models by quota' })).toBeVisible()
     expect(screen.getByRole('region', { name: 'Last 30 days token usage' })).toBeVisible()
-    expect(screen.getByRole('region', { name: '30-day usage trend' }).getAttribute('data-option')).toContain('#457a61')
+    expect(screen.getByRole('region', { name: '30-day usage trend' }).getAttribute('data-option')).toContain('#2563eb')
     expect(fetchMock).toHaveBeenCalledWith('/api/console/dashboard/analytics?range=30d', expect.anything())
   })
 

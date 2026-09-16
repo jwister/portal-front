@@ -24,7 +24,11 @@ export function setStoredLanguage(language: PortalLanguage): void {
   void i18n.changeLanguage(language)
 }
 
-const browserLanguages = typeof navigator === 'undefined' ? [] : navigator.languages
+// Mirrors the pre-hydration bootstrap in deploy/prerender.mjs, which reads
+// `navigator.languages?.[0] || navigator.language`. If the two disagreed, the
+// prerendered homepage would flash one language and hydrate into the other.
+const browserLanguages = typeof navigator === 'undefined' ? []
+  : navigator.languages?.length ? navigator.languages : [navigator.language]
 
 void i18n.use(initReactI18next).init({
   resources: {

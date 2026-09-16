@@ -33,14 +33,15 @@ describe('PublicHeader', () => {
     render(<PublicHeader />)
 
     expect(await screen.findByRole('button', { name: '控制台' })).toBeVisible()
-    const avatar = screen.getByLabelText('alice 的用户头像')
+    const avatar = screen.getByText('的账户菜单').closest('summary')!
     expect(avatar).toBeVisible()
     expect(screen.getByText('alice')).toBeVisible()
     expect(avatar.closest('details')).not.toHaveAttribute('open')
     await user.click(avatar)
     expect(screen.getByText('alice')).toBeVisible()
     expect(screen.getByRole('button', { name: '退出登录' })).toBeVisible()
-    expect(screen.queryByRole('link', { name: '控制台' })).not.toBeInTheDocument()
+    // The account menu carries the console link so the phone header can stay one row.
+    expect(screen.getByRole('link', { name: '控制台' })).toHaveAttribute('href', '/console/dashboard')
     expect(screen.queryByText('创建账户')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '个人资料' })).toHaveAttribute('href', '/console/profile')
     await user.keyboard('{Escape}')
@@ -58,7 +59,7 @@ describe('PublicHeader', () => {
     vi.stubGlobal('location', { ...window.location, assign })
 
     render(<PublicHeader />)
-    const avatar = await screen.findByLabelText('alice 的用户头像')
+    const avatar = (await screen.findByText('的账户菜单')).closest('summary')!
     await user.click(avatar)
     await user.click(screen.getByRole('button', { name: '退出登录' }))
 

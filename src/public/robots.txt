@@ -1,0 +1,14 @@
+# Any unknown path falls back to the SPA shell, so this file has to exist as a real
+# file or crawlers receive HTML where robots directives are expected.
+User-agent: *
+Allow: /
+
+# Signed-in areas and payment flows hold no crawlable content.
+Disallow: /console/
+Disallow: /purchase
+Disallow: /recharge
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /oauth/
+
+Sitemap: https://ztoken.cc/sitemap.xml

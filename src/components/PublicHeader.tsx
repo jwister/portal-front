@@ -39,7 +39,7 @@ export function PublicHeader() {
   ]
   return <header ref={header} className={`public-header public-site-header${menuOpen ? ' site-menu-open' : ''}${account ? ' site-has-account' : ''}`}>
     <a className="site-brand" href="/" aria-label="ZToken"><img src={logo} alt="" width="26" height="26" />ZToken</a>
-    <nav id="public-navigation" className="site-links" aria-label={t('nav.main')}>{navItems.map(([path, label]) => <a key={path} {...(path === '/purchase' ? authenticatedLink(status, path) : { href: path })} onMouseEnter={() => { if (window.matchMedia('(hover: hover)').matches) prefetchRoute(path) }} aria-current={(path === '/' ? currentPath === '/' : currentPath.startsWith(path.split('/').slice(0, 2).join('/'))) ? 'page' : undefined}>{label}</a>)}</nav>
+    <nav id="public-navigation" className="site-links" aria-label={t('nav.main')}>{navItems.map(([path, label]) => <a key={path} className={path === '/purchase' ? 'site-nav-cta' : undefined} {...(path === '/purchase' ? authenticatedLink(status, path) : { href: path })} onMouseEnter={() => { if (window.matchMedia('(hover: hover)').matches) prefetchRoute(path) }} aria-current={(path === '/' ? currentPath === '/' : currentPath.startsWith(path.split('/').slice(0, 2).join('/'))) ? 'page' : undefined}>{label}</a>)}</nav>
     <div className="site-actions">
       <LanguageMenu />
       <button type="button" className="site-primary" aria-busy={status.kind === 'loading'} onClick={() => window.location.assign(account ? '/console/dashboard' : '/sign-in')}>{t(account ? 'nav.console' : 'auth.submit')}</button>

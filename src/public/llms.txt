@@ -1,0 +1,18 @@
+# ZToken
+
+> One API gateway for the major AI models. ZToken handles model routing, API key
+> management, usage metering and pay-as-you-go billing behind a single endpoint that
+> speaks the OpenAI, Anthropic and Gemini request formats.
+
+## Docs
+
+- [Quick start](https://ztoken.cc/docs/guides/quick-start): First API call in five minutes
+- [Model catalogue](https://ztoken.cc/models): Every available model with live pricing
+- [API reference](https://ztoken.cc/docs): Endpoints, authentication and streaming
+
+## Endpoints
+
+- `POST /v1/chat/completions`: OpenAI-compatible chat
+- `POST /v1/responses`: OpenAI Responses API
+- `POST /v1/messages`: Anthropic-compatible messages
+- `POST /v1beta/models/{model}:generateContent`: Gemini-compatible generation

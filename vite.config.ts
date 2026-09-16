@@ -17,13 +17,19 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         '/api': {
-          target: env.VITE_API_PROXY_TARGET || 'https://pay.ztoken.cc',
+          target: env.VITE_API_PROXY_TARGET || 'https://ztoken.cc',
           changeOrigin: true,
           // The gateway sets cookies for its own domain, which a tunnelled / sandbox
           // origin cannot store. Rewrite them to host-only so sign-in survives the proxy.
           cookieDomainRewrite: '',
         },
       },
+    },
+    preview: {
+      // Vite rejects requests whose Host it does not recognise. Set
+      // VITE_PREVIEW_ALLOWED_HOSTS to expose a local preview through a tunnel,
+      // e.g. VITE_PREVIEW_ALLOWED_HOSTS=foo.ngrok-free.dev for a PageSpeed run.
+      allowedHosts: env.VITE_PREVIEW_ALLOWED_HOSTS ? env.VITE_PREVIEW_ALLOWED_HOSTS.split(',') : [],
     },
     build: {
       manifest: true,

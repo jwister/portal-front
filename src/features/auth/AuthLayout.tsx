@@ -2,7 +2,13 @@ import { useEffect, useId, useRef, useState, type InputHTMLAttributes, type Reac
 import { useTranslation } from 'react-i18next'
 import { setStoredLanguage } from '../../i18n'
 import brandLogo from '../../assets/brand-logo.webp'
+import { vendorLogoUrl } from '../catalog/vendor-logos'
 import './auth.css'
+
+/** The models the gateway fans out to in the illustration, each with its own mark. */
+const authModels: [vendor: string, label: string, slot: string][] = [
+  ['OpenAI', 'GPT', 'one'], ['Anthropic', 'Claude', 'two'], ['Google', 'Gemini', 'three'],
+]
 
 export function AuthLayout({ title, copy, children, compact = false }: { title: string; copy?: string; children: ReactNode; compact?: boolean }) {
   const { t, i18n } = useTranslation()
@@ -29,9 +35,9 @@ export function AuthLayout({ title, copy, children, compact = false }: { title: 
           </svg>
           <div className="zt-auth-app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16" /></svg><span>{t('auth.yourApp')}</span></div>
           <div className="zt-auth-hub"><img src={brandLogo} alt="" width="44" height="44" /><strong>ZToken</strong></div>
-          <div className="zt-auth-model zt-auth-model-one"><span className="zt-auth-model-symbol">G</span>GPT</div>
-          <div className="zt-auth-model zt-auth-model-two"><span className="zt-auth-model-symbol">C</span>Claude</div>
-          <div className="zt-auth-model zt-auth-model-three"><span className="zt-auth-model-symbol">G</span>Gemini</div>
+          {authModels.map(([vendor, label, slot]) => <div className={`zt-auth-model zt-auth-model-${slot}`} key={label}>
+            <span className="zt-auth-model-symbol"><img src={vendorLogoUrl(vendor)} alt="" width="18" height="18" loading="lazy" decoding="async" /></span>{label}
+          </div>)}
         </div>
         <div className="zt-auth-story-footer"><p>{t('auth.storyFooter')}</p><a href="/docs">{t('auth.readDocs')}<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></a></div>
       </aside>
