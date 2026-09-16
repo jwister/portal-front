@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { HTMLAttributes, ReactNode } from 'react'
 
 interface Column<T> {
   title: ReactNode
@@ -10,10 +10,16 @@ interface Column<T> {
 }
 
 /** One semantic table, presented as labeled records on narrow screens. */
-export function ResponsiveTable<T extends object>({ columns, dataSource, rowKey }: { columns: Column<T>[]; dataSource: T[]; rowKey: keyof T | ((row: T) => string); pagination?: false }) {
+export function ResponsiveTable<T extends object>({ columns, dataSource, rowKey, onRow }: {
+  columns: Column<T>[]
+  dataSource: T[]
+  rowKey: keyof T | ((row: T) => string)
+  pagination?: false
+  onRow?: (row: T) => HTMLAttributes<HTMLTableRowElement>
+}) {
   return <table className="console-responsive-table" role="table">
     <thead role="rowgroup"><tr role="row">{columns.map((column, index) => <th key={index} scope="col" role="columnheader">{column.title}</th>)}</tr></thead>
-    <tbody role="rowgroup">{dataSource.map((row) => <tr role="row" key={typeof rowKey === 'function' ? rowKey(row) : String(row[rowKey])}>
+    <tbody role="rowgroup">{dataSource.map((row) => <tr role="row" key={typeof rowKey === 'function' ? rowKey(row) : String(row[rowKey])} {...onRow?.(row)}>
       {columns.map((column, index) => {
         const value = column.dataIndex ? (row as Record<string, unknown>)[column.dataIndex] : undefined
         return <td role="cell" key={index} className={column.key === 'actions' ? 'console-table-actions' : undefined}>

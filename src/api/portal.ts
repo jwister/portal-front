@@ -342,6 +342,11 @@ export function getPaymentOrder(orderNo: string): Promise<PaymentOrder> {
   return requestJson<PaymentOrder>(`/api/payments/orders/${encodeURIComponent(orderNo)}`)
 }
 
+/** 仅请求服务端取消当前会话所属的待支付订单。 */
+export function cancelPaymentOrder(orderNo: string): Promise<PaymentOrder> {
+  return requestJson<PaymentOrder>(`/api/payments/orders/${encodeURIComponent(orderNo)}/cancel`, { method: 'POST' })
+}
+
 export function getTrc20PaymentStatus(orderNo: string): Promise<Trc20PaymentInstruction> {
   return requestJson(`/api/payments/orders/${encodeURIComponent(orderNo)}/trc20/status`)
 }
