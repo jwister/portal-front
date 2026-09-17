@@ -1,4 +1,4 @@
-import '@douyinfe/semi-ui/react19-adapter'
+import './ui/semi-base'
 import './styles.css'
 import './styles/site-theme.css'
 import { lazy, Suspense } from 'react'

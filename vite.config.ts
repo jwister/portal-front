@@ -41,7 +41,10 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             if (!id.includes('node_modules')) return undefined
             if (id.includes('echarts') || id.includes('zrender')) return 'echarts'
-            if (id.includes('@douyinfe')) return 'semi'
+            // Semi is deliberately not forced into one chunk: the catalog needs only
+            // Button and Skeleton, while the console pulls Modal, Toast and Pagination.
+            // Letting Rollup place each component with the routes that use it keeps the
+            // console's widgets off the public pages, and still hoists anything shared.
             if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react'
             return undefined
           },

@@ -1,4 +1,5 @@
-import { Typography } from '@douyinfe/semi-ui'
+import '../../ui/semi-base'
+import Typography from '@douyinfe/semi-ui/lib/es/typography'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 

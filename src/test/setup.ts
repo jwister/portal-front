@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import '@douyinfe/semi-ui/react19-adapter'
+import '../ui/semi-base'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
 import { clearCatalogCache } from '../features/catalog/use-catalog'

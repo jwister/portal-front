@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Button } from '@douyinfe/semi-ui'
+import '../../ui/semi-base'
+import Button from '@douyinfe/semi-ui/lib/es/button'
 import { useTranslation } from 'react-i18next'
 import '../../i18n'
 import { compareModelsByVendor, modelHref, priceGroup, vendorRank } from './catalog-data'

@@ -1,4 +1,7 @@
-import { Button, Input, Typography } from '@douyinfe/semi-ui'
+import '../../ui/semi-base'
+import Button from '@douyinfe/semi-ui/lib/es/button'
+import Input from '@douyinfe/semi-ui/lib/es/input'
+import Typography from '@douyinfe/semi-ui/lib/es/typography'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import './trc20-checkout.css'

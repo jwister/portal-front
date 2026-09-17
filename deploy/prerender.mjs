@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { createServer } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -21,11 +21,26 @@ try {
     if (source.includes('</style')) throw new Error('Unsafe inline stylesheet')
     html = html.replace(new RegExp(`<link[^>]+href="/${css.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*>`), `<style data-entry-css>${source}</style>`)
   }
+  // Lazily loaded chunks also list the entry stylesheet among their dependencies, so on
+  // every deep-linked route Vite's preload helper downloads it again even though it was
+  // just inlined. Drop it from those lists to keep that round trip off the critical path.
+  const entryCss = manifest['index.html'].css ?? []
+  let stripped = 0
+  for (const name of await readdir('dist/assets')) {
+    if (!name.endsWith('.js')) continue
+    const file = 'dist/assets/' + name
+    const source = await readFile(file, 'utf8')
+    let next = source
+    for (const css of entryCss) next = next.replaceAll(`,"${css}"`, '').replaceAll(`"${css}",`, '')
+    if (next === source) continue
+    await writeFile(file, next)
+    stripped += 1
+  }
   const bootstrap = `<script>(()=>{const root=document.getElementById('root'),zh=document.getElementById('home-zh');if(location.pathname==='/'){let locale;try{locale=localStorage.getItem('ztoken.locale')}catch{}const chinese=locale==='zh-CN'||(locale!=='en'&&(navigator.languages?.[0]||navigator.language||'').toLowerCase().startsWith('zh'));if(chinese)root.replaceChildren(zh.content);root.dataset.prerendered='true';document.documentElement.lang=chinese?'zh-CN':'en'}else root.replaceChildren();zh.remove()})()</script>`
   html = html.replace('<div id="root"></div>', `<div id="root">${english}</div><template id="home-zh">${chinese}</template>${bootstrap}`)
   if (html.includes('/src/assets/') || !html.includes('id="reference-hero-title"')) throw new Error('Incomplete homepage prerender')
   await writeFile('dist/index.html', html)
-  console.log('Prerendered English/Chinese homepage with inline entry CSS; other routes keep the SPA fallback.')
+  console.log(`Prerendered English/Chinese homepage with inline entry CSS; dropped the duplicate stylesheet request from ${stripped} chunks; other routes keep the SPA fallback.`)
 } finally {
   await server.close()
 }

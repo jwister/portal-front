@@ -7,3 +7,9 @@ dist/
 # IDE and local tooling state
 .idea/
 .codebuddy/
+
+# Playwright MCP scratch output
+.playwright-mcp/
+
+# ui-ux-pro-max skill (local design tooling, not project code)
+.claude/

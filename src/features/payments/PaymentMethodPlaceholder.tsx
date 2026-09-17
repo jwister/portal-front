@@ -1,4 +1,7 @@
-import { Card, Tag, Typography } from '@douyinfe/semi-ui'
+import '../../ui/semi-base'
+import Card from '@douyinfe/semi-ui/lib/es/card'
+import Tag from '@douyinfe/semi-ui/lib/es/tag'
+import Typography from '@douyinfe/semi-ui/lib/es/typography'
 import { useTranslation } from 'react-i18next'
 
 import '../../i18n'

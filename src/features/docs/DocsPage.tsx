@@ -1,6 +1,7 @@
 import { SeedanceSection } from './SeedanceSection'
 import { useEffect, useState } from 'react'
-import { Button } from '@douyinfe/semi-ui'
+import '../../ui/semi-base'
+import Button from '@douyinfe/semi-ui/lib/es/button'
 import { useTranslation } from 'react-i18next'
 import { CopyButton } from '../catalog/CatalogShared'
 import { useCatalog } from '../catalog/use-catalog'
