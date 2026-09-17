@@ -18,6 +18,8 @@ import { ConsolePageHeader } from '../../components/ConsolePageHeader'
 import { MetricCard } from '../../components/MetricCard'
 import { RemoteState } from '../../components/RemoteState'
 import { ConsoleIcon } from '../../components/ConsoleIcon'
+import paypalLogo from '../../assets/paypal.webp'
+import tronLogo from '../../assets/tron.webp'
 import {
   formatUsd,
   cancelPaymentOrder,
@@ -217,9 +219,9 @@ export function OrdersPage() {
       title: t('orders.method'),
       dataIndex: 'method' as const,
       render: (value: string) => value === 'PAYPAL'
-        ? <span className="order-payment"><img className="payment-method-logo" src="/Paypal.png" alt="" width="28" height="28" />PayPal</span>
+        ? <span className="order-payment"><img className="payment-method-logo" src={paypalLogo} alt="" width="28" height="28" />PayPal</span>
         : value === 'USDT_TRC20'
-          ? <span className="order-payment"><img className="payment-method-logo" src="/Tron.png" alt="" width="28" height="28" />TRC20 USDT</span>
+          ? <span className="order-payment"><img className="payment-method-logo" src={tronLogo} alt="" width="28" height="28" />TRC20 USDT</span>
           : value,
     },
     {

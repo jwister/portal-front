@@ -36,7 +36,12 @@ try {
     await writeFile(file, next)
     stripped += 1
   }
-  const bootstrap = `<script>(()=>{const root=document.getElementById('root'),zh=document.getElementById('home-zh');if(location.pathname==='/'){let locale;try{locale=localStorage.getItem('ztoken.locale')}catch{}const chinese=locale==='zh-CN'||(locale!=='en'&&(navigator.languages?.[0]||navigator.language||'').toLowerCase().startsWith('zh'));if(chinese)root.replaceChildren(zh.content);root.dataset.prerendered='true';document.documentElement.lang=chinese?'zh-CN':'en'}else root.replaceChildren();zh.remove()})()</script>`
+  // Each translation table is its own chunk, so the language the bootstrap picks is
+  // also the one to preload: it then downloads beside the entry script instead of
+  // being discovered only once the application has parsed and asked for it.
+  const localeChunk = (locale) => manifest[`src/i18n/locales/${locale}.json`]?.file ?? ''
+  const tables = JSON.stringify({ en: localeChunk('en'), zh: localeChunk('zh-CN') })
+  const bootstrap = `<script>(()=>{const root=document.getElementById('root'),zh=document.getElementById('home-zh');let locale;try{locale=localStorage.getItem('ztoken.locale')}catch{}const chinese=locale==='zh-CN'||(locale!=='en'&&(navigator.languages?.[0]||navigator.language||'').toLowerCase().startsWith('zh'));const t=${tables},file=chinese?t.zh:t.en;if(file){const l=document.createElement('link');l.rel='modulepreload';l.href='/'+file;l.crossOrigin='';document.head.appendChild(l)}if(location.pathname==='/'){if(chinese)root.replaceChildren(zh.content);root.dataset.prerendered='true';document.documentElement.lang=chinese?'zh-CN':'en'}else root.replaceChildren();zh.remove()})()</script>`
   html = html.replace('<div id="root"></div>', `<div id="root">${english}</div><template id="home-zh">${chinese}</template>${bootstrap}`)
   if (html.includes('/src/assets/') || !html.includes('id="reference-hero-title"')) throw new Error('Incomplete homepage prerender')
   await writeFile('dist/index.html', html)

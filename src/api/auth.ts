@@ -145,9 +145,13 @@ export async function signOut(): Promise<void> {
 
 export function getSafeReturnTo(value: string | null | undefined, fallback = '/console/dashboard'): string {
   if (!value || !value.startsWith('/') || value.startsWith('//')) return fallback
+  // Prerendering has no window: resolving against a placeholder keeps the same
+  // same-origin check while letting the built HTML carry the real destination,
+  // which a visitor clicking before hydration would otherwise lose.
+  const origin = typeof window === 'undefined' ? 'https://ztoken.cc' : window.location.origin
   try {
-    const url = new URL(value, window.location.origin)
-    if (url.origin !== window.location.origin) return fallback
+    const url = new URL(value, origin)
+    if (url.origin !== origin) return fallback
     return `${url.pathname}${url.search}${url.hash}`
   } catch {
     return fallback

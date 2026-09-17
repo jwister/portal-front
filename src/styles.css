@@ -274,7 +274,5 @@ h1 { font-family: Georgia, serif; font-size: clamp(3.1rem, 8vw, 7.2rem); font-we
 .payment-method-logo { display: block; height: 21px; object-fit: contain; width: auto; }.order-status-content { align-items: center; display: inline-flex; gap: 5px; }.order-status-content .semi-icon { font-size: 14px; }
 @media (max-width: 760px) { .console-summary-grid { grid-template-columns: 1fr; }.console-identity-card { align-items: flex-start; padding: 20px; } }
 
-/* Suspense fallback while a route chunk loads; keeps the layout from jumping. */
-.route-fallback { margin: 0 auto; max-width: 960px; padding: 32px 24px; }
-.route-fallback > p { color: #6f84a0; margin: 12px 0 0; text-align: center; }
-.public-ledger-route .route-fallback { padding-top: 140px; }
+/* The Suspense fallback is centred by base.css, which ships in the entry bundle so it
+   can paint while this stylesheet is still downloading. Nothing to override here. */

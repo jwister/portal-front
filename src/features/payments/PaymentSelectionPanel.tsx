@@ -8,6 +8,8 @@ import { AuthApiError, getAuthStatus } from '../../api/auth'
 import { signInUrl } from '../../auth/auth-links'
 import { ConsoleIcon } from '../../components/ConsoleIcon'
 import './payment-selection.css'
+import paypalLogo from '../../assets/paypal.webp'
+import tronLogo from '../../assets/tron.webp'
 
 interface PaymentSelectionPanelProps {
   onConfirm: (order: PaymentOrder) => void
@@ -56,12 +58,12 @@ export function PaymentSelectionPanel({ onConfirm }: PaymentSelectionPanelProps)
         <div className="zt-payment-options">
         <label className={`zt-payment-option ${method === 'PAYPAL' ? 'is-selected' : ''}`}>
           <input type="radio" name="payment-method" aria-label="PayPal" checked={method === 'PAYPAL'} onChange={() => setMethod('PAYPAL')} />
-          <img src="/Paypal.png" alt="" width="56" height="32" />
+          <img src={paypalLogo} alt="" width="56" height="32" />
           <span><strong>PayPal</strong><small>{t('payment.paypalHint')}</small></span><i aria-hidden="true" />
         </label>
         <label className={`zt-payment-option ${method === 'USDT_TRC20' ? 'is-selected' : ''}`}>
           <input type="radio" name="payment-method" aria-label="TRC20 USDT" checked={method === 'USDT_TRC20'} onChange={() => setMethod('USDT_TRC20')} />
-          <img src="/Tron.png" alt="" width="32" height="32" />
+          <img src={tronLogo} alt="" width="32" height="32" />
           <span><strong>TRC20 USDT</strong><small>{t('payment.tronHint')}</small></span><i aria-hidden="true" />
         </label>
         </div>

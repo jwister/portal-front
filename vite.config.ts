@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         '/api': {
-          target: env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8084',
+          target: env.VITE_API_PROXY_TARGET || 'https://ztoken.cc',
           changeOrigin: true,
           // The gateway sets cookies for its own domain, which a tunnelled / sandbox
           // origin cannot store. Rewrite them to host-only so sign-in survives the proxy.

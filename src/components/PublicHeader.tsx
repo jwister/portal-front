@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStatus } from '../auth/use-auth-status'
 import { authenticatedLink } from '../auth/auth-links'
+import { isPlainLeftClick, navigateTo } from '../navigation'
 import { AccountMenu } from './AccountMenu'
 import { LanguageMenu } from './LanguageMenu'
 import logo from '../assets/brand-logo.webp'
@@ -17,7 +18,7 @@ function prefetchRoute(path: string): void {
   }
 }
 
-export function PublicHeader() {
+export function PublicHeader({ path }: { path?: string } = {}) {
   const { t } = useTranslation()
   const status = useAuthStatus()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -32,14 +33,28 @@ export function PublicHeader() {
     return () => { document.removeEventListener('keydown', close); document.removeEventListener('pointerdown', outside) }
   }, [menuOpen])
   const account = status.kind === 'authenticated' ? status.profile : null
-  const currentPath = typeof window === 'undefined' ? '/' : window.location.pathname
+  const currentPath = path ?? (typeof window === 'undefined' ? '/' : window.location.pathname)
   const navItems = [
     ['/', t('nav.home')], ['/models', t('nav.models')],
     ['/docs/guides/quick-start', t('nav.docs')], ['/purchase', t('nav.purchase')],
   ]
+  /** Purchase is the one destination that must leave the page: an anonymous visitor
+   *  is redirected to sign-in with a return address, which needs a real navigation. */
+  const linkProps = (destination: string) => destination === '/purchase'
+    ? { className: 'site-nav-cta', ...authenticatedLink(status, destination) }
+    : {
+      href: destination,
+      onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
+        if (!isPlainLeftClick(event)) return
+        event.preventDefault()
+        setMenuOpen(false)
+        prefetchRoute(destination)
+        navigateTo(destination)
+      },
+    }
   return <header ref={header} className={`public-header public-site-header${menuOpen ? ' site-menu-open' : ''}${account ? ' site-has-account' : ''}`}>
-    <a className="site-brand" href="/" aria-label="ZToken"><img src={logo} alt="" width="26" height="26" />ZToken</a>
-    <nav id="public-navigation" className="site-links" aria-label={t('nav.main')}>{navItems.map(([path, label]) => <a key={path} className={path === '/purchase' ? 'site-nav-cta' : undefined} {...(path === '/purchase' ? authenticatedLink(status, path) : { href: path })} onMouseEnter={() => { if (window.matchMedia('(hover: hover)').matches) prefetchRoute(path) }} aria-current={(path === '/' ? currentPath === '/' : currentPath.startsWith(path.split('/').slice(0, 2).join('/'))) ? 'page' : undefined}>{label}</a>)}</nav>
+    <a className="site-brand" href="/" aria-label="ZToken" onClick={(event) => { if (!isPlainLeftClick(event)) return; event.preventDefault(); navigateTo('/') }}><img src={logo} alt="" width="26" height="26" />ZToken</a>
+    <nav id="public-navigation" className="site-links" aria-label={t('nav.main')}>{navItems.map(([destination, label]) => <a key={destination} {...linkProps(destination)} onMouseEnter={() => { if (window.matchMedia('(hover: hover)').matches) prefetchRoute(destination) }} aria-current={(destination === '/' ? currentPath === '/' : currentPath.startsWith(destination.split('/').slice(0, 2).join('/'))) ? 'page' : undefined}>{label}</a>)}</nav>
     <div className="site-actions">
       <LanguageMenu />
       <button type="button" className="site-primary" aria-busy={status.kind === 'loading'} onClick={() => window.location.assign(account ? '/console/dashboard' : '/sign-in')}>{t(account ? 'nav.console' : 'auth.submit')}</button>

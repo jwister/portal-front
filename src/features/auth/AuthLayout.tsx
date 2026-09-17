@@ -18,7 +18,7 @@ export function AuthLayout({ title, copy, children, compact = false }: { title: 
       <a className="zt-auth-brand" href="/" aria-label="ZToken"><img src={brandLogo} alt="" width="32" height="32" /><span>ZToken</span></a>
       <nav aria-label={t('auth.navigation')}>
         <a href="/">{t('auth.backHome')}</a>
-        <button type="button" onClick={() => setStoredLanguage(i18n.language === 'zh-CN' ? 'en' : 'zh-CN')} aria-label={`${t('auth.changeLanguage')} (${i18n.language === 'zh-CN' ? 'EN' : '中文'})`}>{i18n.language === 'zh-CN' ? 'EN' : '中文'}</button>
+        <button type="button" onClick={() => void setStoredLanguage(i18n.language === 'zh-CN' ? 'en' : 'zh-CN')} aria-label={`${t('auth.changeLanguage')} (${i18n.language === 'zh-CN' ? 'EN' : '中文'})`}>{i18n.language === 'zh-CN' ? 'EN' : '中文'}</button>
       </nav>
     </header>
     <div className="zt-auth-body">

@@ -3,6 +3,11 @@ import '../ui/semi-base'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
 import { clearCatalogCache } from '../features/catalog/use-catalog'
+import { loadLocale } from '../i18n'
+
+// The browser fetches one translation table; tests switch languages freely, so both
+// are loaded up front and `changeLanguage` stays synchronous for them.
+await Promise.all([loadLocale('en'), loadLocale('zh-CN')])
 
 const values = new Map<string, string>()
 

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { ConsoleLayout, type ConsoleKey } from './components/ConsoleLayout'
 import { RemoteState } from './components/RemoteState'
+import { navigateTo } from './navigation'
 import type { AuthStatus } from './auth/use-auth-status'
 import './styles/console.css'
 
@@ -21,12 +22,7 @@ export function ConsoleRoutes({ path, status }: { path: string; status: AuthStat
     return <Suspense fallback={<RemoteState kind="loading" />}><PaymentCompletePage /></Suspense>
   }
   const activeKey = path.split('/')[2] as ConsoleKey
-  const navigate = (nextPath: string) => {
-    if (window.location.pathname === nextPath) return
-    window.history.pushState({}, '', nextPath)
-    window.dispatchEvent(new PopStateEvent('popstate'))
-  }
-  return <ConsoleLayout activeKey={activeKey} profile={status.profile} onNavigate={navigate}>
+  return <ConsoleLayout activeKey={activeKey} profile={status.profile} onNavigate={navigateTo}>
     <div className="console-route-content" key={path}><Suspense fallback={<RemoteState kind="loading" />}>
       {activeKey === 'dashboard' ? <DashboardPage /> : activeKey === 'profile' ? <ProfilePage /> : activeKey === 'logs' ? <LogsPage /> : <ConsoleDetailRoutes activeKey={activeKey} />}
     </Suspense></div>
