@@ -37,6 +37,7 @@ describe('PurchasePage', () => {
 
     await user.clear(input)
     await user.type(input, '25.5')
+    expect(screen.getByTestId('purchase-ledger-summary')).toHaveTextContent('$25.50')
     await user.click(screen.getByRole('button', { name: 'Confirm payment' }))
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
@@ -74,7 +75,7 @@ describe('PurchasePage', () => {
     render(<PurchasePage />)
 
     expect(screen.queryByTestId('purchase-ledger-steps')).not.toBeInTheDocument()
-    expect(screen.getByTestId('purchase-ledger-summary')).toHaveTextContent('$5')
+    expect(screen.getByTestId('purchase-ledger-summary')).toHaveTextContent('$5.00')
   })
 
   it('renders exactly the two supported payment choices', () => {

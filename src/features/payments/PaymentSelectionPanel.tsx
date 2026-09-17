@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import '../../i18n'
 import { AmountSelector, isValidCustomAmount, type AmountSelection } from './AmountSelector'
-import { createPaymentOrder, PortalApiError, type PaymentOrder, type PaymentMethod } from '../../api/portal'
+import { createPaymentOrder, formatUsd, PortalApiError, type PaymentOrder, type PaymentMethod } from '../../api/portal'
 import { AuthApiError, getAuthStatus } from '../../api/auth'
 import { signInUrl } from '../../auth/auth-links'
 import { ConsoleIcon } from '../../components/ConsoleIcon'
@@ -23,6 +23,8 @@ export function PaymentSelectionPanel({ onConfirm }: PaymentSelectionPanelProps)
   const customValid = selected !== 'custom' || isValidCustomAmount(customAmount)
   const amount = selected === 'custom' ? customAmount : String(selected)
   const amountIsUsable = customValid && amount !== ''
+  // 展示金额与订单、支付详情共用美元格式，避免预设和自定义输入出现不同小数位。
+  const amountText = amountIsUsable ? formatUsd(Math.round(Number(amount) * 100)) : '$—'
 
   const handleConfirm = async () => {
     if (!amountIsUsable || submitting) return
@@ -65,7 +67,7 @@ export function PaymentSelectionPanel({ onConfirm }: PaymentSelectionPanelProps)
         </div>
       </section>
       <footer className="zt-payment-total">
-        <div data-testid="purchase-ledger-summary" aria-live="polite"><span>{t('purchase.selected')}</span><strong key={amount}>${amount || '—'}</strong></div>
+        <div data-testid="purchase-ledger-summary" aria-live="polite"><span>{t('purchase.selected')}</span><strong key={amount}>{amountText}</strong></div>
         <button className="zt-payment-confirm" type="button" disabled={!amountIsUsable || submitting} aria-busy={submitting} onClick={() => { void handleConfirm() }}>{submitting?<span className="console-loading-ring" aria-hidden="true" />:<ConsoleIcon name="recharge" />}{t('payment.confirm')}<ConsoleIcon name="arrow" /></button>
       </footer>
       {error && <p className="zt-payment-error" role="alert">{error}</p>}
