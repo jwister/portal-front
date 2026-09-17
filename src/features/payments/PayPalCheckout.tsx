@@ -18,6 +18,7 @@ type CheckoutPhase =
   | 'loading-config'
   | 'preparing'
   | 'rendering'
+  | 'ready'
   | 'cancelling'
   | 'polling'
   | 'final'
@@ -69,8 +70,9 @@ export function PayPalCheckout({ order, onCompleted }: PayPalCheckoutProps) {
         const paypal = await loadPayPalSdk(config.clientId, config.mode)
         if (cancelled) return
         renderStateRef.current = { config, paypal }
-        renderButtons(renderStateRef.current)
         setPhase('rendering')
+        await renderButtons(renderStateRef.current)
+        if (!cancelled) setPhase('ready')
       } catch (loadError) {
         if (cancelled) return
         setError(loadError instanceof Error ? loadError.message : String(loadError))
@@ -116,7 +118,7 @@ export function PayPalCheckout({ order, onCompleted }: PayPalCheckoutProps) {
     }
   }, [currentOrder.status, order.orderNo, onCompleted])
 
-  function renderButtons(state: RenderState) {
+  async function renderButtons(state: RenderState) {
     const container = buttonsContainerRef.current
     if (!container) return
     destroyButtons()
@@ -162,7 +164,7 @@ export function PayPalCheckout({ order, onCompleted }: PayPalCheckoutProps) {
       },
     })
     buttonsRef.current = buttons
-    void buttons.render(container)
+    await buttons.render(container)
   }
 
   function destroyButtons() {
@@ -185,6 +187,7 @@ export function PayPalCheckout({ order, onCompleted }: PayPalCheckoutProps) {
 
   const amountText = formatUsd(currentOrder.amountUsdMinor)
   const creditText = amountText.endsWith('.00') ? amountText.slice(0, -3) : amountText
+  const isSdkLoading = phase === 'loading-config' || phase === 'preparing' || phase === 'rendering'
 
   return (
     <section className="paypal-checkout" aria-label={t('payment.checkoutTitle')}>
@@ -196,10 +199,14 @@ export function PayPalCheckout({ order, onCompleted }: PayPalCheckoutProps) {
         </p>
         <p className="paypal-checkout-status" data-status={currentOrder.status}>{statusText}</p>
       </header>
-      <div ref={buttonsContainerRef} className="paypal-buttons" data-testid="paypal-buttons" />
-      {phase === 'loading-config' || phase === 'preparing' || phase === 'rendering'
-        ? <p className="paypal-checkout-hint">{t('payment.sdkLoading')}</p>
-        : null}
+      <div className="paypal-buttons-stage">
+        {isSdkLoading && <div className="paypal-buttons-loading" data-testid="paypal-buttons-loading" aria-live="polite">
+          <div className="paypal-button-skeleton" data-testid="paypal-button-skeleton" aria-hidden="true" />
+          <div className="paypal-button-skeleton paypal-button-skeleton--secondary" data-testid="paypal-button-skeleton" aria-hidden="true" />
+          <div className="paypal-loading-message"><span className="paypal-loading-spinner" data-testid="paypal-loading-spinner" aria-hidden="true" />{t('payment.sdkLoading')}</div>
+        </div>}
+        <div ref={buttonsContainerRef} className="paypal-buttons" data-testid="paypal-buttons" />
+      </div>
       {phase === 'cancelling'
         ? <p className="paypal-checkout-hint">{t('payment.sdkCancelled')}</p>
         : null}

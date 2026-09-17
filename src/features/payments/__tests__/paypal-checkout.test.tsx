@@ -108,6 +108,28 @@ describe('PayPalCheckout', () => {
     expect(store.calls.map((c) => `${c.method} ${c.pathname}`)).toContain('GET /api/payments/orders/PO-1/paypal/config')
   })
 
+  it('shows a two-button loading skeleton while the PayPal SDK is loading', async () => {
+    const store: RequestStore = { calls: [] }
+    let resolveConfig: ((response: Response) => void) | undefined
+    installFetch(store, {
+      'GET /api/payments/orders/PO-1/paypal/config': () => new Promise<Response>((resolve) => { resolveConfig = resolve }),
+    })
+
+    render(<PayPalCheckout order={order} />)
+
+    expect(screen.getByTestId('paypal-buttons-loading')).toBeVisible()
+    expect(screen.getAllByTestId('paypal-button-skeleton')).toHaveLength(2)
+    expect(screen.getByTestId('paypal-loading-spinner')).toBeVisible()
+    expect(screen.getByText('Loading PayPal…')).toBeVisible()
+
+    installPayPalWindow(paypalNamespace)
+    resolveConfig?.(jsonResponse({ clientId: 'public-client', mode: 'sandbox' }))
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('paypal-buttons-loading')).not.toBeInTheDocument()
+    })
+  })
+
   it('shows an explicit manual-review message and never claims success for CREDIT_UNKNOWN', async () => {
     const store: RequestStore = { calls: [] }
     installFetch(store, {
