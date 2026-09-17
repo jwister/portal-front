@@ -205,7 +205,7 @@ export function PayPalCheckout({ order, onCompleted }: PayPalCheckoutProps) {
           <div className="paypal-button-skeleton paypal-button-skeleton--secondary" data-testid="paypal-button-skeleton" aria-hidden="true" />
           <div className="paypal-loading-message"><span className="paypal-loading-spinner" data-testid="paypal-loading-spinner" aria-hidden="true" />{t('payment.sdkLoading')}</div>
         </div>}
-        <div ref={buttonsContainerRef} className="paypal-buttons" data-testid="paypal-buttons" />
+        <div ref={buttonsContainerRef} className={`paypal-buttons${isSdkLoading ? ' is-loading' : ''}`} data-testid="paypal-buttons" aria-hidden={isSdkLoading || undefined} />
       </div>
       {phase === 'cancelling'
         ? <p className="paypal-checkout-hint">{t('payment.sdkCancelled')}</p>

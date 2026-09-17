@@ -121,12 +121,16 @@ describe('PayPalCheckout', () => {
     expect(screen.getAllByTestId('paypal-button-skeleton')).toHaveLength(2)
     expect(screen.getByTestId('paypal-loading-spinner')).toBeVisible()
     expect(screen.getByText('Loading PayPal…')).toBeVisible()
+    expect(screen.getByTestId('paypal-buttons')).toHaveClass('is-loading')
+    expect(screen.getByTestId('paypal-buttons')).toHaveAttribute('aria-hidden', 'true')
 
     installPayPalWindow(paypalNamespace)
     resolveConfig?.(jsonResponse({ clientId: 'public-client', mode: 'sandbox' }))
 
     await waitFor(() => {
       expect(screen.queryByTestId('paypal-buttons-loading')).not.toBeInTheDocument()
+      expect(screen.getByTestId('paypal-buttons')).not.toHaveClass('is-loading')
+      expect(screen.getByTestId('paypal-buttons')).not.toHaveAttribute('aria-hidden')
     })
   })
 
