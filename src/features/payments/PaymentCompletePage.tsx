@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import '../../i18n'
-import { formatQuota, formatUsd, getPaymentOrder, type PaymentOrder } from '../../api/portal'
+import { formatUsd, getPaymentOrder, type PaymentOrder } from '../../api/portal'
 import './payment-complete-page.css'
 
 type CompletionState = { kind: 'loading' } | { kind: 'paid'; order: PaymentOrder } | { kind: 'not-paid' } | { kind: 'error' }
@@ -44,7 +44,7 @@ export function PaymentCompletePage() {
   if (state.kind === 'error') return <CompletionFailure title={t('payment.complete.loadErrorTitle')} description={t('payment.complete.loadErrorDescription')} />
   return <main className="payment-complete-page" aria-live="polite"><section className="payment-complete-card">
     <div className="payment-complete-icon" aria-hidden="true">✓</div><p className="payment-complete-kicker">{t('payment.complete.eyebrow')}</p><h1>{t('payment.complete.title')}</h1><p className="payment-complete-description">{t('payment.complete.description')}</p>
-    <dl className="payment-complete-details"><div><dt>{t('orders.orderNo')}</dt><dd><code>{state.order.orderNo}</code></dd></div><div><dt>{t('orders.amount')}</dt><dd>{formatUsd(state.order.amountUsdMinor)}</dd></div><div><dt>{t('orders.quota')}</dt><dd>{formatQuota(state.order.quotaToCredit)}</dd></div></dl>
+    <dl className="payment-complete-details"><div><dt>{t('orders.orderNo')}</dt><dd><code>{state.order.orderNo}</code></dd></div><div><dt>{t('orders.amount')}</dt><dd>{formatUsd(state.order.amountUsdMinor)}</dd></div></dl>
     <p className="payment-complete-countdown">{t('payment.complete.returning', { seconds })}</p><Button theme="solid" type="primary" block onClick={goToTokens}>{t('payment.complete.createApiKey')}</Button>
   </section></main>
 }

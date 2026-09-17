@@ -100,8 +100,8 @@ describe('PayPalCheckout', () => {
       expect(screen.getByTestId('paypal-buttons')).toBeInTheDocument()
     })
 
-    expect(screen.getByTestId('paypal-ledger-summary')).toHaveTextContent('$25.50')
-    expect(screen.getByTestId('paypal-ledger-summary')).toHaveTextContent('Expected credit: $25.50')
+    expect(screen.getByTestId('paypal-ledger-summary')).toHaveTextContent('Recharge amount: $25.50')
+    expect(screen.getByTestId('paypal-ledger-summary')).not.toHaveTextContent('Expected credit')
     expect(screen.getByTestId('paypal-ledger-summary')).not.toHaveTextContent('12,750,000')
     expect(screen.getByTestId('paypal-ledger-summary')).toHaveTextContent('Waiting for PayPal confirmation')
 

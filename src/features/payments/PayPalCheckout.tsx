@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import {
-  formatQuota,
-  formatUsd,
-  type PaymentOrder,
-  type PayPalConfig,
-} from '../../api/portal'
+import { formatUsd, type PaymentOrder, type PayPalConfig } from '../../api/portal'
 import { loadPayPalSdk, type PayPalNamespace, type PayPalButtons } from './paypal-sdk'
 
 interface PayPalCheckoutProps {
@@ -174,7 +169,7 @@ export function PayPalCheckout({ order, onCompleted }: PayPalCheckoutProps) {
   }
 
   const statusText = currentOrder.status === 'PAID'
-    ? t('payment.status.paid', { quota: formatQuota(currentOrder.quotaToCredit) })
+    ? t('payment.status.paid')
     : currentOrder.status === 'CONFIRMED' || currentOrder.status === 'CREDITING'
       ? t('payment.status.processing')
       : currentOrder.status === 'CREDIT_FAILED' || currentOrder.status === 'CREDIT_UNKNOWN'
@@ -186,17 +181,13 @@ export function PayPalCheckout({ order, onCompleted }: PayPalCheckoutProps) {
             : t('payment.status.waiting')
 
   const amountText = formatUsd(currentOrder.amountUsdMinor)
-  const creditText = amountText.endsWith('.00') ? amountText.slice(0, -3) : amountText
   const isSdkLoading = phase === 'loading-config' || phase === 'preparing' || phase === 'rendering'
 
   return (
     <section className="paypal-checkout" aria-label={t('payment.checkoutTitle')}>
       <header className="paypal-checkout-summary" data-testid="paypal-ledger-summary">
         <h3>{t('payment.checkoutTitle')}</h3>
-        <p>
-          <strong>{amountText}</strong>
-          <span> · {t('payment.quotaEquivalent', { amount: creditText })}</span>
-        </p>
+        <p>{t('orders.amount')}: <strong>{amountText}</strong></p>
         <p className="paypal-checkout-status" data-status={currentOrder.status}>{statusText}</p>
       </header>
       <div className="paypal-buttons-stage">

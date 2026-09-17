@@ -11,7 +11,6 @@ import { MetricCard } from '../../components/MetricCard'
 import { RemoteState } from '../../components/RemoteState'
 import { ConsoleIcon } from '../../components/ConsoleIcon'
 import {
-  formatQuota,
   formatUsd,
   cancelPaymentOrder,
   getPaymentOrder,
@@ -207,11 +206,6 @@ export function OrdersPage() {
       render: (value: number) => formatUsd(value),
     },
     {
-      title: t('orders.quota'),
-      dataIndex: 'quotaToCredit' as const,
-      render: (value: number) => formatQuota(value),
-    },
-    {
       title: t('orders.method'),
       dataIndex: 'method' as const,
       render: (value: string) => value === 'PAYPAL'
@@ -313,7 +307,6 @@ export function OrdersPage() {
             <div><dt>{t('orders.orderNo')}</dt><dd><code>{selectedOrder.orderNo}</code></dd></div>
             <div><dt>{t('orders.status')}</dt><dd>{t(`orders.status.${selectedOrder.status.toLowerCase()}`)}</dd></div>
             <div><dt>{t('orders.amount')}</dt><dd>{formatUsd(selectedOrder.amountUsdMinor)}</dd></div>
-            <div><dt>{t('orders.quota')}</dt><dd>{formatQuota(selectedOrder.quotaToCredit)}</dd></div>
             <div><dt>{t('orders.method')}</dt><dd>{selectedOrder.method === 'USDT_TRC20' ? 'TRC20 USDT' : 'PayPal'}</dd></div>
             <div><dt>{t('orders.created')}</dt><dd>{formatTimestamp(selectedOrder.createdAt)}</dd></div>
             <div><dt>{t('orders.expires')}</dt><dd>{formatTimestamp(selectedOrder.expiresAt)}</dd></div>

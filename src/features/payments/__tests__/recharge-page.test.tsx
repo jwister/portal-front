@@ -31,6 +31,7 @@ describe('RechargePage', () => {
     render(<RechargePage />)
 
     expect(screen.getByRole('heading', { name: 'Recharge balance' })).toBeVisible()
+    expect(screen.getByText('Choose a recharge amount, confirm payment, then wait for the recharge to complete.')).toBeVisible()
     expect(screen.getByRole('button', { name: '$500' })).toBeVisible()
     expect(screen.getByRole('radio', { name: 'PayPal' })).toBeChecked()
     expect(screen.getByRole('radio', { name: 'TRC20 USDT' })).not.toBeChecked()

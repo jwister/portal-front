@@ -55,7 +55,10 @@ describe('OrdersPage', () => {
     })
 
     expect(screen.getByText('$25.50')).toBeVisible()
-    expect(screen.getByText('12,750,000')).toBeVisible()
+    expect(screen.queryByText('12,750,000')).not.toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Quota' })).not.toBeInTheDocument()
+    expect(screen.getByText('Payment completed')).toBeVisible()
+    expect(screen.queryByText('Quota credited')).not.toBeInTheDocument()
     expect(screen.getByText('PayPal')).toBeVisible()
     expect(screen.getByText('Completed orders (this page)')).toBeVisible()
     expect(screen.getByText('Pending orders (this page)')).toBeVisible()
@@ -94,6 +97,8 @@ describe('OrdersPage', () => {
     await user.dblClick(screen.getByText('PO-1').closest('tr')!)
 
     expect(await screen.findByRole('dialog', { name: 'Order details' })).toBeVisible()
+    expect(screen.getAllByText('$25.50').length).toBeGreaterThanOrEqual(2)
+    expect(screen.queryByText('12,750,000')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Cancel order' })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Transaction ID')).not.toBeInTheDocument()
   })

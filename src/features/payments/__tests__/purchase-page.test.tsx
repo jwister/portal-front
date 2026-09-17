@@ -25,6 +25,7 @@ describe('PurchasePage', () => {
 
     render(<PurchasePage />)
 
+    expect(screen.getByText('Choose a recharge amount, confirm payment, then wait for the recharge to complete.')).toBeVisible()
     for (const amount of ['$5', '$10', '$50', '$100', '$200', '$500']) {
       expect(screen.getByRole('button', { name: amount })).toBeVisible()
     }

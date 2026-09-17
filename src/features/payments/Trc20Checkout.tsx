@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import './trc20-checkout.css'
 
-import { formatQuota, formatUsd, getPaymentOrder, getTrc20PaymentStatus, submitTrc20Txid, type PaymentOrder, type Trc20PaymentInstruction } from '../../api/portal'
+import { formatUsd, getPaymentOrder, getTrc20PaymentStatus, submitTrc20Txid, type PaymentOrder, type Trc20PaymentInstruction } from '../../api/portal'
 
 interface Trc20CheckoutProps { order: PaymentOrder; onCompleted?: (order: PaymentOrder) => void }
 const terminal = new Set<PaymentOrder['status']>(['PAID', 'CREDIT_FAILED', 'CREDIT_UNKNOWN', 'EXPIRED', 'CANCELLED'])
@@ -30,13 +30,13 @@ export function Trc20Checkout({ order, onCompleted }: Trc20CheckoutProps) {
     if (!txid.trim()) return
     try { const result = await submitTrc20Txid(order.orderNo, txid.trim()); setMessage(t(`payment.trc20Result.${result.result}`)) } catch { setMessage(t('payment.trc20VerifyError')) }
   }
-  const status = current.status === 'PAID' ? t('payment.status.paid', { quota: formatQuota(current.quotaToCredit) })
+  const status = current.status === 'PAID' ? t('payment.status.paid')
     : current.status === 'CONFIRMED' || current.status === 'CREDITING' ? t('payment.status.processing')
       : current.status === 'EXPIRED' ? t('payment.status.expired') : t('payment.trc20Waiting')
-  const creditText = formatUsd(current.amountUsdMinor).replace(/\.00$/, '')
+  const rechargeAmount = formatUsd(current.amountUsdMinor)
 
   return <section className="trc20-checkout" aria-label={t('payment.trc20Title')}>
-    <header className="trc20-checkout-summary" data-testid="trc20-ledger-summary"><p className="trc20-kicker">TRON · TRC20</p><h3>{t('payment.trc20Title')}</h3><p>{t('payment.quotaEquivalent', { amount: creditText })}</p><p className="trc20-checkout-status" data-status={current.status}>{status}</p></header>
+    <header className="trc20-checkout-summary" data-testid="trc20-ledger-summary"><p className="trc20-kicker">TRON · TRC20</p><h3>{t('payment.trc20Title')}</h3><p>{t('orders.amount')}: <strong>{rechargeAmount}</strong></p><p className="trc20-checkout-status" data-status={current.status}>{status}</p></header>
     {instruction && <div className="trc20-instruction">
       <div><span>{t('payment.trc20Amount')}</span><strong>{instruction.payableAmount} {instruction.payableCurrency}</strong><Button theme="borderless" size="small" onClick={() => { void copy(instruction.payableAmount) }}>{t('payment.trc20CopyAmount')}</Button></div>
       <div><span>{t('payment.trc20Address')}</span><code>{instruction.receiveAddress}</code><Button theme="borderless" size="small" onClick={() => { void copy(instruction.receiveAddress) }}>{t('payment.trc20CopyAddress')}</Button></div>
