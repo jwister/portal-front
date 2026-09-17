@@ -21,7 +21,7 @@ describe('Trc20Checkout', () => {
 
   it('renders only server-issued payment instructions and submits the TxID to its order endpoint', async () => {
     const fetchMock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
-      if (url === '/api/payments/orders/PO_TRON_1/trc20/status') return Promise.resolve(response({ receiveAddress: 'TJxA4YfDSE5v9cYrgeArHQkCZcqW45wBzQ', payableAmount: '25.5001', payableCurrency: 'USDT', status: 'WAITING_PAYMENT', expiresAt: order.expiresAt, txidCheckResult: null }))
+      if (url === '/api/payments/orders/PO_TRON_1/trc20/status') return Promise.resolve(response({ receiveAddress: 'TJxA4YfDSE5v9cYrgeArHQkCZcqW45wBzQ', payableAmount: '25.51', payableCurrency: 'USDT', status: 'WAITING_PAYMENT', expiresAt: order.expiresAt, txidCheckResult: null }))
       if (url === '/api/payments/orders/PO_TRON_1/trc20/txid') return Promise.resolve(response({ result: 'PENDING_CONFIRMATION' }))
       if (url === '/api/payments/orders/PO_TRON_1') return Promise.resolve(response(order))
       return Promise.reject(new Error(`Unexpected request: ${url}`))
@@ -31,7 +31,7 @@ describe('Trc20Checkout', () => {
 
     render(<Trc20Checkout order={order} />)
 
-    expect(await screen.findByText('25.5001 USDT')).toBeVisible()
+    expect(await screen.findByText('25.51 USDT')).toBeVisible()
     expect(screen.getByText('TJxA4YfDSE5v9cYrgeArHQkCZcqW45wBzQ')).toBeVisible()
     expect(screen.getByTestId('trc20-ledger-summary')).toHaveTextContent('Pay with TRC20 USDT')
     expect(screen.getByTestId('trc20-ledger-summary')).toHaveTextContent('Expected credit: $25.50')

@@ -109,6 +109,17 @@ body:has(.zt-console) .semi-modal-body { overflow-wrap:anywhere; }
 body:has(.zt-console) .semi-modal-body code { white-space:normal; overflow-wrap:anywhere; }
 body:has(.zt-console) .semi-modal .semi-button { min-height:44px; }
 body:has(.zt-console) .semi-modal .semi-input { font-size:16px; }
+.order-detail-modal .semi-modal-content { padding:0; }
+.order-detail-modal .semi-modal-header { padding:22px 28px 18px; border-bottom:1px solid var(--console-line); }
+.order-detail-modal .semi-modal-body { padding:0; }
+.order-detail-modal .semi-modal-footer { padding:16px 28px 20px; border-top:1px solid var(--console-line); }
+.order-detail { display:grid; gap:20px; padding:24px 28px 28px; }
+.order-detail-hint { margin:0!important; }
+.order-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1px; margin:0; overflow:hidden; border:1px solid var(--console-line); border-radius:12px; background:var(--console-line); }
+.order-detail-grid > div { display:grid; gap:6px; min-width:0; padding:14px 16px; background:#fff; }
+.order-detail-grid dt { color:var(--console-muted); font-size:12px; }
+.order-detail-grid dd { margin:0; color:var(--console-ink); font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.order-detail-danger { display:flex; justify-content:flex-end; padding-top:4px; }
 @media(max-width:1200px) {
   .zt-console { grid-template-columns:200px minmax(0,1fr); }
   .zt-console.console-shell .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -156,6 +167,10 @@ body:has(.zt-console) .semi-modal .semi-input { font-size:16px; }
   body:has(.zt-console) .semi-modal { top:16px; margin:0 auto; padding-bottom:16px; }
   body:has(.zt-console) .semi-modal-content { padding:20px; }
   body:has(.zt-console) .semi-modal-footer .semi-space { display:flex; flex-wrap:wrap; gap:8px; }
+  .order-detail-modal .semi-modal-header,.order-detail-modal .semi-modal-footer { padding-left:20px; padding-right:20px; }
+  .order-detail { gap:16px; padding:20px; }
+  .order-detail-grid { grid-template-columns:1fr; }
+  .order-detail-grid > div { padding:12px 14px; }
 }
 @media(prefers-reduced-motion:reduce) { .zt-console *, .console-loading-ring { animation:none!important; transition:none!important; } }
 

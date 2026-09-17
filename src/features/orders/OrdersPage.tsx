@@ -1,6 +1,6 @@
 import { ResponsiveTable as Table } from '../../components/ResponsiveTable'
 import { Button, Input, Modal, Pagination, Space, Tag, Toast, Typography } from '@douyinfe/semi-ui'
-import { IconAlertCircle, IconClock, IconCreditCard, IconRefresh, IconTickCircle } from '@douyinfe/semi-icons'
+import { IconAlertCircle, IconClock, IconCreditCard, IconDelete, IconEyeOpened, IconRefresh, IconTickCircle } from '@douyinfe/semi-icons'
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -242,6 +242,34 @@ export function OrdersPage() {
       dataIndex: 'expiresAt' as const,
       render: (value: string) => formatTimestamp(value),
     },
+    {
+      title: t('orders.actions'),
+      key: 'actions',
+      render: (_: unknown, order: PaymentOrder) => {
+        const stopRowAction = (event: React.MouseEvent) => event.stopPropagation()
+        return <Space spacing="tight">
+          <Button
+            theme="borderless"
+            icon={<IconEyeOpened />}
+            aria-label={t('orders.viewOrder', { orderNo: order.orderNo })}
+            onClick={(event) => { stopRowAction(event); void openDetail(order.orderNo) }}
+          >{t('orders.view')}</Button>
+          {order.status === 'WAITING_PAYMENT' && <Button
+            theme="borderless"
+            type="danger"
+            icon={<IconDelete />}
+            aria-label={t('orders.cancelOrder', { orderNo: order.orderNo })}
+            onClick={(event) => {
+              stopRowAction(event)
+              setSelectedOrder(order)
+              setTrc20Instruction(null)
+              setTxid('')
+              setCancelConfirmVisible(true)
+            }}
+          >{t('orders.cancel')}</Button>}
+        </Space>
+      },
+    },
   ]
 
   return (
@@ -276,17 +304,20 @@ export function OrdersPage() {
         onCancel={closeDetail}
         closeOnEsc={!busy}
         maskClosable={!busy}
+        className="order-detail-modal"
         footer={<Button disabled={Boolean(busy)} onClick={closeDetail}>{t('orders.close')}</Button>}
       >
-        {selectedOrder && <section aria-label={t('orders.detailTitle')}>
-          <Typography.Paragraph type="tertiary">{t('orders.detailHint')}</Typography.Paragraph>
-          <Typography.Paragraph><strong>{t('orders.orderNo')}：</strong><code>{selectedOrder.orderNo}</code></Typography.Paragraph>
-          <Typography.Paragraph><strong>{t('orders.amount')}：</strong>{formatUsd(selectedOrder.amountUsdMinor)}</Typography.Paragraph>
-          <Typography.Paragraph><strong>{t('orders.quota')}：</strong>{formatQuota(selectedOrder.quotaToCredit)}</Typography.Paragraph>
-          <Typography.Paragraph><strong>{t('orders.method')}：</strong>{selectedOrder.method === 'USDT_TRC20' ? 'TRC20 USDT' : 'PayPal'}</Typography.Paragraph>
-          <Typography.Paragraph><strong>{t('orders.created')}：</strong>{formatTimestamp(selectedOrder.createdAt)}</Typography.Paragraph>
-          <Typography.Paragraph><strong>{t('orders.expires')}：</strong>{formatTimestamp(selectedOrder.expiresAt)}</Typography.Paragraph>
-          <Typography.Paragraph><strong>{t('orders.status')}：</strong>{t(`orders.status.${selectedOrder.status.toLowerCase()}`)}</Typography.Paragraph>
+        {selectedOrder && <section className="order-detail" aria-label={t('orders.detailTitle')}>
+          <Typography.Paragraph className="order-detail-hint" type="tertiary">{t('orders.detailHint')}</Typography.Paragraph>
+          <dl className="order-detail-grid">
+            <div><dt>{t('orders.orderNo')}</dt><dd><code>{selectedOrder.orderNo}</code></dd></div>
+            <div><dt>{t('orders.status')}</dt><dd>{t(`orders.status.${selectedOrder.status.toLowerCase()}`)}</dd></div>
+            <div><dt>{t('orders.amount')}</dt><dd>{formatUsd(selectedOrder.amountUsdMinor)}</dd></div>
+            <div><dt>{t('orders.quota')}</dt><dd>{formatQuota(selectedOrder.quotaToCredit)}</dd></div>
+            <div><dt>{t('orders.method')}</dt><dd>{selectedOrder.method === 'USDT_TRC20' ? 'TRC20 USDT' : 'PayPal'}</dd></div>
+            <div><dt>{t('orders.created')}</dt><dd>{formatTimestamp(selectedOrder.createdAt)}</dd></div>
+            <div><dt>{t('orders.expires')}</dt><dd>{formatTimestamp(selectedOrder.expiresAt)}</dd></div>
+          </dl>
           {canRecoverTrc20 && trc20Instruction && <section className="trc20-checkout">
             <Typography.Title heading={5}>{t('orders.trc20Recovery')}</Typography.Title>
             <Typography.Paragraph type="tertiary">{t('orders.trc20RecoveryHint')}</Typography.Paragraph>
@@ -299,7 +330,7 @@ export function OrdersPage() {
               <Button type="primary" loading={busy === 'txid'} disabled={!txid.trim() || Boolean(busy)} onClick={() => { void verifyTxid() }}>{t('payment.trc20Verify')}</Button>
             </div>
           </section>}
-          {canCancel && <Button type="danger" theme="solid" disabled={Boolean(busy)} onClick={() => setCancelConfirmVisible(true)}>{t('orders.cancel')}</Button>}
+          {canCancel && <div className="order-detail-danger"><Button type="danger" theme="solid" disabled={Boolean(busy)} onClick={() => setCancelConfirmVisible(true)}>{t('orders.cancel')}</Button></div>}
         </section>}
       </Modal>
       <Modal

@@ -98,6 +98,27 @@ describe('OrdersPage', () => {
     expect(screen.queryByLabelText('Transaction ID')).not.toBeInTheDocument()
   })
 
+  it('provides view and waiting-order cancellation actions in the last table column', async () => {
+    const waitingOrder = order()
+    const fetchMock = vi.fn((path: string) => {
+      if (path === '/api/payments/orders?page=1&pageSize=20') return Promise.resolve(jsonResponse({ items: [waitingOrder], page: 1, pageSize: 20, total: 1 }))
+      if (path === '/api/payments/orders/PO-1') return Promise.resolve(jsonResponse(waitingOrder))
+      throw new Error(`Unexpected request: ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<OrdersPage />)
+    await screen.findByText('PO-1')
+
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'View order PO-1' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Cancel order PO-1' })).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'View order PO-1' }))
+    expect(await screen.findByRole('dialog', { name: 'Order details' })).toBeVisible()
+  })
+
   it('cancels a waiting order and refreshes the order list', async () => {
     const waitingOrder = order()
     const cancelledOrder = order({ status: 'CANCELLED' })
@@ -134,7 +155,7 @@ describe('OrdersPage', () => {
       if (path === '/api/payments/orders?page=1&pageSize=20') return Promise.resolve(jsonResponse({ items: [trc20Order], page: 1, pageSize: 20, total: 1 }))
       if (path === '/api/payments/orders/PO-TRON-1') return Promise.resolve(jsonResponse(trc20Order))
       if (path === '/api/payments/orders/PO-TRON-1/trc20/status') return Promise.resolve(jsonResponse({
-        receiveAddress: 'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE', payableAmount: '1.000001', payableCurrency: 'USDT',
+        receiveAddress: 'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE', payableAmount: '1.01', payableCurrency: 'USDT',
         status: 'WAITING_PAYMENT', expiresAt: trc20Order.expiresAt, txidCheckResult: 'SUBMITTED',
       }))
       if (path === '/api/payments/orders/PO-TRON-1/trc20/txid') return Promise.resolve(jsonResponse({ result: 'CONFIRMED' }))
@@ -148,7 +169,7 @@ describe('OrdersPage', () => {
     await user.dblClick(screen.getByText('PO-TRON-1').closest('tr')!)
 
     expect(await screen.findByText('TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE')).toBeVisible()
-    expect(screen.getByText('1.000001 USDT')).toBeVisible()
+    expect(screen.getByText('1.01 USDT')).toBeVisible()
     await user.type(screen.getByLabelText('Transaction ID'), txid)
     await user.click(screen.getByRole('button', { name: 'Verify transaction' }))
 
