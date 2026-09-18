@@ -1,4 +1,5 @@
 import '../../ui/semi-base'
+import Banner from '@douyinfe/semi-ui/lib/es/banner'
 import Button from '@douyinfe/semi-ui/lib/es/button'
 import Input from '@douyinfe/semi-ui/lib/es/input'
 import Typography from '@douyinfe/semi-ui/lib/es/typography'
@@ -18,6 +19,7 @@ export function Trc20Checkout({ order, onCompleted }: Trc20CheckoutProps) {
   const [current, setCurrent] = useState(order)
   const [txid, setTxid] = useState('')
   const [message, setMessage] = useState<string | null>(null)
+  const [isAmountMismatch, setIsAmountMismatch] = useState(false)
 
   useEffect(() => { void getTrc20PaymentStatus(order.orderNo).then(setInstruction).catch(() => setMessage(t('payment.trc20LoadError'))) }, [order.orderNo, t])
   useEffect(() => {
@@ -31,7 +33,16 @@ export function Trc20Checkout({ order, onCompleted }: Trc20CheckoutProps) {
   }
   const verify = async () => {
     if (!txid.trim()) return
-    try { const result = await submitTrc20Txid(order.orderNo, txid.trim()); setMessage(t(`payment.trc20Result.${result.result}`)) } catch { setMessage(t('payment.trc20VerifyError')) }
+    setIsAmountMismatch(false)
+    try {
+      const result = await submitTrc20Txid(order.orderNo, txid.trim())
+      setMessage(t(`payment.trc20Result.${result.result}`))
+      if (result.result === 'AMOUNT_MISMATCH') {
+        setIsAmountMismatch(true)
+      }
+    } catch {
+      setMessage(t('payment.trc20VerifyError'))
+    }
   }
   const status = current.status === 'PAID' ? t('payment.status.paid')
     : current.status === 'CONFIRMED' || current.status === 'CREDITING' ? t('payment.status.processing')
@@ -39,12 +50,18 @@ export function Trc20Checkout({ order, onCompleted }: Trc20CheckoutProps) {
   const rechargeAmount = formatUsd(current.amountUsdMinor)
 
   return <section className="trc20-checkout" aria-label={t('payment.trc20Title')}>
+    <Banner
+      type="warning"
+      title={t('payment.trc20WarningTitle')}
+      description={t('payment.trc20WarningContent')}
+      style={{ marginBottom: '1rem' }}
+    />
     <header className="trc20-checkout-summary" data-testid="trc20-ledger-summary"><p className="trc20-kicker">TRON · TRC20</p><h3>{t('payment.trc20Title')}</h3><p>{t('orders.amount')}: <strong>{rechargeAmount}</strong></p><p className="trc20-checkout-status" data-status={current.status}>{status}</p></header>
     {instruction && <div className="trc20-instruction">
       <div><span>{t('payment.trc20Amount')}</span><strong>{instruction.payableAmount} {instruction.payableCurrency}</strong><Button theme="borderless" size="small" onClick={() => { void copy(instruction.payableAmount) }}>{t('payment.trc20CopyAmount')}</Button></div>
       <div><span>{t('payment.trc20Address')}</span><code>{instruction.receiveAddress}</code><Button theme="borderless" size="small" onClick={() => { void copy(instruction.receiveAddress) }}>{t('payment.trc20CopyAddress')}</Button></div>
     </div>}
     <div className="trc20-txid"><Input aria-label={t('payment.trc20Txid')} value={txid} onChange={setTxid} placeholder={t('payment.trc20TxidPlaceholder')} /><Button type="primary" disabled={!txid.trim()} onClick={() => { void verify() }}>{t('payment.trc20Verify')}</Button></div>
-    {message && <Typography.Text type="tertiary">{message}</Typography.Text>}
+    {message && <Typography.Text type={isAmountMismatch ? 'danger' : 'tertiary'}>{message}</Typography.Text>}
   </section>
 }

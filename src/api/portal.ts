@@ -306,7 +306,7 @@ export interface Trc20PaymentInstruction {
 }
 
 export interface TxidVerification {
-  result: 'CONFIRMED' | 'PENDING_CONFIRMATION' | 'UNMATCHED' | 'DUPLICATE'
+  result: 'CONFIRMED' | 'PENDING_CONFIRMATION' | 'UNMATCHED' | 'DUPLICATE' | 'AMOUNT_MISMATCH'
 }
 
 export interface PaymentOrderPage {

@@ -46,4 +46,25 @@ describe('Trc20Checkout', () => {
     expect(init.method).toBe('POST')
     expect(init.body).toBe(JSON.stringify({ txid: 'a'.repeat(64) }))
   })
+
+  it('displays the transfer warning banner and handles AMOUNT_MISMATCH result', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url === '/api/payments/orders/PO_TRON_1/trc20/status') return Promise.resolve(response({ receiveAddress: 'TJxA4YfDSE5v9cYrgeArHQkCZcqW45wBzQ', payableAmount: '25.501', payableCurrency: 'USDT', status: 'WAITING_PAYMENT', expiresAt: order.expiresAt, txidCheckResult: null }))
+      if (url === '/api/payments/orders/PO_TRON_1/trc20/txid') return Promise.resolve(response({ result: 'AMOUNT_MISMATCH' }))
+      if (url === '/api/payments/orders/PO_TRON_1') return Promise.resolve(response(order))
+      return Promise.reject(new Error(`Unexpected request: ${url}`))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<Trc20Checkout order={order} />)
+
+    expect(await screen.findByText('Transfer Warning')).toBeVisible()
+    expect(screen.getByText(/Please ensure you transfer the exact amount/)).toBeVisible()
+
+    await user.type(screen.getByLabelText('Transaction ID'), 'b'.repeat(64))
+    await user.click(screen.getByRole('button', { name: 'Verify transaction' }))
+
+    await waitFor(() => expect(screen.getByText(/The on-chain transfer amount does not match/)).toBeVisible())
+  })
 })
