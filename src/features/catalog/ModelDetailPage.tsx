@@ -7,7 +7,7 @@ import { useCatalog } from './use-catalog'
 import { CatalogState, CopyButton, Discount, PriceList, VendorMark } from './CatalogShared'
 import { OfficialPriceReference } from './OfficialPriceReference'
 import { ModelExamples } from './ModelExamples'
-import { cardPriceRows, formatPrice, priceGroup, type CatalogModel } from './catalog-data'
+import { cardPriceRows, dearestTier, formatPrice, priceGroup, tierLabelKey, type CatalogModel } from './catalog-data'
 import type { NewApiPricingResponse } from '../../api/portal'
 
 /**
@@ -24,6 +24,7 @@ const MODALITIES: Record<CatalogModel['type'], { input: string[]; output: string
 }
 
 function billingKey(model: CatalogModel): string {
+  if (model.tiers.length > 1) return 'catalog.billing.tieredToken'
   const unit = model.prices[0]?.unit
   if (unit === 'second') return 'catalog.billing.tiered'
   if (unit === 'request') return 'catalog.billing.perRequest'
@@ -78,6 +79,7 @@ function Capability({ model, pricing, group }: { model: CatalogModel; pricing: N
  */
 function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: NewApiPricingResponse; group: string }) {
   const { t } = useTranslation()
+  const quoted = model.tiers.length > 1 ? dearestTier(model.tiers) : null
   const tokenPriced = model.prices[0]?.unit === 'million'
   const columns = tokenPriced ? (['input', 'output'] as const).filter((key) => model.prices.some((row) => row.key === key)) : []
   const current = priceGroup(pricing, model, group).name
@@ -114,7 +116,8 @@ function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: 
         })}</tbody>
       </table>
     </div>}
-    <p className="zt-muted zt-price-note">{t('catalog.groupTableNote', { group: current || '—' })}</p>
+    <p className="zt-muted zt-price-note">{t('catalog.groupTableNote', { group: current || '—' })}
+      {quoted && ` ${t('catalog.groupTableTier', { tier: tierLabelKey(quoted.label) ? t(tierLabelKey(quoted.label)!) : quoted.label })}`}</p>
   </section>
 }
 
@@ -128,6 +131,10 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
   if (!model) return <main className="zt-public zt-state"><h1>{t('catalog.notFound')}</h1><a href="/models">{t('catalog.back')}</a></main>
   const { ratio, name } = priceGroup(pricing, model, group)
   const headline = cardPriceRows(model).slice(0, 2)
+  // `prices` holds one tier only, so a tiered model names it here rather than letting two
+  // unattributed numbers stand for a rate that changes with the request.
+  const quoted = model.tiers.length > 1 ? dearestTier(model.tiers) : null
+  const headlineTier = quoted && (tierLabelKey(quoted.label) ? t(tierLabelKey(quoted.label)!) : quoted.label)
   const docsHref = `${isDocumentedSeedance(model.name) ? '/docs/api/seedance' : '/docs/guides/quick-start'}?${new URLSearchParams({ model: model.name })}`
   return <main className="zt-public zt-detail"><div className="zt-container">
     <a className="zt-back" href="/models">← {t('catalog.back')}</a>
@@ -139,7 +146,7 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
         <p className="zt-detail-lead">{t('catalog.introLine', { vendor: model.vendor, protocols: model.endpoints.join(' / ') || t(`catalog.type.${model.type}`) })}</p>
         <dl className="zt-detail-facts">
           {headline.map((row) => <div key={row.key}>
-            <dt>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`)}</small></dt>
+            <dt>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`)}{headlineTier ? ` · ${headlineTier}` : ''}</small></dt>
             <dd>{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{ratio < 1 && row.base > 0 && <del>${formatPrice(row.base)}</del>}<strong>${formatPrice(row.base * ratio)}</strong></>}</dd>
           </div>)}
           <div><dt>{t('catalog.cap.billing')}</dt><dd><span className="zt-cap-text">{t(billingKey(model))}</span></dd></div>

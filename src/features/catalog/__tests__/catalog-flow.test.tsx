@@ -56,7 +56,7 @@ describe('catalog browsing and pricing', () => {
     await user.type(screen.getByRole('searchbox'), '-missing')
     expect(screen.getByText('没有找到模型')).toBeVisible()
     await user.click(screen.getAllByRole('button', { name: '清除筛选' })[0])
-    expect(screen.getAllByRole('article')).toHaveLength(4)
+    expect(screen.getAllByRole('article')).toHaveLength(pricingFixture.data.length)
     expect(window.location.search).toBe('')
   })
 
@@ -93,6 +93,36 @@ describe('catalog browsing and pricing', () => {
     expect(screen.getAllByText('$0.57').length).toBeGreaterThan(0)
     expect(screen.getByText('$0.35625')).toBeVisible()
     expect(screen.getByText('缓存写入')).toBeVisible()
+  })
+
+  it('prices every tier on the card and the detail page, naming the one the header quotes', async () => {
+    const catalog = render(<ModelsPage />)
+    const card = await screen.findByTestId('model-card-deepseek-v4.1-flash')
+    // Both windows are priced, and `peak`/`off_peak` reach the visitor as copy, not as the
+    // gateway's own identifiers.
+    expect(within(card).getByText('闲时')).toBeVisible()
+    expect(within(card).getByText('忙时')).toBeVisible()
+    expect(within(card).getByText('$0.283575')).toBeVisible()
+    expect(within(card).getByText('$0.141835')).toBeVisible()
+    expect(within(card).queryByText('价格暂不可用')).not.toBeInTheDocument()
+    // Six rows would double the card's height, so the cache rates wait for the detail page.
+    expect(within(card).queryByText('缓存读取')).not.toBeInTheDocument()
+    // Input-length bands render the same way, straight from the gateway's own labels.
+    const banded = await screen.findByTestId('model-card-deepseek-banded-test')
+    expect(within(banded).getByText('输入<=32k')).toBeVisible()
+    expect(within(banded).getByText('32k<输入<=200k')).toBeVisible()
+    catalog.unmount()
+
+    render(<ModelDetailPage modelName="deepseek-v4.1-flash" />)
+    // Named in the header facts and again in the capability matrix.
+    expect((await screen.findAllByText('分档计费 · 按请求条件')).length).toBe(2)
+    // Both tiers' cache read rates, the ones the card left out.
+    expect(screen.getByText('$0.0056715')).toBeVisible()
+    expect(screen.getByText('$0.00283575')).toBeVisible()
+    // The header quotes one tier, so it has to say which — and it is the dearer one, even
+    // though the gateway writes the cheap band first.
+    expect(screen.getAllByText(/USD \/ 百万 Token · 忙时/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('$0.283575').length).toBeGreaterThan(1)
   })
 
   it('adds the group comparison table and the protocol chips', async () => {

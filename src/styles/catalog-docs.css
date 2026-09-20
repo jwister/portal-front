@@ -67,6 +67,11 @@
 .zt-price-value del { color:#64748b; font-size:12px; }
 .zt-discount small { display:none; }
 .zt-price-heading { display:flex; justify-content:space-between; gap:12px; margin-bottom:8px; color:var(--zt-muted); font-size:11px; }
+.zt-price-tier + .zt-price-tier { margin-top:12px; padding-top:12px; border-top:1px solid #cbd5e1; }
+/* A band heading has to outrank the rows it introduces, and one chip treatment reads for
+   both a label we translate (闲时) and the operator's own wording (输入<=32k). */
+.zt-price-tier-label { display:inline-block; margin:0 0 4px; padding:3px 9px; border:1px solid #cbd5e1; border-radius:6px; background:#f1f5f9; color:var(--zt-ink); font-size:12px; font-weight:650; overflow-wrap:anywhere; }
+.zt-price-tier .zt-price-row:first-of-type { border-top:0; }
 .zt-model-card footer { margin-top:auto; padding-top:20px; display:flex; align-items:center; justify-content:space-between; gap:12px; color:#64748b; font-size:12px; }
 .zt-model-card footer button { position:relative; z-index:2; min-height:40px; }
 .zt-catalog-note { color:var(--zt-muted); font-size:13px; margin:24px 0; }

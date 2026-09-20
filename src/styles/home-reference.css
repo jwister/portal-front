@@ -113,11 +113,17 @@
 .reference-model-groups { display: grid; gap: 18px; }
 .reference-model-group { overflow: hidden; border: 1px solid var(--home-line); border-radius: 16px; background: #fff; box-shadow: 0 7px 22px rgba(29, 25, 54, .04); }
 .reference-model-group h3 { margin: 0; padding: 18px 22px; border-bottom: 1px solid var(--home-line); font-size: 1rem; font-weight: 700; }
-.reference-model-row { min-height: 82px; display: grid; grid-template-columns: 44px minmax(150px,1.35fr) minmax(180px,1.2fr) .8fr .55fr auto; align-items: center; gap: 14px; padding: 14px 20px; }
+/* The price column carries two labelled figures ("输入 $9.50/M · 输出 $47.50/M", and a
+   resolution pair for video), so it reserves more room than the metadata beside it. */
+.reference-model-row { min-height: 82px; display: grid; grid-template-columns: 44px minmax(150px,1.3fr) minmax(205px,1.45fr) .7fr .5fr auto; align-items: center; gap: 14px; padding: 14px 20px; }
 .reference-model-row + .reference-model-row { border-top: 1px solid #f1f1f5; }
 /* Shape and size come from the sitewide avatar rule in base.css. */
 .reference-model-row p { margin: 0; }.reference-model-row p small,.reference-model-row p strong { display: block; }.reference-model-row p small { color: var(--home-muted); font-size: .72rem; }.reference-model-row p strong { margin-top: 3px; font-size: .95rem; overflow-wrap: anywhere; }
-.reference-price,.reference-source { color: var(--home-muted); font-size: .78rem; }.reference-discount { color: #e11d48; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+/* The price is what the table exists to compare, so it outranks the source beside it;
+   tabular figures keep the decimal points aligned down the column. */
+.reference-price { color: var(--home-ink); font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.reference-source { color: var(--home-muted); font-size: .78rem; }
+.reference-discount { color: #e11d48; font-size: .78rem; font-weight: 700; white-space: nowrap; }
 .reference-model-row > a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 22px; border-radius: 9px; color: #fff; background: var(--home-coral); font-size: .85rem; font-weight: 800; letter-spacing: .01em; white-space: nowrap; box-shadow: 0 6px 16px rgba(225,29,72,.32); transition: background .2s ease, box-shadow .2s ease, transform .2s ease; }
 .reference-model-row > a:hover { background: var(--home-red-dark); transform: translateY(-1px); box-shadow: 0 10px 22px rgba(225,29,72,.42); }
 .reference-model-row > a:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(225,29,72,.34); }
@@ -144,7 +150,7 @@
   .reference-hero-copy { max-width: 700px; }
   .reference-code-card { width: 100%; max-width: 720px; }
   .reference-feature-grid { grid-template-columns: repeat(2,1fr); }
-  .reference-model-row { grid-template-columns: 44px minmax(140px,1fr) 1fr .7fr auto; }.reference-source { display: none; }
+  .reference-model-row { grid-template-columns: 44px minmax(140px,1fr) minmax(190px,1.2fr) .7fr auto; }.reference-source { display: none; }
 }
 @media (max-width: 720px) {
   .reference-code-tabs button[aria-selected=true]::after { animation: none; }

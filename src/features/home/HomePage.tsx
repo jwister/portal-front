@@ -95,30 +95,59 @@ const apiDemos = [
   },
 ] as const
 
+/**
+ * A hand-picked shortlist, not the catalog: the homepage is prerendered, so these rows ship
+ * as static HTML while `/models` reads every model and its live rate from the gateway.
+ *
+ * Both figures are the price after the default group discount, matching what a card on
+ * `/models` shows, and each group names the copy that labels them — token models quote
+ * input and output per million, video models quote two resolutions per second. Re-check
+ * every figure against `/api/catalog/pricing` whenever a rate changes; nothing here fails
+ * when the gateway moves. Last checked 2026-09-20.
+ *
+ * Models whose rate varies per request (`deepseek-v4.1-flash` off-peak, `glm-5.1` input
+ * bands) are deliberately left out: one price slot cannot state two, and half a story about
+ * a price is worse than sending the visitor to the catalog for it. The video rows quote
+ * 720p and 1080p, which is why `seedance-2.0-mini` and `-fast` are absent — the gateway
+ * prices neither of them at 1080p, and a blank cell sells nothing. Per-second rates are
+ * rounded UP to four decimals so the column stays legible without ever quoting under the
+ * real rate; `/models` carries the exact figure.
+ */
 const modelGroups = [
   {
     title: 'home.models.flagship',
+    price: 'home.modelPrice',
     models: [
-      ['Anthropic', 'claude-fable-5', '$9.5/M · $47.5/M', 'aws'],
-      ['OpenAI', 'gpt-5.6-sol', '$4.75/M · $28.5/M', 'azure'],
+      ['Anthropic', 'claude-fable-5.1', '$9.50/M', '$47.50/M', 'aws'],
+      ['OpenAI', 'gpt-6-astra', '$9.50/M', '$47.50/M', 'azure'],
     ],
   },
   {
     title: 'home.models.mainstream',
+    price: 'home.modelPrice',
     models: [
-      ['Anthropic', 'claude-opus-5', '$4.75/M · $23.75/M', 'aws'],
-      ['Anthropic', 'claude-opus-4.8', '$4.75/M · $23.75/M', 'aws'],
-      ['OpenAI', 'gpt-5.6-terra', '$1.9/M · $11.4/M', 'azure'],
-      ['Zhipu', 'glm-5.2', '$1.121/M · $3.914/M', 'Baidu Cloud'],
+      ['Anthropic', 'claude-opus-5', '$4.75/M', '$23.75/M', 'aws'],
+      ['OpenAI', 'gpt-5.6-terra', '$1.90/M', '$11.40/M', 'azure'],
+      ['DeepSeek', 'deepseek-v4-pro', '$1.691/M', '$3.382/M', 'deepseek'],
+      ['Zhipu', 'glm-5.2', '$1.121/M', '$3.914/M', 'Baidu Cloud'],
     ],
   },
   {
     title: 'home.models.value',
+    price: 'home.modelPrice',
     models: [
-      ['OpenAI', 'gpt-5.6-luna', '$0.19/M · $1.14/M', 'azure'],
-      ['Anthropic', 'claude-sonnet-5', '$1.9/M · $9.5/M', 'aws'],
-      ['Anthropic', 'claude-sonnet-4-6', '$2.85/M · $14.25/M', 'aws'],
-      ['Zhipu', 'glm-5.1', '$0.6745/M · $2.356/M', 'Baidu Cloud'],
+      ['Anthropic', 'claude-sonnet-5', '$1.90/M', '$9.50/M', 'aws'],
+      ['OpenAI', 'gpt-5.6-luna', '$0.19/M', '$1.14/M', 'azure'],
+      ['DeepSeek', 'deepseek-v3.2', '$0.285/M', '$0.4275/M', 'deepseek'],
+      ['DeepSeek', 'deepseek-v4-flash', '$0.1425/M', '$0.285/M', 'deepseek'],
+    ],
+  },
+  {
+    title: 'home.models.video',
+    price: 'home.modelPriceVideo',
+    models: [
+      ['ByteDance', 'seedance-2.5', '$0.1883', '$0.3511', 'Doubao'],
+      ['ByteDance', 'seedance-2.0', '$0.1234', '$0.3087', 'Doubao'],
     ],
   },
 ] as const
@@ -233,7 +262,7 @@ export function HomePage() {
               <a href="/sign-in"><img src={googleIcon} alt="" width="14" height="14" loading="lazy" decoding="async" />Google</a>
               <a href="/sign-in"><img src={mailIcon} alt="" width="14" height="14" loading="lazy" decoding="async" />{t('auth.email')}</a>
             </div>}
-            {kind === 'balance' && <div className="reference-mini-balance">$ <strong>1.00</strong><small>{t('home.creditFlexible')}</small></div>}
+            {kind === 'balance' && <div className="reference-mini-balance">$ <strong>0.05</strong><small>{t('home.creditFlexible')}</small></div>}
             {kind === 'key' && <code className="reference-mini-key">sk-************************</code>}
           </article>)}
         </div>
@@ -254,10 +283,10 @@ export function HomePage() {
         <div className="reference-model-groups">
           {modelGroups.map((group) => <article className="reference-model-group" key={group.title}>
             <h3>{t(group.title)}</h3>
-            {group.models.map(([vendor, model, prices, source]) => <div className="reference-model-row" key={model}>
+            {group.models.map(([vendor, model, first, second, source]) => <div className="reference-model-row" key={model}>
               <VendorLogo vendor={vendor} />
               <p><small>{vendor}</small><strong>{model}</strong></p>
-              <span className="reference-price">{t('home.modelPrice', { prices })}</span>
+              <span className="reference-price">{t(group.price, { first, second })}</span>
               <span className="reference-source">{t('home.modelSource', { source })}</span>
               <b className="reference-discount">{t('home.modelDiscount')}</b>
               <a {...authenticatedLink(auth, '/purchase')}>{t('home.buyNow')}</a>
