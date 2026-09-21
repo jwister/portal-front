@@ -56,7 +56,7 @@ export function ProfilePage() {
 
   return (
     <main className="console-profile-page">
-      <ConsolePageHeader title={t('profile.title')} description={t('profile.description')} />
+      <ConsolePageHeader title={t('profile.title')} />
       <section className="console-identity-card" aria-labelledby="profile-identity-title">
         <span className="console-identity-avatar" aria-hidden="true">{profileInitial(profile)}</span>
         <div className="console-identity-copy">

@@ -53,7 +53,10 @@ function dateFromTimestamp(timestamp: number): string {
 function initialDraft(token?: TokenSummary): TokenWriteRequest {
   return {
     name: token?.name ?? '',
-    unlimited: token?.unlimited ?? false,
+    // A new key starts unlimited. The quota field starts at zero, and a key created on that
+    // default cannot call anything — the failure shows up only at the first request, long
+    // after the dialog closed. An existing token keeps whatever it was saved with.
+    unlimited: token?.unlimited ?? true,
     remainingQuota: token?.remainingQuota ?? 0,
     expiredTime: token?.expiredTime ?? -1,
   }
@@ -92,6 +95,62 @@ async function copyText(value: string): Promise<boolean> {
   }
 }
 
+/**
+ * The dialog owns its own draft. Held one level up, every keystroke in the name field
+ * re-rendered the page around it — rebuilding the column definitions and handing the table
+ * a new `columns` array, so all fifty rows and their buttons and tooltips re-rendered per
+ * character typed. Down here a keystroke touches nothing but this dialog.
+ *
+ * The parent gives it a fresh `key` on each open, which is what resets the draft; the
+ * component stays mounted while `editor` is null so the close animation still runs.
+ */
+function TokenEditorModal({ editor, onClose, onSaved }: {
+  editor: TokenEditor | null
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const { t } = useTranslation()
+  const [draft, setDraft] = useState<TokenWriteRequest>(() => initialDraft(editor?.token))
+  const [saving, setSaving] = useState(false)
+
+  const save = () => {
+    if (!editor || !draft.name.trim()) return
+    const payload = { ...draft, name: draft.name.trim() }
+    setSaving(true)
+    const request = editor.mode === 'create'
+      ? createToken(payload)
+      : updateToken(editor.token!.id, payload)
+    void request.then(() => {
+      Toast.success(editor.mode === 'create' ? t('tokens.createSuccess') : t('tokens.updateSuccess'))
+      onClose()
+      onSaved()
+    }).catch(() => {
+      Toast.error(t('tokens.actionError'))
+    }).finally(() => setSaving(false))
+  }
+
+  return (
+    <Modal
+      title={editor?.mode === 'create' ? t('tokens.create') : t('tokens.edit')}
+      visible={editor !== null}
+      onCancel={onClose}
+      footer={<Space><Button onClick={onClose}>{t('tokens.cancel')}</Button><Button theme="solid" type="primary" loading={saving} disabled={!draft.name.trim()} onClick={save}>{editor?.mode === 'create' ? t('tokens.createConfirm') : t('tokens.save')}</Button></Space>}
+    >
+      <div className="token-editor">
+        <label htmlFor="token-name">{t('tokens.nameField')}</label>
+        <Input id="token-name" value={draft.name} onChange={(value) => setDraft((current) => ({ ...current, name: value }))} />
+        <label className="token-checkbox"><input type="checkbox" checked={draft.unlimited} onChange={(event) => setDraft((current) => ({ ...current, unlimited: event.target.checked }))} />{t('tokens.unlimited')}</label>
+        {draft.unlimited
+          ? <p className="token-warning">{t('tokens.unlimitedWarning')}</p>
+          : <><label htmlFor="token-quota">{t('tokens.remainingQuota')} ($)</label><Input id="token-quota" type="number" value={String(draft.remainingQuota / QUOTA_PER_USD)} onChange={(value) => setDraft((current) => ({ ...current, remainingQuota: Math.round((Number(value) || 0) * QUOTA_PER_USD) }))} /></>}
+        <label className="token-checkbox"><input type="checkbox" checked={draft.expiredTime === -1} onChange={(event) => setDraft((current) => ({ ...current, expiredTime: event.target.checked ? -1 : Math.floor(Date.now() / 1000) }))} />{t('tokens.neverExpires')}</label>
+        <label htmlFor="token-expiration">{t('tokens.expiration')}</label>
+        <Input id="token-expiration" type="date" disabled={draft.expiredTime === -1} value={dateFromTimestamp(draft.expiredTime)} onChange={(value) => setDraft((current) => ({ ...current, expiredTime: value ? Math.floor(new Date(`${value}T23:59:59`).getTime() / 1000) : current.expiredTime }))} />
+      </div>
+    </Modal>
+  )
+}
+
 export function TokensPage() {
   const { t } = useTranslation()
   const [tokens, setTokens] = useState<TokenPage | null>(null)
@@ -99,8 +158,9 @@ export function TokensPage() {
   const [revision, setRevision] = useState(0)
   const [failed, setFailed] = useState(false)
   const [editor, setEditor] = useState<TokenEditor | null>(null)
-  const [draft, setDraft] = useState<TokenWriteRequest>(initialDraft())
-  const [saving, setSaving] = useState(false)
+  // Bumped on every open so the dialog remounts with a fresh draft; it is deliberately not
+  // bumped on close, which leaves the dialog mounted long enough to animate out.
+  const [editorSeq, setEditorSeq] = useState(0)
   const [revealedKey, setRevealedKey] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<TokenSummary | null>(null)
 
@@ -124,23 +184,7 @@ export function TokensPage() {
 
   const openEditor = (next: TokenEditor) => {
     setEditor(next)
-    setDraft(initialDraft(next.token))
-  }
-
-  const save = () => {
-    if (!editor || !draft.name.trim()) return
-    const payload = { ...draft, name: draft.name.trim() }
-    setSaving(true)
-    const request = editor.mode === 'create'
-      ? createToken(payload)
-      : updateToken(editor.token!.id, payload)
-    void request.then(() => {
-      Toast.success(editor.mode === 'create' ? t('tokens.createSuccess') : t('tokens.updateSuccess'))
-      setEditor(null)
-      reloadFromFirstPage()
-    }).catch(() => {
-      Toast.error(t('tokens.actionError'))
-    }).finally(() => setSaving(false))
+    setEditorSeq((current) => current + 1)
   }
 
   const changeStatus = (token: TokenSummary) => {
@@ -224,22 +268,7 @@ export function TokensPage() {
         : <div className="console-table-wrap"><Table columns={columns} dataSource={tokens.items} rowKey="id" pagination={false} /> </div>}
       {tokens.total > tokens.pageSize && <Pagination currentPage={tokens.page} pageSize={tokens.pageSize} total={tokens.total} onPageChange={setPage} />}
 
-      <Modal
-        title={editor?.mode === 'create' ? t('tokens.create') : t('tokens.edit')}
-        visible={editor !== null}
-        onCancel={() => setEditor(null)}
-        footer={<Space><Button onClick={() => setEditor(null)}>{t('tokens.cancel')}</Button><Button theme="solid" type="primary" loading={saving} disabled={!draft.name.trim()} onClick={save}>{editor?.mode === 'create' ? t('tokens.createConfirm') : t('tokens.save')}</Button></Space>}
-      >
-        <div className="token-editor">
-          <label htmlFor="token-name">{t('tokens.nameField')}</label>
-          <Input id="token-name" value={draft.name} onChange={(value) => setDraft((current) => ({ ...current, name: value }))} />
-          <label className="token-checkbox"><input type="checkbox" checked={draft.unlimited} onChange={(event) => setDraft((current) => ({ ...current, unlimited: event.target.checked }))} />{t('tokens.unlimited')}</label>
-          {!draft.unlimited && <><label htmlFor="token-quota">{t('tokens.remainingQuota')} ($)</label><Input id="token-quota" type="number" value={String(draft.remainingQuota / QUOTA_PER_USD)} onChange={(value) => setDraft((current) => ({ ...current, remainingQuota: Math.round((Number(value) || 0) * QUOTA_PER_USD) }))} /></>}
-          <label className="token-checkbox"><input type="checkbox" checked={draft.expiredTime === -1} onChange={(event) => setDraft((current) => ({ ...current, expiredTime: event.target.checked ? -1 : Math.floor(Date.now() / 1000) }))} />{t('tokens.neverExpires')}</label>
-          <label htmlFor="token-expiration">{t('tokens.expiration')}</label>
-          <Input id="token-expiration" type="date" disabled={draft.expiredTime === -1} value={dateFromTimestamp(draft.expiredTime)} onChange={(value) => setDraft((current) => ({ ...current, expiredTime: value ? Math.floor(new Date(`${value}T23:59:59`).getTime() / 1000) : current.expiredTime }))} />
-        </div>
-      </Modal>
+      <TokenEditorModal key={editorSeq} editor={editor} onClose={() => setEditor(null)} onSaved={reloadFromFirstPage} />
 
       <Modal title={t('tokens.revealTitle')} visible={revealedKey !== null} onCancel={() => setRevealedKey(null)} footer={<Space><Button icon={<IconCopy />} onClick={copyRevealedKey}>{t('tokens.copy')}</Button><Button onClick={() => setRevealedKey(null)}>{t('tokens.cancel')}</Button></Space>}>
         <Typography.Paragraph>{t('tokens.revealWarning')}</Typography.Paragraph>

@@ -185,6 +185,9 @@ body:has(.zt-console) .semi-modal { --semi-color-primary:#2563eb; --semi-color-p
 body:has(.zt-console) .semi-modal .semi-input-wrapper { min-height:44px; border:1px solid #94a3b8; border-radius:8px; background:#fff; }
 body:has(.zt-console) .semi-modal .semi-modal-footer { display:flex; justify-content:flex-end; }
 body:has(.zt-console) .semi-modal .token-checkbox { min-height:44px; display:flex; align-items:center; gap:8px; }
+/* The unlimited setting is the risky one, so it is the only field that argues back. The
+   left rule and tinted panel carry the warning where colour alone would not. */
+body:has(.zt-console) .semi-modal .token-warning { margin:0 0 4px; padding:10px 12px; border-left:3px solid #dc2626; border-radius:0 6px 6px 0; background:#fef2f2; color:#b91c1c; font-size:13px; line-height:1.6; }
 body:has(.zt-console) .semi-modal input[type=checkbox] { width:20px; height:20px; accent-color:#2563eb; }
 body:has(.zt-console) .semi-modal-close { min-width:44px; min-height:44px; }
 
