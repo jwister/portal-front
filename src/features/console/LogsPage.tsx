@@ -23,7 +23,7 @@ function localDateTime(value: Date): string {
   const pad = (number: number) => String(number).padStart(2, '0')
   return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`
 }
-function todayFilters(): LogFilters { const end = new Date(); const start = new Date(end); start.setHours(0, 0, 0, 0); return { modelName: '', tokenName: '', type: '', start: localDateTime(start), end: localDateTime(end) } }
+function todayFilters(): LogFilters { const end = new Date(); end.setHours(23, 59, 59, 999); const start = new Date(end); start.setHours(0, 0, 0, 0); return { modelName: '', tokenName: '', type: '', start: localDateTime(start), end: localDateTime(end) } }
 
 function toTimestamp(value: string): number | undefined {
   if (!value) return undefined
