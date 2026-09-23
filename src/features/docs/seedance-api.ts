@@ -1,7 +1,7 @@
 /** Gateway contract: https://ztoken.cc/doc.html, video and asset APIs, checked 2026-09-14. */
 export const SEEDANCE_MODELS = ['seedance-2.0', 'seedance-2.0-fast', 'seedance-2.0-mini'] as const
-export const VIDEO_URL = 'https://api.ztoken.cc/v1/videos'
-export const ASSET_URL = 'https://api.ztoken.cc/v1/assets'
+export const VIDEO_URL = ((window as any).PORTAL_PUBLIC_API_URL || 'https://api.ztoken.cc') + '/v1/videos'
+export const ASSET_URL = ((window as any).PORTAL_PUBLIC_API_URL || 'https://api.ztoken.cc') + '/v1/assets'
 export const ASSET_VERSION = '2024-01-01'
 
 export function isDocumentedSeedance(model: string): boolean {

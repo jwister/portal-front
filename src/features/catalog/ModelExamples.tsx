@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { CopyButton } from './CatalogShared'
 import type { CatalogModel } from './catalog-data'
 
-export const MODEL_BASE_URL = 'https://api.ztoken.cc/v1'
+export const MODEL_BASE_URL = ((window as any).PORTAL_PUBLIC_API_URL || 'https://api.ztoken.cc') + '/v1'
 /** Anthropic-style clients expect the host without the OpenAI `/v1` suffix. */
 export const MODEL_HOST = MODEL_BASE_URL.replace(/\/v1$/, '')
 export const modelEndpointUrl = (endpoint: string) => `${MODEL_HOST}${endpoint.startsWith('/v1/') || endpoint.startsWith('/v1beta/') ? endpoint : `/v1${endpoint}`}`

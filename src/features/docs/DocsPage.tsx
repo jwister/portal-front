@@ -7,7 +7,7 @@ import { CopyButton } from '../catalog/CatalogShared'
 import { useCatalog } from '../catalog/use-catalog'
 import { modelHref } from '../catalog/catalog-data'
 
-export const MODEL_BASE_URL = 'https://api.ztoken.cc/v1'
+export const MODEL_BASE_URL = ((window as any).PORTAL_PUBLIC_API_URL || 'https://api.ztoken.cc') + '/v1'
 /** Anthropic-style clients expect the host without the OpenAI `/v1` suffix. */
 export const MODEL_HOST = MODEL_BASE_URL.replace(/\/v1$/, '')
 

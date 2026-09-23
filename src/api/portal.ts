@@ -331,6 +331,10 @@ export interface CreatePaymentOrderInput {
   method: PaymentMethod
 }
 
+export function getSiteConfig(): Promise<{ publicApiUrl: string }> {
+  return requestJson('/api/config')
+}
+
 export function getPaymentConfig(): Promise<{ enabled: boolean }> {
   return requestJson('/api/payments/config')
 }
@@ -390,4 +394,5 @@ export function formatUsd(amountUsdMinor: number): string {
 export function formatQuota(quota: number): string {
   return quota.toLocaleString('en-US')
 }
+
 
