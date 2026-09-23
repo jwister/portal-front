@@ -37,7 +37,7 @@ describe('model selection through registration and login', () => {
     window.history.replaceState({}, '', '/sign-in?' + new URLSearchParams({ returnTo: target }))
     const assign = vi.fn()
     vi.stubGlobal('location', { ...window.location, assign })
-    vi.stubGlobal('fetch', vi.fn().mockImplementation((url) => Promise.resolve(url === '/api/auth/sign-in' ? new Response(null, { status: 204 }) : new Response(JSON.stringify({ availableQuota: quota, quotaPerUsd: 500_000 })))))
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url) => Promise.resolve(url === '/api/auth/sign-in' ? new Response(null, { status: 204 }) : new Response(JSON.stringify({ availableQuota: quota, quotaPerUsd: 500_000, enableRecharge: true })))))
     render(<SignInPage />)
     expect(new URL(screen.getByRole('link', { name: 'Create account' }).getAttribute('href')!, 'https://example.test').searchParams.get('returnTo')).toBe(target)
     await user.type(screen.getByLabelText('Username'), 'test-user')

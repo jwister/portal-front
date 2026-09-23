@@ -65,6 +65,7 @@ describe('portal application shell', () => {
         usedQuota: 100,
         requestCount: 12,
         tokenUsage: null,
+        enableRecharge: true,
       }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({
         dailyUsage: [],

@@ -46,7 +46,7 @@ describe('ConsoleLayout', () => {
   })
 
   it('shows the account balance in dollars, refreshes it and offers language choices', async () => {
-    const fetchMock=vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({availableQuota:6250000,quotaPerUsd:500000,usedQuota:0,requestCount:0,tokenUsage:0}),{status:200})))
+    const fetchMock=vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({availableQuota:6250000,quotaPerUsd:500000,usedQuota:0,requestCount:0,tokenUsage:0,enableRecharge:true}),{status:200})))
     vi.stubGlobal('fetch', fetchMock)
     const user=userEvent.setup(), navigate=vi.fn()
     render(<ConsoleLayout activeKey="profile" onNavigate={navigate} profile={{id:1,username:'alice'}}><div>content</div></ConsoleLayout>)
@@ -54,7 +54,7 @@ describe('ConsoleLayout', () => {
     await user.click(screen.getByRole('link', {name:'当前余额 $12.50，前往充值'}))
     expect(navigate).toHaveBeenCalledWith('/console/recharge')
     expect(screen.getByText('alice')).toBeVisible()
-    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({availableQuota:10000000,quotaPerUsd:500000}),{status:200})))
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({availableQuota:10000000,quotaPerUsd:500000,enableRecharge:true}),{status:200})))
     await getDashboard()
     expect(await screen.findByRole('link', {name:'当前余额 $20.00，前往充值'})).toBeVisible()
     await user.click(screen.getByLabelText('切换语言: 简体中文'))

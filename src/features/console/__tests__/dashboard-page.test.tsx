@@ -42,8 +42,8 @@ function getTrendOption(): { xAxis: { data: string[] }, series: Array<{ data: nu
 
 const analytics30 = { dailyUsage: [{ date: '2026-09-01', quota: 300, requestCount: 30 }], topModels: [{ modelName: 'gpt-4o', quota: 300 }], tokenUsage: [{ date: '2026-09-01', tokenUsage: 3000 }] }
 const analytics7 = { dailyUsage: [{ date: '2026-09-05', quota: 70, requestCount: 7 }], topModels: [{ modelName: 'gpt-4o', quota: 70 }], tokenUsage: [{ date: '2026-09-05', tokenUsage: 700 }] }
-const summary30 = { availableQuota: 300, usedQuota: 30, requestCount: 30, tokenUsage: 3000 }
-const summary7 = { availableQuota: 700, usedQuota: 70, requestCount: 7, tokenUsage: 700 }
+const summary30 = { availableQuota: 300, usedQuota: 30, requestCount: 30, tokenUsage: 3000, enableRecharge: true }
+const summary7 = { availableQuota: 700, usedQuota: 70, requestCount: 7, tokenUsage: 700, enableRecharge: true }
 
 describe('DashboardPage', () => {
   beforeEach(async () => {
@@ -69,6 +69,7 @@ describe('DashboardPage', () => {
         usedQuota: 100,
         requestCount: 12,
         tokenUsage: null,
+        enableRecharge: true,
         quotaPerUsd: 10,
       }), { status: 200 }))
     })

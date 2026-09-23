@@ -13,7 +13,7 @@ const signedIn: AuthStatus = { authenticated: true, profile: { id: 1, username: 
 const anonymous: AuthStatus = { authenticated: false, profile: null }
 
 function dashboard(availableQuota: number, quotaPerUsd = 500_000): DashboardSummary {
-  return { availableQuota, quotaPerUsd, usedQuota: 0, requestCount: 0, tokenUsage: 0 }
+  return { availableQuota, quotaPerUsd, usedQuota: 0, requestCount: 0, tokenUsage: 0, enableRecharge: true }
 }
 
 describe('model access destination', () => {
