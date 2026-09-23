@@ -4,6 +4,7 @@ export interface DashboardSummary {
   requestCount: number
   tokenUsage: number | null
   quotaPerUsd: number
+  enableRecharge: boolean
 }
 
 /** 后端已按当前账户权限聚合的图表数据，浏览器不接触 New API 的访问凭据。 */

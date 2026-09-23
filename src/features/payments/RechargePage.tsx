@@ -1,6 +1,6 @@
 import '../../ui/semi-base'
 import Typography from '@douyinfe/semi-ui/lib/es/typography'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import '../../i18n'
@@ -13,6 +13,17 @@ import { Trc20Checkout } from './Trc20Checkout'
 export function RechargePage() {
   const { t } = useTranslation()
   const [order, setOrder] = useState<PaymentOrder | null>(null)
+  const [enabled, setEnabled] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let active = true
+    getDashboard().then((dashboard) => {
+      if (active) setEnabled(dashboard.enableRecharge)
+    }).catch(() => {
+      if (active) setEnabled(false)
+    })
+    return () => { active = false }
+  }, [])
 
   const completed = useCallback((next: PaymentOrder) => {
     setOrder(next)
@@ -26,7 +37,13 @@ export function RechargePage() {
   return (
     <main className="recharge-page">
       <ConsolePageHeader title={t('console.recharge')} description={t('purchase.copy')} />
-      {order
+      {enabled === false
+        ? (
+          <div style={{ padding: '40px', background: 'var(--semi-color-bg-1)', borderRadius: '8px', marginTop: '24px' }}>
+            <Typography.Title heading={4} style={{ textAlign: 'center', fontWeight: 'normal', color: 'var(--semi-color-text-1)' }}>未开启在线充值，请联系管理员。</Typography.Title>
+          </div>
+        )
+        : order
         ? (
           <>
             {order.method === 'USDT_TRC20' ? <Trc20Checkout order={order} onCompleted={completed} /> : <PayPalCheckout order={order} onCompleted={completed} />}
@@ -36,9 +53,11 @@ export function RechargePage() {
           </>
         )
         : <PaymentSelectionPanel onConfirm={setOrder} />}
-      <Typography.Paragraph type="tertiary" className="purchase-footnote">
-        {t('purchase.footnote')}
-      </Typography.Paragraph>
+      {enabled !== false && (
+        <Typography.Paragraph type="tertiary" className="purchase-footnote">
+          {t('purchase.footnote')}
+        </Typography.Paragraph>
+      )}
     </main>
   )
 }
