@@ -7,7 +7,7 @@ export interface DashboardSummary {
   enableRecharge: boolean
 }
 
-/** 后端已按当前账户权限聚合的图表数据，浏览器不接触 New API 的访问凭据。 */
+/** 后端已按当前账户权限聚合的图表数据，浏览器不接触 New API 的访问凭据�?*/
 export interface DashboardAnalytics {
   dailyUsage: Array<{ date: string; quota: number; requestCount: number }>
   topModels: Array<{ modelName: string; quota: number }>
@@ -39,7 +39,7 @@ export interface TokenWriteRequest {
   expiredTime: number
 }
 
-/** NewAPI 模型广场的原始模型字段；Portal 不在接口层裁剪定价数据。 */
+/** NewAPI 模型广场的原始模型字段；Portal 不在接口层裁剪定价数据�?*/
 export interface NewApiPricingModel {
   id?: number
   model_name: string
@@ -67,7 +67,7 @@ export interface NewApiVendor {
   name: string
 }
 
-/** NewAPI 模型广场 `/api/pricing` 的完整顶层响应。 */
+/** NewAPI 模型广场 `/api/pricing` 的完整顶层响应�?*/
 export interface NewApiPricingResponse {
   success: boolean
   data: NewApiPricingModel[]
@@ -129,7 +129,7 @@ export function getDashboard(): Promise<DashboardSummary> {
   return pendingDashboard
 }
 
-/** 获取指定时间范围的个人用量分析；范围被限制为服务端支持的两个安全选项。 */
+/** 获取指定时间范围的个人用量分析；范围被限制为服务端支持的两个安全选项�?*/
 export function getDashboardAnalytics(range: '7d' | '30d'): Promise<DashboardAnalytics> {
   return requestJson(`/api/console/dashboard/analytics${queryString({ range })}`)
 }
@@ -253,22 +253,22 @@ export function updateProfile(profile: ProfileUpdateRequest): Promise<Profile> {
   })
 }
 
-/** 直接读取 Portal 原样透传的 NewAPI 模型广场定价响应。 */
+/** 直接读取 Portal 原样透传�?NewAPI 模型广场定价响应�?*/
 export function getPricing(): Promise<NewApiPricingResponse> {
   return requestJson('/api/catalog/pricing')
 }
 
-/** 读取模型广场汇率和导航配置使用的 NewAPI 公开状态响应。 */
+/** 读取模型广场汇率和导航配置使用的 NewAPI 公开状态响应�?*/
 export function getModelSquareStatus(): Promise<unknown> {
   return requestJson('/api/catalog/status')
 }
 
-/** 读取模型广场列表卡片使用的性能汇总数据。 */
+/** 读取模型广场列表卡片使用的性能汇总数据�?*/
 export function getPerformanceSummary(query: { hours?: number } = {}): Promise<unknown> {
   return requestJson(`/api/catalog/perf-metrics/summary${queryString(query)}`)
 }
 
-/** 读取模型广场单模型详情使用的性能数据。 */
+/** 读取模型广场单模型详情使用的性能数据�?*/
 export function getPerformanceMetrics(query: { model: string; group?: string; hours?: number }): Promise<unknown> {
   return requestJson(`/api/catalog/perf-metrics${queryString(query)}`)
 }
@@ -331,6 +331,10 @@ export interface CreatePaymentOrderInput {
   method: PaymentMethod
 }
 
+export function getPaymentConfig(): Promise<{ enabled: boolean }> {
+  return requestJson('/api/payments/config')
+}
+
 export function createPaymentOrder(input: CreatePaymentOrderInput): Promise<PaymentOrder> {
   return requestJson<PaymentOrder>('/api/payments/orders', {
     method: 'POST',
@@ -343,7 +347,7 @@ export function getPaymentOrder(orderNo: string): Promise<PaymentOrder> {
   return requestJson<PaymentOrder>(`/api/payments/orders/${encodeURIComponent(orderNo)}`)
 }
 
-/** 仅请求服务端取消当前会话所属的待支付订单。 */
+/** 仅请求服务端取消当前会话所属的待支付订单�?*/
 export function cancelPaymentOrder(orderNo: string): Promise<PaymentOrder> {
   return requestJson<PaymentOrder>(`/api/payments/orders/${encodeURIComponent(orderNo)}/cancel`, { method: 'POST' })
 }
@@ -386,3 +390,4 @@ export function formatUsd(amountUsdMinor: number): string {
 export function formatQuota(quota: number): string {
   return quota.toLocaleString('en-US')
 }
+

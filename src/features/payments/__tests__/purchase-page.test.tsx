@@ -20,6 +20,8 @@ describe('PurchasePage', () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockImplementation((url) => url === '/api/auth/status'
       ? Promise.resolve(new Response(JSON.stringify({ authenticated: true, profile: { id: 1, username: 'test' } })))
+      : url === '/api/payments/config'
+      ? Promise.resolve(new Response(JSON.stringify({ enabled: true })))
       : Promise.reject(new Error('Order request recorded')))
     vi.stubGlobal('fetch', fetchMock)
 
@@ -58,6 +60,8 @@ describe('PurchasePage', () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockImplementation((url) => url === '/api/auth/status'
       ? Promise.resolve(new Response(JSON.stringify({ authenticated: true, profile: { id: 1, username: 'test' } })))
+      : url === '/api/payments/config'
+      ? Promise.resolve(new Response(JSON.stringify({ enabled: true })))
       : Promise.reject(new Error('Order request recorded')))
     vi.stubGlobal('fetch', fetchMock)
     render(<PurchasePage />)
@@ -90,7 +94,7 @@ describe('PurchasePage', () => {
   it('redirects anonymous visitors to login without creating an order', async () => {
     const assign = vi.fn()
     vi.stubGlobal('location', { ...window.location, assign })
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ authenticated: false, profile: null })))
+    const fetchMock = vi.fn().mockImplementation((url) => url === '/api/payments/config' ? Promise.resolve(new Response(JSON.stringify({ enabled: true }))) : Promise.resolve(new Response(JSON.stringify({ authenticated: false, profile: null }))))
     vi.stubGlobal('fetch', fetchMock)
     render(<PurchasePage />)
     await userEvent.setup().click(screen.getByRole('button', { name: 'Confirm payment' }))
@@ -101,9 +105,7 @@ describe('PurchasePage', () => {
 
   it('waits for authentication before sending any order request', async () => {
     let finish!: (response: Response) => void
-    const fetchMock = vi.fn().mockImplementation((url) => url === '/api/auth/status'
-      ? new Promise<Response>((resolve) => { finish = resolve })
-      : Promise.reject(new Error('Order request recorded')))
+    const fetchMock = vi.fn().mockImplementation((url) => url === '/api/payments/config' ? Promise.resolve(new Response(JSON.stringify({ enabled: true }))) : url === '/api/auth/status' ? new Promise<Response>((resolve) => { finish = resolve }) : Promise.reject(new Error('Order request recorded')))
     vi.stubGlobal('fetch', fetchMock)
     render(<PurchasePage />)
     const confirm = screen.getByRole('button', { name: 'Confirm payment' })
@@ -115,7 +117,7 @@ describe('PurchasePage', () => {
   })
 
   it('does not create an order when the status request fails', async () => {
-    const fetchMock = vi.fn().mockRejectedValue(new Error('Offline'))
+    const fetchMock = vi.fn().mockImplementation((url) => url === '/api/payments/config' ? Promise.resolve(new Response(JSON.stringify({ enabled: true }))) : Promise.reject(new Error('Offline')))
     vi.stubGlobal('fetch', fetchMock)
     render(<PurchasePage />)
     await userEvent.setup().click(screen.getByRole('button', { name: 'Confirm payment' }))
@@ -126,9 +128,7 @@ describe('PurchasePage', () => {
   it('returns to login if the session expires between checking and creating the order', async () => {
     const assign = vi.fn()
     vi.stubGlobal('location', { ...window.location, assign })
-    vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce(new Response(JSON.stringify({ authenticated: true, profile: { id: 1, username: 'test' } })))
-      .mockResolvedValueOnce(new Response('{}', { status: 401 })))
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url) => url === '/api/payments/config' ? Promise.resolve(new Response(JSON.stringify({ enabled: true }))) : url === '/api/auth/status' ? Promise.resolve(new Response(JSON.stringify({ authenticated: true, profile: { id: 1, username: 'test' } }))) : Promise.resolve(new Response('{}', { status: 401 }))))
     render(<PurchasePage />)
     await userEvent.setup().click(screen.getByRole('button', { name: 'Confirm payment' }))
     await waitFor(() => expect(assign).toHaveBeenCalledWith('/sign-in?returnTo=%2Fpurchase'))
@@ -138,6 +138,8 @@ describe('PurchasePage', () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockImplementation((url) => url === '/api/auth/status'
       ? Promise.resolve(new Response(JSON.stringify({ authenticated: true, profile: { id: 1, username: 'test' } })))
+      : url === '/api/payments/config'
+      ? Promise.resolve(new Response(JSON.stringify({ enabled: true })))
       : Promise.reject(new Error('Order request recorded')))
     vi.stubGlobal('fetch', fetchMock)
     render(<PurchasePage />)
@@ -154,3 +156,5 @@ describe('PurchasePage', () => {
     }))
   })
 })
+
+
