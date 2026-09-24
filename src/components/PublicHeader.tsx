@@ -34,10 +34,13 @@ export function PublicHeader({ path }: { path?: string } = {}) {
   }, [menuOpen])
   const account = status.kind === 'authenticated' ? status.profile : null
   const currentPath = path ?? (typeof window === 'undefined' ? '/' : window.location.pathname)
-  const navItems = [
+  const navItems: Array<[string, string]> = [
     ['/', t('nav.home')], ['/models', t('nav.models')],
-    ['/docs/guides/quick-start', t('nav.docs')], ['/purchase', t('nav.purchase')],
+    ['/docs/guides/quick-start', t('nav.docs')]
   ]
+  if (typeof window === 'undefined' || (window as any).PORTAL_ENABLE_RECHARGE !== false) {
+    navItems.push(['/purchase', t('nav.purchase')]);
+  }
   /** Purchase is the one destination that must leave the page: an anonymous visitor
    *  is redirected to sign-in with a return address, which needs a real navigation. */
   const linkProps = (destination: string) => destination === '/purchase'

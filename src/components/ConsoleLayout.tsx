@@ -69,7 +69,7 @@ export function ConsoleLayout({ activeKey, children, onNavigate, profile }: Cons
     onNavigate(path)
   }
   const navigation = <nav aria-label={t('console.navigation')} className="zt-console-nav">
-    {((Object.keys(destinations) as ConsoleKey[]).filter((key) => key !== 'recharge' || (window as any).PORTAL_ENABLE_RECHARGE !== false)).map((key) => <a key={key} href={destinations[key]} aria-current={key === activeKey ? 'page' : undefined} onClick={(event) => navigate(event, destinations[key])}><ConsoleIcon name={key} /><span>{t(`console.${key}`)}</span></a>)}
+    {((Object.keys(destinations) as ConsoleKey[]).filter((key) => (key !== 'recharge' && key !== 'orders') || (window as any).PORTAL_ENABLE_RECHARGE !== false)).map((key) => <a key={key} href={destinations[key]} aria-current={key === activeKey ? 'page' : undefined} onClick={(event) => navigate(event, destinations[key])}><ConsoleIcon name={key} /><span>{t(`console.${key}`)}</span></a>)}
   </nav>
   const brand = <a className="zt-console-brand" href="/" aria-label="ZToken"><img src={brandLogo} alt="" width="32" height="32" /><strong>ZToken</strong></a>
   return <div className="zt-console console-shell">
