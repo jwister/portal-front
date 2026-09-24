@@ -13,18 +13,7 @@ import { Trc20Checkout } from './Trc20Checkout'
 export function RechargePage() {
   const { t } = useTranslation()
   const [order, setOrder] = useState<PaymentOrder | null>(null)
-  const [enabled, setEnabled] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    let active = true
-    getDashboard().then((dashboard) => {
-      if (active) setEnabled(dashboard.enableRecharge)
-    }).catch(() => {
-      if (active) setEnabled(false)
-    })
-    return () => { active = false }
-  }, [])
-
+  
   const completed = useCallback((next: PaymentOrder) => {
     setOrder(next)
     // 仅在服务端确认实际到账后才跳转完成页，避免中间状态误报支付成功。
@@ -37,13 +26,7 @@ export function RechargePage() {
   return (
     <main className="recharge-page">
       <ConsolePageHeader title={t('console.recharge')} description={t('purchase.copy')} />
-      {enabled === false
-        ? (
-          <div style={{ padding: '40px', background: 'var(--semi-color-bg-1)', borderRadius: '8px', marginTop: '24px' }}>
-            <Typography.Title heading={4} style={{ textAlign: 'center', fontWeight: 'normal', color: 'var(--semi-color-text-1)' }}>未开启在线充值，请联系管理员。</Typography.Title>
-          </div>
-        )
-        : order
+      {order
         ? (
           <>
             {order.method === 'USDT_TRC20' ? <Trc20Checkout order={order} onCompleted={completed} /> : <PayPalCheckout order={order} onCompleted={completed} />}
@@ -53,11 +36,9 @@ export function RechargePage() {
           </>
         )
         : <PaymentSelectionPanel onConfirm={setOrder} />}
-      {enabled !== false && (
-        <Typography.Paragraph type="tertiary" className="purchase-footnote">
+      <Typography.Paragraph type="tertiary" className="purchase-footnote">
           {t('purchase.footnote')}
         </Typography.Paragraph>
-      )}
     </main>
   )
 }

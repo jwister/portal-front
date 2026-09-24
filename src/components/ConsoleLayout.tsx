@@ -69,7 +69,7 @@ export function ConsoleLayout({ activeKey, children, onNavigate, profile }: Cons
     onNavigate(path)
   }
   const navigation = <nav aria-label={t('console.navigation')} className="zt-console-nav">
-    {(Object.keys(destinations) as ConsoleKey[]).map((key) => <a key={key} href={destinations[key]} aria-current={key === activeKey ? 'page' : undefined} onClick={(event) => navigate(event, destinations[key])}><ConsoleIcon name={key} /><span>{t(`console.${key}`)}</span></a>)}
+    {((Object.keys(destinations) as ConsoleKey[]).filter((key) => key !== 'recharge' || (window as any).PORTAL_ENABLE_RECHARGE !== false)).map((key) => <a key={key} href={destinations[key]} aria-current={key === activeKey ? 'page' : undefined} onClick={(event) => navigate(event, destinations[key])}><ConsoleIcon name={key} /><span>{t(`console.${key}`)}</span></a>)}
   </nav>
   const brand = <a className="zt-console-brand" href="/" aria-label="ZToken"><img src={brandLogo} alt="" width="32" height="32" /><strong>ZToken</strong></a>
   return <div className="zt-console console-shell">
@@ -85,7 +85,7 @@ export function ConsoleLayout({ activeKey, children, onNavigate, profile }: Cons
         <div className="zt-console-topbar-title"><button ref={trigger} className="zt-console-menu-toggle" type="button" aria-expanded={menuOpen} aria-label={t('console.openNavigation')} onClick={() => setMenuOpen(true)}><ConsoleIcon name="menu" /></button><span>{t(`console.${activeKey}`)}</span></div>
         <div className="zt-console-topbar-actions">
           <LanguageMenu />
-          <a className="zt-console-balance" href="/console/recharge" aria-label={t('console.currentBalance', { balance:balanceText })} onClick={(event) => navigate(event, '/console/recharge')}><ConsoleIcon name="recharge" /><span>{balanceText}</span></a>
+          {((window as any).PORTAL_ENABLE_RECHARGE !== false) && <a className="zt-console-balance" href="/console/recharge" aria-label={t('console.currentBalance', { balance:balanceText })} onClick={(event) => navigate(event, '/console/recharge')}><ConsoleIcon name="recharge" /><span>{balanceText}</span></a>}
           <AccountMenu username={accountName} onNavigate={navigate} />
         </div>
       </header>

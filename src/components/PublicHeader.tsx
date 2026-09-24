@@ -64,3 +64,4 @@ export function PublicHeader({ path }: { path?: string } = {}) {
   </header>
 
 }
+
