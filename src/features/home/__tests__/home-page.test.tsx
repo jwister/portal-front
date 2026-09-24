@@ -2,6 +2,7 @@ import githubIcon from '../../../assets/github.webp'
 import googleIcon from '../../../assets/google.webp'
 import mailIcon from '../../../assets/mail.webp'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { renderToString } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import i18n from '../../../i18n'
@@ -39,6 +40,39 @@ describe('HomePage', () => {
     expect(screen.getByText('购买额度')).toBeVisible()
     expect(screen.getByText('获取 API Key')).toBeVisible()
     expect(screen.getAllByRole('link', { name: '开始使用' })[0]).toHaveAttribute('href', '/sign-in?returnTo=%2Fconsole%2Fdashboard')
+  })
+
+  it('advertises the sign-up gift the deployment configures', () => {
+    vi.stubGlobal('PORTAL_QUOTA_FOR_NEW_USER', 100000)
+    render(<HomePage />)
+
+    const heroOffer = screen.getAllByText('10万 Token')[0].closest('a') as HTMLElement
+    expect(heroOffer).toHaveTextContent('新人福利注册即送 10万 Token 额度')
+    expect(heroOffer).toHaveAttribute('href', '/sign-in?returnTo=%2Fconsole%2Fdashboard')
+    expect(screen.getAllByText('新用户赠送额度仅用于测试')).toHaveLength(2)
+    const balanceStep = screen.getByText('购买额度').closest('article') as HTMLElement
+    expect(within(balanceStep).getByText('10万')).toBeVisible()
+  })
+
+  it('falls back to the default gift when the config script has not run', () => {
+    render(<HomePage />)
+
+    expect(screen.getAllByText('30万 Token')).toHaveLength(2)
+  })
+
+  it('hides every mention of the gift when the deployment gives none', () => {
+    vi.stubGlobal('PORTAL_QUOTA_FOR_NEW_USER', 0)
+    const { container } = render(<HomePage />)
+
+    expect(container.querySelector('.reference-gift')).toBeNull()
+    expect(container.querySelector('.reference-mini-balance')).toBeNull()
+    expect(screen.queryByText('新用户赠送额度仅用于测试')).toBeNull()
+  })
+
+  it('prerenders the default gift so hydration matches the build output', () => {
+    vi.stubGlobal('PORTAL_QUOTA_FOR_NEW_USER', 100000)
+
+    expect(renderToString(<HomePage />)).toContain('30万 Token')
   })
 
   it('starts the assurance and metric bands at the same time', () => {

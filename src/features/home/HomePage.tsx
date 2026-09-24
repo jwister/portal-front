@@ -9,8 +9,9 @@ import { Trans, useTranslation } from 'react-i18next'
 
 import '../../i18n'
 import { useScrollReveal } from './use-scroll-reveal'
+import { useNewUserGift } from './use-new-user-gift'
 
-type FeatureIcon = 'shield' | 'privacy' | 'route' | 'code' | 'wallet' | 'team'
+type FeatureIcon = 'shield' | 'privacy' | 'route' | 'code' | 'wallet' | 'team' | 'gift'
 
 const apiDemos = [
   {
@@ -161,8 +162,37 @@ function LineIcon({ name }: { name: FeatureIcon }) {
     code: <><path {...common} d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14" /></>,
     wallet: <><path {...common} d="M4 7h15a2 2 0 0 1 2 2v9H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h13" /><path {...common} d="M15 11h6v4h-6a2 2 0 0 1 0-4Z" /></>,
     team: <><circle {...common} cx="9" cy="8" r="3" /><circle {...common} cx="17" cy="9" r="2" /><path {...common} d="M3 20c.5-4 2.5-6 6-6s5.5 2 6 6M15 15c3 0 5 1.7 6 5" /></>,
+    gift: <><rect {...common} x="3" y="8" width="18" height="4" rx="1" /><path {...common} d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" /><path {...common} d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5" /></>,
   }
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
+}
+
+/* The gift figure only settles after hydration (see useNewUserGift), so each place that
+   prints it is its own small component: that switch then re-renders these, not the page. */
+
+/** The sign-up offer as a one-line announcement pill: a link above the hero headline,
+ *  plain text above the closing buttons, where a start button already sits beneath it. */
+function GiftBadge({ link }: { link?: ReturnType<typeof authenticatedLink> }) {
+  const { t } = useTranslation()
+  const amount = useNewUserGift()
+  if (!amount) return null
+  const content = <>
+    <span className="reference-gift-tag"><LineIcon name="gift" />{t('home.giftTag')}</span>
+    <span className="reference-gift-text"><Trans i18nKey="home.giftOffer" values={{ amount }} components={{ strong: <strong /> }} /></span>
+  </>
+  return link ? <a className="reference-gift" {...link}>{content}</a> : <p className="reference-gift">{content}</p>
+}
+
+function GiftNote() {
+  const { t } = useTranslation()
+  return useNewUserGift() ? <small>{t('home.giftNote')}</small> : null
+}
+
+function GiftBalance() {
+  const { t } = useTranslation()
+  const amount = useNewUserGift()
+  if (!amount) return null
+  return <div className="reference-mini-balance"><Trans i18nKey="home.giftBalance" values={{ amount }} components={{ strong: <strong /> }} /><small className="reference-mini-gift">{t('home.giftTag')}</small></div>
 }
 
 /** The vendor's own mark. These sit below the fold, so they load lazily; the fixed
@@ -225,12 +255,13 @@ export function HomePage() {
     <main className="reference-home" ref={pageRef}>
       <section className="reference-hero" aria-labelledby="reference-hero-title">
         <div className="reference-hero-copy">
+          <GiftBadge link={authenticatedLink(auth, '/console/dashboard')} />
           <h1 id="reference-hero-title">{t('home.title')}<span>{t('home.titleAccent')}</span></h1>
           <p>{t('home.description')}</p>
           <div className="reference-hero-entry">
             <div className="reference-hero-entry-copy">
               <strong>{t('home.heroCtaTitle')}</strong>
-              <small>{t('home.creditGift')}</small>
+              <GiftNote />
             </div>
             <div className="reference-hero-actions">
               <a className="reference-primary" {...authenticatedLink(auth, '/console/dashboard')}>{t('home.start')}</a>
@@ -262,11 +293,11 @@ export function HomePage() {
               <a href="/sign-in"><img src={googleIcon} alt="" width="14" height="14" loading="lazy" decoding="async" />Google</a>
               <a href="/sign-in"><img src={mailIcon} alt="" width="14" height="14" loading="lazy" decoding="async" />{t('auth.email')}</a>
             </div>}
-            {kind === 'balance' && <div className="reference-mini-balance">$ <strong>0.05</strong><small>{t('home.creditFlexible')}</small></div>}
+            {kind === 'balance' && <GiftBalance />}
             {kind === 'key' && <code className="reference-mini-key">sk-************************</code>}
           </article>)}
         </div>
-        <p className="reference-credit-note">{t('home.creditGift')}</p>
+        <div className="reference-credit-note"><GiftBadge /><GiftNote /></div>
         <div className="reference-actions"><a className="reference-primary" {...authenticatedLink(auth, '/console/dashboard')}>{t('home.start')}</a><a className="reference-secondary" href="/models">{t('home.viewPrices')}</a></div>
       </section>
 

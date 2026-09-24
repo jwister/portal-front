@@ -59,9 +59,25 @@
 .reference-primary:active { transform: translateY(0); }
 .reference-hero-entry { max-width: 590px; display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 30px; padding-top: 22px; border-top: 1px solid rgba(37,99,235,.18); }
 .reference-hero-entry-copy { min-width: 0; }
-.reference-hero-entry-copy strong,.reference-hero-entry-copy small { display: block; }
-.reference-hero-entry-copy strong { color: var(--home-ink); font-size: 14px; line-height: 1.4; }
-.reference-hero-entry-copy small { margin-top: 5px; color: var(--home-muted); font-size: 12px; line-height: 1.55; }
+.reference-hero-entry-copy > strong,.reference-hero-entry-copy > small { display: block; }
+.reference-hero-entry-copy > strong { color: var(--home-ink); font-size: 14px; line-height: 1.4; }
+.reference-hero-entry-copy > small { margin-top: 5px; color: var(--home-muted); font-size: 12px; line-height: 1.55; }
+/* The sign-up offer is an announcement pill: one line, read before the headline. It is on
+   the purchase path, so the tag carries the conversion red; the pill itself stays white so
+   the start button remains the loudest thing on screen. */
+.reference-gift { max-width: 100%; display: inline-flex; align-items: center; gap: 10px; margin: 0 0 26px; padding: 4px 16px 4px 4px; border: 1px solid rgba(225,29,72,.2); border-radius: 999px; color: var(--home-ink); background: rgba(255,255,255,.82); box-shadow: 0 6px 18px rgba(225,29,72,.1); font-size: 14px; font-weight: 500; line-height: 1.4; white-space: nowrap; }
+.reference-gift-tag { position: relative; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; overflow: hidden; padding: 5px 11px 5px 9px; border-radius: 999px; color: #fff; background: linear-gradient(135deg, #f43f5e 0%, var(--home-coral) 100%); font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+.reference-gift-tag svg { width: 14px; height: 14px; }
+/* A light sweep crosses the tag three times after load so the offer is noticed without the
+   pill moving, then stops: an endless loop would keep the compositor producing frames for as
+   long as the page stays open. Transform only, and the reduced-motion rule below turns it off. */
+.reference-gift-tag::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.45) 50%, transparent 70%); transform: translateX(-120%); animation: reference-gift-shine 3s ease-in-out 1s 3; }
+.reference-gift-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.reference-gift strong { color: var(--home-coral); font-weight: 800; }
+a.reference-gift { transition: border-color .2s ease, box-shadow .2s ease; }
+a.reference-gift::after { content: "\2192"; flex: 0 0 auto; color: var(--home-coral); font-weight: 700; transition: transform .2s ease; }
+a.reference-gift:hover { color: var(--home-ink); border-color: rgba(225,29,72,.4); box-shadow: 0 8px 22px rgba(225,29,72,.16); }
+a.reference-gift:hover::after { transform: translateX(3px); }
 .reference-hero-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 15px; }
 .reference-hero-link { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; color: var(--home-teal); font-size: 14px; font-weight: 750; }
 .reference-hero-link::after { content: "\2192"; transition: transform .2s ease; }
@@ -95,9 +111,12 @@
 .reference-step h3 { margin-bottom: 12px; font-size: 1.2rem; font-weight: 700; }.reference-step h3 a { color: inherit; }
 .reference-step > p { color: var(--home-muted); font-size: .9rem; line-height: 1.75; }
 .reference-mini-buttons { display: flex; gap: 8px; margin-top: 22px; }.reference-mini-buttons a { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 9px; border: 1px solid #ededf2; border-radius: 8px; color: #777b88; text-align: center; font-size: 11px; text-decoration: none; transition: border-color .2s ease, color .2s ease; }.reference-mini-buttons a:hover { border-color: #cfd6e2; color: #33383f; }.reference-mini-buttons img { width: 14px; height: 14px; object-fit: contain; }
-.reference-mini-balance { display: flex; align-items: baseline; gap: 6px; margin-top: 18px; color: var(--home-teal); }.reference-mini-balance strong { font-size: 28px; }.reference-mini-balance small { margin-left: auto; color: var(--home-muted); }
+.reference-mini-balance { display: flex; align-items: baseline; gap: 6px; margin-top: 18px; color: var(--home-teal); }.reference-mini-balance strong { font-size: 28px; }
+.reference-mini-gift { align-self: center; margin-left: auto; padding: 3px 10px; border-radius: 999px; color: var(--home-coral); background: #fff1f2; font-size: 12px; font-weight: 700; }
 .reference-mini-key { display: block; margin-top: 24px; padding: 12px; overflow: hidden; border-radius: 8px; color: #7e8290; background: #f7f7fa; font-size: 12px; }
-.reference-home .reference-credit-note { margin: 40px 0 20px; color: var(--home-muted); text-align: center; font-size: .85rem; }
+.reference-home .reference-credit-note { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 40px 0 24px; }
+.reference-credit-note .reference-gift { margin: 0; padding-right: 20px; font-size: 15px; }
+.reference-credit-note > small { color: var(--home-muted); font-size: .8rem; }
 .reference-actions { display: flex; justify-content: center; gap: 12px; }
 
 .reference-trust { max-width: 1184px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); border: 1px solid var(--home-line); border-radius: 16px; background: #fff; box-shadow: 0 8px 22px rgba(25, 24, 43, .05); }
@@ -174,6 +193,7 @@
   .reference-hero { padding-top: 56px; }.reference-hero h1 { font-size: 2.25rem; }
   .reference-code-tabs { padding: 0 8px; font-size: 11px; }.reference-code-status { padding: 15px; }.reference-code-body { padding: 18px; }.reference-code-footer span:nth-child(3) { display: none; }
   .reference-actions { flex-direction: column; }.reference-actions a { width: 100%; }
+  .reference-gift,.reference-credit-note .reference-gift { gap: 8px; padding-right: 14px; font-size: 13px; }
   .reference-hero-entry { align-items: stretch; flex-direction: column; gap: 16px; text-align: center; }
   .reference-hero-actions { flex-direction: column; align-items: stretch; gap: 10px; }
   .reference-hero-actions a { justify-content: center; }
@@ -182,6 +202,7 @@
 }
 @media (prefers-reduced-motion: reduce) { .reference-home * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 @keyframes reference-code-in { from { opacity: .35; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@keyframes reference-gift-shine { 0% { transform: translateX(-120%); } 45%, 100% { transform: translateX(120%); } }
 @keyframes reference-tab-progress { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
 
 @media(max-width:800px) { .reference-home { padding-top:64px; }.reference-hero h1 { text-wrap:balance; }.reference-home { padding-bottom:84px; }.reference-code-tabs button { min-height:44px; } }
