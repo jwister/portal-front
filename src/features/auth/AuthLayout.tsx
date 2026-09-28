@@ -3,11 +3,16 @@ import { useTranslation } from 'react-i18next'
 import { setStoredLanguage } from '../../i18n'
 import brandLogo from '../../assets/brand-logo.webp'
 import { vendorLogoUrl } from '../catalog/vendor-logos'
+import { isDomesticRegion } from '../../support/portal-config'
 import './auth.css'
 
-/** The models the gateway fans out to in the illustration, each with its own mark. */
+/** The models the gateway fans out to in the illustration, each with its own mark. The
+ *  mainland site shows only models its own nodes serve. */
 const authModels: [vendor: string, label: string, slot: string][] = [
   ['OpenAI', 'GPT', 'one'], ['Anthropic', 'Claude', 'two'], ['Google', 'Gemini', 'three'],
+]
+const domesticAuthModels: [vendor: string, label: string, slot: string][] = [
+  ['DeepSeek', 'DeepSeek', 'one'], ['Zhipu', 'GLM', 'two'], ['ByteDance', 'Seedance', 'three'],
 ]
 
 export function AuthLayout({ title, copy, children, compact = false }: { title: string; copy?: string; children: ReactNode; compact?: boolean }) {
@@ -35,7 +40,7 @@ export function AuthLayout({ title, copy, children, compact = false }: { title: 
           </svg>
           <div className="zt-auth-app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16" /></svg><span>{t('auth.yourApp')}</span></div>
           <div className="zt-auth-hub"><img src={brandLogo} alt="" width="44" height="44" /><strong>ZToken</strong></div>
-          {authModels.map(([vendor, label, slot]) => <div className={`zt-auth-model zt-auth-model-${slot}`} key={label}>
+          {(isDomesticRegion() ? domesticAuthModels : authModels).map(([vendor, label, slot]) => <div className={`zt-auth-model zt-auth-model-${slot}`} key={label}>
             <span className="zt-auth-model-symbol"><img src={vendorLogoUrl(vendor)} alt="" width="18" height="18" loading="lazy" decoding="async" /></span>{label}
           </div>)}
         </div>

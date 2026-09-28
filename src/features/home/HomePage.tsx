@@ -10,6 +10,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import '../../i18n'
 import { useScrollReveal } from './use-scroll-reveal'
 import { useNewUserGift } from './use-new-user-gift'
+import { formatMoney, useDisplayCurrency, useDomesticRegion, useIcpRecord, useRechargeEnabled } from '../../support/portal-config'
 
 type FeatureIcon = 'shield' | 'privacy' | 'route' | 'code' | 'wallet' | 'team' | 'gift'
 
@@ -96,15 +97,24 @@ const apiDemos = [
   },
 ] as const
 
+interface ModelGroup {
+  title: string
+  /** The copy that labels both figures; `unit` is what each figure carries itself. */
+  price: 'home.modelPrice' | 'home.modelPriceVideo'
+  unit: '/M' | ''
+  models: readonly (readonly [vendor: string, model: string, first: number, second: number, source: string])[]
+}
+
 /**
  * A hand-picked shortlist, not the catalog: the homepage is prerendered, so these rows ship
  * as static HTML while `/models` reads every model and its live rate from the gateway.
  *
- * Both figures are the price after the default group discount, matching what a card on
- * `/models` shows, and each group names the copy that labels them — token models quote
- * input and output per million, video models quote two resolutions per second. Re-check
- * every figure against `/api/catalog/pricing` whenever a rate changes; nothing here fails
- * when the gateway moves. Last checked 2026-09-20.
+ * Both figures are the USD price after the default group discount, matching what a card on
+ * `/models` shows, and are printed in the site's display currency. Each group names the copy
+ * that labels them — token models quote input and output per million, video models quote two
+ * resolutions per second. Re-check every figure against that site's `/api/catalog/pricing`
+ * whenever a rate changes; nothing here fails when the gateway moves. Last checked
+ * 2026-09-20 (overseas) and 2026-09-28 (mainland).
  *
  * Models whose rate varies per request (`deepseek-v4.1-flash` off-peak, `glm-5.1` input
  * bands) are deliberately left out: one price slot cannot state two, and half a story about
@@ -114,44 +124,99 @@ const apiDemos = [
  * rounded UP to four decimals so the column stays legible without ever quoting under the
  * real rate; `/models` carries the exact figure.
  */
-const modelGroups = [
+const overseasModels: readonly ModelGroup[] = [
   {
     title: 'home.models.flagship',
     price: 'home.modelPrice',
+    unit: '/M',
     models: [
-      ['Anthropic', 'claude-fable-5.1', '$9.50/M', '$47.50/M', 'aws'],
-      ['OpenAI', 'gpt-6-astra', '$9.50/M', '$47.50/M', 'azure'],
+      ['Anthropic', 'claude-fable-5.1', 9.5, 47.5, 'aws'],
+      ['OpenAI', 'gpt-6-astra', 9.5, 47.5, 'azure'],
     ],
   },
   {
     title: 'home.models.mainstream',
     price: 'home.modelPrice',
+    unit: '/M',
     models: [
-      ['Anthropic', 'claude-opus-5', '$4.75/M', '$23.75/M', 'aws'],
-      ['OpenAI', 'gpt-5.6-terra', '$1.90/M', '$11.40/M', 'azure'],
-      ['DeepSeek', 'deepseek-v4-pro', '$1.691/M', '$3.382/M', 'deepseek'],
-      ['Zhipu', 'glm-5.2', '$1.121/M', '$3.914/M', 'Baidu Cloud'],
+      ['Anthropic', 'claude-opus-5', 4.75, 23.75, 'aws'],
+      ['OpenAI', 'gpt-5.6-terra', 1.9, 11.4, 'azure'],
+      ['DeepSeek', 'deepseek-v4-pro', 1.691, 3.382, 'deepseek'],
+      ['Zhipu', 'glm-5.2', 1.121, 3.914, 'Baidu Cloud'],
     ],
   },
   {
     title: 'home.models.value',
     price: 'home.modelPrice',
+    unit: '/M',
     models: [
-      ['Anthropic', 'claude-sonnet-5', '$1.90/M', '$9.50/M', 'aws'],
-      ['OpenAI', 'gpt-5.6-luna', '$0.19/M', '$1.14/M', 'azure'],
-      ['DeepSeek', 'deepseek-v3.2', '$0.285/M', '$0.4275/M', 'deepseek'],
-      ['DeepSeek', 'deepseek-v4-flash', '$0.1425/M', '$0.285/M', 'deepseek'],
+      ['Anthropic', 'claude-sonnet-5', 1.9, 9.5, 'aws'],
+      ['OpenAI', 'gpt-5.6-luna', 0.19, 1.14, 'azure'],
+      ['DeepSeek', 'deepseek-v3.2', 0.285, 0.4275, 'deepseek'],
+      ['DeepSeek', 'deepseek-v4-flash', 0.1425, 0.285, 'deepseek'],
     ],
   },
   {
     title: 'home.models.video',
     price: 'home.modelPriceVideo',
+    unit: '',
     models: [
-      ['ByteDance', 'seedance-2.5', '$0.1883', '$0.3511', 'Doubao'],
-      ['ByteDance', 'seedance-2.0', '$0.1234', '$0.3087', 'Doubao'],
+      ['ByteDance', 'seedance-2.5', 0.1883, 0.3511, 'Doubao'],
+      ['ByteDance', 'seedance-2.0', 0.1234, 0.3087, 'Doubao'],
     ],
   },
-] as const
+]
+
+/**
+ * The mainland site serves only models from mainland nodes, and its default group has no
+ * discount (ratio 1), so these are the gateway's base rates and carry no discount badge.
+ *
+ * `deepseek-v4.1-flash` is listed here despite its two rates: it quotes the peak band, the
+ * dearest one, so the row never quotes under a request; `/models` shows the off-peak band.
+ *
+ * The video rows are provisional: the mainland gateway does not list Seedance or CDance yet,
+ * so they quote the overseas base rates until it does. The CDance aliases all share one rate.
+ */
+const domesticModels: readonly ModelGroup[] = [
+  {
+    title: 'home.models.mainstream',
+    price: 'home.modelPrice',
+    unit: '/M',
+    models: [
+      ['DeepSeek', 'deepseek-v4-pro', 1.78, 3.56, 'deepseek'],
+      ['DeepSeek', 'deepseek-v4.1-flash', 0.2985, 1.194, 'deepseek'],
+      ['Zhipu', 'glm-5.2', 1.18, 4.12, 'Baidu Cloud'],
+    ],
+  },
+  {
+    title: 'home.models.value',
+    price: 'home.modelPrice',
+    unit: '/M',
+    models: [
+      ['DeepSeek', 'deepseek-v3.2', 0.3, 0.45, 'deepseek'],
+      ['DeepSeek', 'deepseek-v4-flash', 0.15, 0.3, 'deepseek'],
+    ],
+  },
+  {
+    title: 'home.models.video',
+    price: 'home.modelPriceVideo',
+    unit: '',
+    models: [
+      ['ByteDance', 'seedance-2.5', 0.1982, 0.3695, 'Doubao'],
+      ['ByteDance', 'seedance-2.0', 0.1298, 0.3249, 'Doubao'],
+      ['CDance', 'cdance2.5-0807', 0.4515, 0.8245, 'Doubao'],
+      ['CDance', 'cdance2.0-0813', 0.4515, 0.8245, 'Doubao'],
+    ],
+  },
+]
+
+/** Fixed locale and precision, so the build and the browser print the same text. Built once
+ *  rather than for every row. */
+const priceFormat = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
+/** Rounded UP to four decimals, so a rate converted to another currency never quotes under
+ *  the real one either. The small offset keeps float noise (`2.0100000000000002`) from
+ *  pushing an exact figure up a step. */
+const formatHomePrice = (value: number) => priceFormat.format(Math.ceil(value * 10_000 - 1e-6) / 10_000)
 
 function LineIcon({ name }: { name: FeatureIcon }) {
   const common = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, strokeWidth: 1.8 }
@@ -168,7 +233,9 @@ function LineIcon({ name }: { name: FeatureIcon }) {
 }
 
 /* The gift figure only settles after hydration (see useNewUserGift), so each place that
-   prints it is its own small component: that switch then re-renders these, not the page. */
+   prints it is its own small component: that switch then re-renders these, not the page.
+   Where the deployment gives nothing, the prerender bootstrap already hides them by their
+   classes (`html[data-gift="none"]`) before first paint, so their removal shifts nothing. */
 
 /** The sign-up offer as a one-line announcement pill: a link above the hero headline,
  *  plain text above the closing buttons, where a start button already sits beneath it. */
@@ -185,7 +252,7 @@ function GiftBadge({ link }: { link?: ReturnType<typeof authenticatedLink> }) {
 
 function GiftNote() {
   const { t } = useTranslation()
-  return useNewUserGift() ? <small>{t('home.giftNote')}</small> : null
+  return useNewUserGift() ? <small className="reference-gift-note">{t('home.giftNote')}</small> : null
 }
 
 function GiftBalance() {
@@ -204,13 +271,46 @@ function VendorLogo({ vendor }: { vendor: string }) {
     : vendor.slice(0, 1)}</span>
 }
 
-export function HomePage() {
+/* The region, currency and ICP record come from the deployment's config script, which the
+   prerender does not run, so they settle after hydration like the gift: each is read in its
+   own leaf, and on the mainland site only this table and the footer line re-render. */
+
+function ModelGroups({ auth }: { auth: ReturnType<typeof useAuthStatus> }) {
   const { t } = useTranslation()
-  const auth = useAuthStatus()
+  const domestic = useDomesticRegion()
+  const currency = useDisplayCurrency()
+  // Where purchasing is switched off, each row sends the visitor to the console instead.
+  const rechargeEnabled = useRechargeEnabled()
+  const action = authenticatedLink(auth, rechargeEnabled ? '/purchase' : '/console/dashboard')
+  const price = (usd: number, unit: string) => formatMoney(usd, formatHomePrice, currency) + unit
+  return <div className="reference-model-groups">
+    {(domestic ? domesticModels : overseasModels).map((group) => <article className="reference-model-group" key={group.title}>
+      <h3>{t(group.title)}</h3>
+      {group.models.map(([vendor, model, first, second, source]) => <div className="reference-model-row" key={model}>
+        <VendorLogo vendor={vendor} />
+        <p><small>{vendor}</small><strong>{model}</strong></p>
+        <span className="reference-price">{t(group.price, { first: price(first, group.unit), second: price(second, group.unit) })}</span>
+        <span className="reference-source">{t('home.modelSource', { source })}</span>
+        {!domestic && <b className="reference-discount">{t('home.modelDiscount')}</b>}
+        <a {...action}>{t(rechargeEnabled ? 'home.buyNow' : 'home.useNow')}</a>
+      </div>)}
+    </article>)}
+  </div>
+}
+
+function IcpRecord() {
+  const record = useIcpRecord()
+  return record ? <span style={{ marginLeft: '16px' }}>
+    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>{record}</a>
+  </span> : null
+}
+
+/** The rotating API example. It owns the rotation, so each switch re-renders this card
+ *  alone rather than the whole page. */
+function ApiDemoCard() {
+  const { t } = useTranslation()
   const [activeDemo, setActiveDemo] = useState(0)
   const demo = apiDemos[activeDemo]
-  const pageRef = useRef<HTMLElement>(null)
-  useScrollReveal(pageRef)
 
   useEffect(() => {
     // On phones, automatic example changes can move the content below the card.
@@ -225,6 +325,25 @@ export function HomePage() {
     manualOnly?.addEventListener('change', schedule)
     return () => { window.clearTimeout(timer); manualOnly?.removeEventListener('change', schedule) }
   }, [activeDemo])
+
+  return <div className="reference-code-card" aria-label={t('home.example')}>
+    <div className="reference-code-tabs" role="tablist" aria-label={t('home.example')}>
+      {apiDemos.map((item, index) => <button key={item.label} type="button" role="tab" aria-selected={index === activeDemo} aria-controls="home-api-example" onClick={() => setActiveDemo(index)}>{item.label}</button>)}
+    </div>
+    <div className="reference-code-panel" id="home-api-example" role="tabpanel" aria-live="polite" key={demo.label}>
+      <div className="reference-code-status"><span><b>{demo.method}</b> {demo.endpoint}</span><em>● 200 OK</em></div>
+      <div className="reference-code-body"><pre>{demo.request}</pre><pre>{demo.response}</pre></div>
+      <div className="reference-code-footer">{demo.stats.map((stat) => <span key={stat}>{stat}</span>)}</div>
+    </div>
+  </div>
+}
+
+export function HomePage() {
+  const { t } = useTranslation()
+  const auth = useAuthStatus()
+  const pageRef = useRef<HTMLElement>(null)
+  useScrollReveal(pageRef)
+
   const steps = [
     [t('home.stepOne'), t('home.stepOneCopy'), 'account'],
     [t('home.stepTwo'), t('home.stepTwoCopy'), 'balance'],
@@ -269,16 +388,7 @@ export function HomePage() {
             </div>
           </div>
         </div>
-        <div className="reference-code-card" aria-label={t('home.example')}>
-          <div className="reference-code-tabs" role="tablist" aria-label={t('home.example')}>
-            {apiDemos.map((item, index) => <button key={item.label} type="button" role="tab" aria-selected={index === activeDemo} aria-controls="home-api-example" onClick={() => setActiveDemo(index)}>{item.label}</button>)}
-          </div>
-          <div className="reference-code-panel" id="home-api-example" role="tabpanel" aria-live="polite" key={demo.label}>
-            <div className="reference-code-status"><span><b>{demo.method}</b> {demo.endpoint}</span><em>● 200 OK</em></div>
-            <div className="reference-code-body"><pre>{demo.request}</pre><pre>{demo.response}</pre></div>
-            <div className="reference-code-footer">{demo.stats.map((stat) => <span key={stat}>{stat}</span>)}</div>
-          </div>
-        </div>
+        <ApiDemoCard />
       </section>
 
       <section className="reference-section reference-steps">
@@ -311,19 +421,7 @@ export function HomePage() {
 
       <section className="reference-section reference-models">
         <div className="reference-heading"><span>{t('home.modelsTag')}</span><h2>{t('home.modelsTitle')}</h2></div>
-        <div className="reference-model-groups">
-          {modelGroups.map((group) => <article className="reference-model-group" key={group.title}>
-            <h3>{t(group.title)}</h3>
-            {group.models.map(([vendor, model, first, second, source]) => <div className="reference-model-row" key={model}>
-              <VendorLogo vendor={vendor} />
-              <p><small>{vendor}</small><strong>{model}</strong></p>
-              <span className="reference-price">{t(group.price, { first, second })}</span>
-              <span className="reference-source">{t('home.modelSource', { source })}</span>
-              <b className="reference-discount">{t('home.modelDiscount')}</b>
-              <a {...authenticatedLink(auth, '/purchase')}>{t('home.buyNow')}</a>
-            </div>)}
-          </article>)}
-        </div>
+        <ModelGroups auth={auth} />
         <a className="reference-more" href="/models">{t('home.moreModels')}</a>
       </section>
 
@@ -344,13 +442,7 @@ export function HomePage() {
 
       <footer className="reference-footer">
         <span>© 2026 <strong>ZToken</strong>. All rights reserved.</span>
-        {((globalThis as any).PORTAL_ICP_RECORD) && (
-          <span style={{ marginLeft: '16px' }}>
-            <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-              {(globalThis as any).PORTAL_ICP_RECORD}
-            </a>
-          </span>
-        )}
+        <IcpRecord />
       </footer>
     </main>
   )

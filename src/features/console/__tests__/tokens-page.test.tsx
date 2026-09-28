@@ -85,6 +85,37 @@ describe('TokensPage', () => {
     expect(screen.getByText('Total tokens').closest('section')).toHaveTextContent('7')
   })
 
+  it('shows and edits a limited quota in yuan on a CNY site', async () => {
+    vi.stubGlobal('PORTAL_QUOTA_DISPLAY_TYPE', 'CNY')
+    vi.stubGlobal('PORTAL_USD_EXCHANGE_RATE', 6.7)
+    const user = userEvent.setup()
+    const page = (items: unknown[]) => new Response(JSON.stringify({ page: 1, pageSize: 50, total: items.length, items }), { status: 200 })
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(page([{ id: 3, name: 'server', enabled: true, remainingQuota: 500_000, usedQuota: 0, unlimited: false, expiredTime: -1, maskedKey: 'sk-abcd********wxyz' }]))
+      .mockResolvedValueOnce(new Response(null, { status: 200 }))
+      .mockImplementation(() => Promise.resolve(page([])))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<TokensPage />)
+    expect(await screen.findByText('server')).toBeVisible()
+    expect(screen.getAllByText('¥6.70').some((element) => element.closest('td') !== null)).toBe(true)
+
+    await user.click(screen.getByRole('button', { name: /Create token/ }))
+    await user.type(screen.getByLabelText('Token name'), 'cny-key')
+    await user.click(screen.getByLabelText('Unlimited quota'))
+    const quota = screen.getByLabelText('Remaining quota (¥)')
+    await user.clear(quota)
+    await user.type(quota, '10')
+    // ¥10 round-trips through quota without drifting to 9.99…
+    expect(quota).toHaveValue(10)
+    await user.click(screen.getByRole('button', { name: 'Create' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/console/tokens', expect.objectContaining({
+      method: 'POST',
+      body: expect.stringContaining('"remainingQuota":746269'),
+    })))
+  })
+
   it('creates a token through the Portal BFF and refreshes the list', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn()

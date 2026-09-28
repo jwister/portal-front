@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderToString } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import i18n from '../../i18n'
@@ -24,6 +25,25 @@ describe('PublicHeader', () => {
     expect(screen.queryByText('alice')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '退出登录' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: '控制台' })).not.toBeInTheDocument()
+  })
+
+  it('offers the console instead of purchase where the deployment switches purchasing off, but only after hydration', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ authenticated: false, profile: null }), { status: 200 })))
+    vi.stubGlobal('PORTAL_ENABLE_RECHARGE', false)
+
+    // The prerendered homepage keeps Purchase, so hydration matches on every site.
+    expect(renderToString(<PublicHeader path="/" />)).toContain('购买')
+    render(<PublicHeader path="/" />)
+    expect(screen.queryByRole('link', { name: '购买' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '立即使用' })).toHaveAttribute('href', '/sign-in?returnTo=%2Fconsole%2Fdashboard')
+  })
+
+  it('sends a signed-in visitor straight to the console where purchasing is off', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ authenticated: true, profile: { id: 7, username: 'alice' } }), { status: 200 })))
+    vi.stubGlobal('PORTAL_ENABLE_RECHARGE', false)
+
+    render(<PublicHeader path="/" />)
+    await waitFor(() => expect(screen.getByRole('link', { name: '立即使用' })).toHaveAttribute('href', '/console/dashboard'))
   })
 
   it('opens the shared account actions on click and restores focus on Escape', async () => {

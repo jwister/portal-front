@@ -7,6 +7,7 @@ import Skeleton from '@douyinfe/semi-ui/lib/es/skeleton'
 import { cardPriceRows, cardTierRows, formatPrice, priceGroup, tierLabelKey, type CatalogModel, type PriceRow } from './catalog-data'
 import type { NewApiPricingResponse } from '../../api/portal'
 import { vendorLogoUrl } from './vendor-logos'
+import { displayCurrency, formatMoney } from '../../support/portal-config'
 
 export function VendorMark({ vendor }: { vendor: string }) {
   const logo = vendorLogoUrl(vendor)
@@ -32,9 +33,10 @@ export function Discount({ model, pricing, group }: { model: CatalogModel; prici
 }
 function PriceRows({ rows, ratio }: { rows: PriceRow[]; ratio: number | null }) {
   const { t } = useTranslation()
+  const currency = displayCurrency()
   return <>{rows.map((row) => <div className="zt-price-row" key={row.key}>
-    <span>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`)}</small></span>
-    <span className="zt-price-value">{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{ratio < 1 && row.base > 0 && <del title={t('catalog.basePrice')}>${formatPrice(row.base)}</del>}<strong title={t('catalog.salePrice')}>${formatPrice(row.base * ratio)}</strong></>}</span>
+    <span>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`, { currency: currency.code })}</small></span>
+    <span className="zt-price-value">{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{ratio < 1 && row.base > 0 && <del title={t('catalog.basePrice')}>{formatMoney(row.base, formatPrice, currency)}</del>}<strong title={t('catalog.salePrice')}>{formatMoney(row.base * ratio, formatPrice, currency)}</strong></>}</span>
   </div>)}</>
 }
 
@@ -54,6 +56,6 @@ export function PriceList({ model, pricing, group, compact = false }: { model: C
         <PriceRows rows={compact ? cardTierRows(tier) : tier.rows} ratio={ratio} />
       </div>)
       : !rows.length ? <p className="zt-muted">{t('models.priceUnavailable')}</p> : <PriceRows rows={rows} ratio={ratio} />}
-    {!compact && <p className="zt-muted zt-price-note">{t('catalog.priceNote')}</p>}
+    {!compact && <p className="zt-muted zt-price-note">{t('catalog.priceNote', { currency: displayCurrency().code })}</p>}
   </div>
 }

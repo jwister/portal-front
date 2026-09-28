@@ -9,6 +9,7 @@ import { MetricCard } from '../../components/MetricCard'
 import { RemoteState } from '../../components/RemoteState'
 import { DashboardChart } from '../../components/DashboardChart'
 import { getDashboard, getDashboardAnalytics, type DashboardAnalytics, type DashboardSummary } from '../../api/portal'
+import { formatMoney } from '../../support/portal-config'
 
 type DashboardRange = '7d' | '30d'
 
@@ -19,7 +20,7 @@ function formatMetric(value: number): string {
 
 function formatBalance(quota: number, quotaPerUsd: number): string {
   if (!Number.isFinite(quotaPerUsd) || quotaPerUsd <= 0) return formatMetric(quota)
-  return `$${new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(quota / quotaPerUsd)}`
+  return formatMoney(quota / quotaPerUsd, (value) => new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value))
 }
 
 function formatTokens(value: number): string {

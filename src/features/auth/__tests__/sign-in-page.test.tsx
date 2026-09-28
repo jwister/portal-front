@@ -17,6 +17,16 @@ describe('SignInPage', () => {
     expect(brand.querySelector('img')).toHaveAttribute('src', brandLogo)
   })
 
+  it('illustrates the gateway with mainland models on the mainland site', () => {
+    const models = (container: HTMLElement) => [...container.querySelectorAll('.zt-auth-model')].map((model) => model.textContent)
+    const overseas = render(<SignInPage />)
+    expect(models(overseas.container)).toEqual(['GPT', 'Claude', 'Gemini'])
+    overseas.unmount()
+
+    vi.stubGlobal('PORTAL_DOMESTIC_REGION', true)
+    expect(models(render(<SignInPage />).container)).toEqual(['DeepSeek', 'GLM', 'Seedance'])
+  })
+
   it('posts entered credentials to the portal login endpoint', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))

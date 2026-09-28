@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { type AuthProfile } from '../api/auth'
 import { getDashboard, type DashboardSummary } from '../api/portal'
 import { useAuthStatus } from '../auth/use-auth-status'
+import { displayCurrency, formatMoney } from '../support/portal-config'
 import { LanguageMenu } from './LanguageMenu'
 import { AccountMenu } from './AccountMenu'
 import { ConsoleIcon } from './ConsoleIcon'
@@ -42,7 +43,7 @@ export function ConsoleLayout({ activeKey, children, onNavigate, profile }: Cons
   const content = useRef<HTMLDivElement>(null)
   const initialPage = useRef(true)
   const balanceText = balance && Number.isFinite(balance.availableQuota) && Number.isFinite(balance.quotaPerUsd) && balance.quotaPerUsd > 0
-    ? '$' + new Intl.NumberFormat(i18n.language, { minimumFractionDigits:2, maximumFractionDigits:2 }).format(balance.availableQuota / balance.quotaPerUsd) : '$—'
+    ? formatMoney(balance.availableQuota / balance.quotaPerUsd, (value) => new Intl.NumberFormat(i18n.language, { minimumFractionDigits:2, maximumFractionDigits:2 }).format(value)) : displayCurrency().symbol + '—'
   useEffect(() => {
     if (!menuOpen) return
     if (dialog.current?.showModal) dialog.current.showModal()

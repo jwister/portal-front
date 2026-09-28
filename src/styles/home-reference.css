@@ -117,6 +117,9 @@ a.reference-gift:hover::after { transform: translateX(3px); }
 .reference-home .reference-credit-note { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 40px 0 24px; }
 .reference-credit-note .reference-gift { margin: 0; padding-right: 20px; font-size: 15px; }
 .reference-credit-note > small { color: var(--home-muted); font-size: .8rem; }
+/* A deployment without a sign-up gift: the prerendered offer is hidden before first paint, so
+   React removing it after hydration moves nothing (set by the bootstrap in deploy/prerender.mjs). */
+html[data-gift="none"] .reference-gift, html[data-gift="none"] .reference-gift-note, html[data-gift="none"] .reference-mini-balance { display: none; }
 .reference-actions { display: flex; justify-content: center; gap: 12px; }
 
 .reference-trust { max-width: 1184px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); border: 1px solid var(--home-line); border-radius: 16px; background: #fff; box-shadow: 0 8px 22px rgba(25, 24, 43, .05); }

@@ -29,18 +29,21 @@ import {
   type TokenSummary,
   type TokenWriteRequest,
 } from '../../api/portal'
+import { displayCurrency, formatMoney, quotaPerUsd } from '../../support/portal-config'
 
 interface TokenEditor {
   mode: 'create' | 'edit'
   token?: TokenSummary
 }
 
-const getQuotaUnit = () => typeof window !== 'undefined' ? ((window as any).PORTAL_QUOTA_PER_USD || 500_000) : 500_000;
-const getCurrencySymbol = () => typeof window !== 'undefined' ? ((window as any).PORTAL_CURRENCY_SYMBOL || '$') : '$';
-
-function formatUsdQuota(quota: number): string {
-  return `${getCurrencySymbol()}${(quota / getQuotaUnit()).toFixed(2)}`
+function formatQuota(quota: number): string {
+  return formatMoney(quota / quotaPerUsd(), (value) => value.toFixed(2))
 }
+
+/** The quota field edits money in the display currency. Rounding to cents keeps a typed
+ *  `10` from reading back as `9.9999…` once a CNY amount has round-tripped through quota. */
+const quotaToAmount = (quota: number) => Number((quota / quotaPerUsd() * displayCurrency().perUsd).toFixed(2))
+const amountToQuota = (amount: number) => Math.round(amount / displayCurrency().perUsd * quotaPerUsd())
 
 function displayKey(key: string): string {
   return key.startsWith('sk-') ? key : `sk-${key}`
@@ -144,7 +147,7 @@ function TokenEditorModal({ editor, onClose, onSaved }: {
         <label className="token-checkbox"><input type="checkbox" checked={draft.unlimited} onChange={(event) => setDraft((current) => ({ ...current, unlimited: event.target.checked }))} />{t('tokens.unlimited')}</label>
         {draft.unlimited
           ? <p className="token-warning">{t('tokens.unlimitedWarning')}</p>
-          : <><label htmlFor="token-quota">{t('tokens.remainingQuota')} ({getCurrencySymbol()})</label><Input id="token-quota" type="number" value={String(draft.remainingQuota / getQuotaUnit())} onChange={(value) => setDraft((current) => ({ ...current, remainingQuota: Math.round((Number(value) || 0) * getQuotaUnit()) }))} /></>}
+          : <><label htmlFor="token-quota">{t('tokens.remainingQuota')} ({displayCurrency().symbol})</label><Input id="token-quota" type="number" value={String(quotaToAmount(draft.remainingQuota))} onChange={(value) => setDraft((current) => ({ ...current, remainingQuota: amountToQuota(Number(value) || 0) }))} /></>}
         <label className="token-checkbox"><input type="checkbox" checked={draft.expiredTime === -1} onChange={(event) => setDraft((current) => ({ ...current, expiredTime: event.target.checked ? -1 : Math.floor(Date.now() / 1000) }))} />{t('tokens.neverExpires')}</label>
         <label htmlFor="token-expiration">{t('tokens.expiration')}</label>
         <Input id="token-expiration" type="date" disabled={draft.expiredTime === -1} value={dateFromTimestamp(draft.expiredTime)} onChange={(value) => setDraft((current) => ({ ...current, expiredTime: value ? Math.floor(new Date(`${value}T23:59:59`).getTime() / 1000) : current.expiredTime }))} />
@@ -239,7 +242,7 @@ export function TokensPage() {
       render: (enabled: boolean) => <Tag color={enabled ? 'green' : 'grey'}>{enabled ? t('tokens.active') : t('tokens.inactive')}</Tag>,
     },
     { title: t('tokens.key'), dataIndex: 'maskedKey', render: (value: string) => <Typography.Text code>{displayKey(value)}</Typography.Text> },
-    { title: t('tokens.quota'), dataIndex: 'remainingQuota', render: (value: number, token: TokenSummary) => token.unlimited ? t('tokens.unlimited') : formatUsdQuota(value) },
+    { title: t('tokens.quota'), dataIndex: 'remainingQuota', render: (value: number, token: TokenSummary) => token.unlimited ? t('tokens.unlimited') : formatQuota(value) },
     {
       title: t('tokens.actions'),
       key: 'actions',
@@ -263,7 +266,7 @@ export function TokensPage() {
       <section className="console-summary-grid" aria-label={t('tokens.title')}>
         <MetricCard label={t('tokens.total')} value={tokens.total} icon={<IconKey />} tone="blue" />
         <MetricCard label={t('tokens.activeCount')} value={activeTokenCount} icon={<IconTickCircle />} tone="mint" />
-        <MetricCard label={t('tokens.limitedQuota')} value={formatUsdQuota(limitedQuota)} icon={<IconCreditCard />} tone="amber" />
+        <MetricCard label={t('tokens.limitedQuota')} value={formatQuota(limitedQuota)} icon={<IconCreditCard />} tone="amber" />
       </section>
       {tokens.items.length === 0
         ? <Empty description={t('tokens.empty')} />

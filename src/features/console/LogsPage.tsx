@@ -10,6 +10,7 @@ import { ConsoleIcon } from '../../components/ConsoleIcon'
 import { ChoiceField } from '../../components/ChoiceField'
 import { DateTimeField } from '../../components/DateTimeField'
 import { getLogs, getLogStats, type LogPage, type LogQuery, type LogStats } from '../../api/portal'
+import { formatMoney, quotaPerUsd } from '../../support/portal-config'
 
 interface LogFilters {
   modelName: string
@@ -35,9 +36,7 @@ function formatTimestamp(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleString()
 }
 
-const getQuotaUnit = () => typeof window !== 'undefined' ? ((window as any).PORTAL_QUOTA_PER_USD || 500_000) : 500_000;
-const getCurrencySymbol = () => typeof window !== 'undefined' ? ((window as any).PORTAL_CURRENCY_SYMBOL || '$') : '$';
-const formatUsd = (quota: number) => `${getCurrencySymbol()}${(quota / getQuotaUnit()).toFixed(4)}`
+const formatCost = (quota: number) => formatMoney(quota / quotaPerUsd(), (value) => value.toFixed(4))
 const formatSeconds = (seconds: number) => `${seconds.toFixed(1)}s`
 
 export function LogsPage() {
@@ -100,7 +99,7 @@ export function LogsPage() {
     { title: t('logs.model'), dataIndex: 'modelName' },
     { title: t('logs.stream'), render: (_: unknown, log: LogPage['items'][number]) => log.stream && log.useTime > 0 ? `${(log.completionTokens / log.useTime).toFixed(1)} t/s` : '-' },
     { title: t('logs.tokens'), render: (_: unknown, log: LogPage['items'][number]) => <span>{t('logs.inputTokens')} {log.promptTokens} / {t('logs.outputTokens')} {log.completionTokens}<br />{t('logs.cacheRead')} {log.cacheTokens} / {t('logs.cacheWrite')} {log.cacheCreationTokens}</span> },
-    { title: t('logs.cost'), dataIndex: 'quota', render: (value: number) => formatUsd(value) },
+    { title: t('logs.cost'), dataIndex: 'quota', render: (value: number) => formatCost(value) },
     { title: t('logs.duration'), render: (_: unknown, log: LogPage['items'][number]) => <span>{t('logs.firstToken')} {log.firstResponseTime > 0 ? formatSeconds(log.firstResponseTime / 1000) : '-'}<br />{t('logs.totalTime')} {formatSeconds(log.useTime)}</span> },
     { title: t('logs.content'), dataIndex: 'content', width: '10%', render: (value: string) => <span className="log-detail" title={value}>{value}</span> },
   ]
@@ -122,7 +121,7 @@ export function LogsPage() {
       </details>
       {failed && <p className="console-form-feedback is-error" role="alert">{t('common.loadError')}</p>}
       <section className="console-summary-grid logs-summary-grid" aria-label={t('logs.title')} aria-busy={loading}>
-        <MetricCard label={t('logs.quota')} value={formatUsd(stats.quota)} icon={<ConsoleIcon name="recharge" />} tone="blue" />
+        <MetricCard label={t('logs.quota')} value={formatCost(stats.quota)} icon={<ConsoleIcon name="recharge" />} tone="blue" />
         <MetricCard label={t('logs.rpm')} value={stats.rpm.toLocaleString()} icon={<ConsoleIcon name="activity" />} tone="mint" />
         <MetricCard label={t('logs.tpm')} value={stats.tpm.toLocaleString()} icon={<ConsoleIcon name="dashboard" />} tone="amber" />
       </section>

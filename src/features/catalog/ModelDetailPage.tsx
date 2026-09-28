@@ -9,6 +9,7 @@ import { OfficialPriceReference } from './OfficialPriceReference'
 import { ModelExamples } from './ModelExamples'
 import { cardPriceRows, dearestTier, formatPrice, priceGroup, tierLabelKey, type CatalogModel } from './catalog-data'
 import type { NewApiPricingResponse } from '../../api/portal'
+import { displayCurrency, formatMoney } from '../../support/portal-config'
 
 /**
  * The catalog carries no modality metadata, so input/output modalities are derived from
@@ -83,6 +84,7 @@ function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: 
   const tokenPriced = model.prices[0]?.unit === 'million'
   const columns = tokenPriced ? (['input', 'output'] as const).filter((key) => model.prices.some((row) => row.key === key)) : []
   const current = priceGroup(pricing, model, group).name
+  const currency = displayCurrency()
   const appliedRatio = (name: string) => {
     const ratio = pricing.group_ratio?.[name]
     return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : null
@@ -93,7 +95,7 @@ function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: 
       <table className="zt-group-table">
         <thead><tr>
           <th scope="col">{t('models.groups')}</th>
-          {columns.map((key) => <th scope="col" key={key}>{t(`catalog.price.${key}`)}<small>{t('catalog.unit.million')}</small></th>)}
+          {columns.map((key) => <th scope="col" key={key}>{t(`catalog.price.${key}`)}<small>{t('catalog.unit.million', { currency: currency.code })}</small></th>)}
           {!columns.length && <th scope="col">{t('models.pricing')}</th>}
           <th scope="col">{t('catalog.groupRatio')}</th>
         </tr></thead>
@@ -105,18 +107,18 @@ function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: 
               const base = model.prices.find((row) => row.key === key)?.base ?? null
               return <td key={key}>{base === null || ratio === null
                 ? <small>{t('models.priceUnavailable')}</small>
-                : <span className="zt-price-value"><strong>${formatPrice(base * ratio)}</strong></span>}</td>
+                : <span className="zt-price-value"><strong>{formatMoney(base * ratio, formatPrice, currency)}</strong></span>}</td>
             })}
             {!columns.length && <td>{model.prices.length ? model.prices.map((row) => <span className="zt-group-price" key={row.key}>
               {row.label ?? t(`catalog.price.${row.key}`)}{' '}
-              {row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : `$${formatPrice(row.base * ratio)}`}
+              {row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : formatMoney(row.base * ratio, formatPrice, currency)}
             </span>) : <small>{t('models.priceUnavailable')}</small>}</td>}
             <td>{ratio === null ? <small>{t('models.priceUnavailable')}</small> : `×${ratio}`}</td>
           </tr>
         })}</tbody>
       </table>
     </div>}
-    <p className="zt-muted zt-price-note">{t('catalog.groupTableNote', { group: current || '—' })}
+    <p className="zt-muted zt-price-note">{t('catalog.groupTableNote', { group: current || '—', currency: currency.code })}
       {quoted && ` ${t('catalog.groupTableTier', { tier: tierLabelKey(quoted.label) ? t(tierLabelKey(quoted.label)!) : quoted.label })}`}</p>
   </section>
 }
@@ -130,6 +132,7 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
   const model = models.find((item) => item.name === modelName)
   if (!model) return <main className="zt-public zt-state"><h1>{t('catalog.notFound')}</h1><a href="/models">{t('catalog.back')}</a></main>
   const { ratio, name } = priceGroup(pricing, model, group)
+  const currency = displayCurrency()
   const headline = cardPriceRows(model).slice(0, 2)
   // `prices` holds one tier only, so a tiered model names it here rather than letting two
   // unattributed numbers stand for a rate that changes with the request.
@@ -146,8 +149,8 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
         <p className="zt-detail-lead">{t('catalog.introLine', { vendor: model.vendor, protocols: model.endpoints.join(' / ') || t(`catalog.type.${model.type}`) })}</p>
         <dl className="zt-detail-facts">
           {headline.map((row) => <div key={row.key}>
-            <dt>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`)}{headlineTier ? ` · ${headlineTier}` : ''}</small></dt>
-            <dd>{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{ratio < 1 && row.base > 0 && <del>${formatPrice(row.base)}</del>}<strong>${formatPrice(row.base * ratio)}</strong></>}</dd>
+            <dt>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`, { currency: currency.code })}{headlineTier ? ` · ${headlineTier}` : ''}</small></dt>
+            <dd>{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{ratio < 1 && row.base > 0 && <del>{formatMoney(row.base, formatPrice, currency)}</del>}<strong>{formatMoney(row.base * ratio, formatPrice, currency)}</strong></>}</dd>
           </div>)}
           <div><dt>{t('catalog.cap.billing')}</dt><dd><span className="zt-cap-text">{t(billingKey(model))}</span></dd></div>
           <div><dt>{t('catalog.cap.groups')}</dt><dd>{model.groups.map((item) => <span className="zt-cap-chip" key={item}>{pricing.usable_group?.[item] ?? item}</span>)}</dd></div>

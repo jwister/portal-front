@@ -20,8 +20,7 @@ function readGiftQuota(): number | null {
 const subscribe = () => () => {}
 const serverSnapshot = () => DEFAULT_GIFT_QUOTA
 
-/** The homepage re-renders on every example rotation, and building an Intl formatter costs
- *  far more than reusing one, so each language keeps its own. */
+/** Building an Intl formatter costs far more than reusing one, so each language keeps its own. */
 const formatters = new Map<string, Intl.NumberFormat>()
 
 /** "30万" / "300K": short enough for a badge, in the reader's own numerals. */

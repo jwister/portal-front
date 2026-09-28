@@ -7,9 +7,11 @@ import { compareModelsByVendor, modelHref, priceGroup, vendorRank } from './cata
 import { useCatalog } from './use-catalog'
 import { useModelNavigation } from './use-model'
 import { CatalogState, CopyButton, Discount, PriceList, VendorMark } from './CatalogShared'
+import { displayCurrency } from '../../support/portal-config'
 
 export function ModelsPage() {
   const { t } = useTranslation()
+  const currency = displayCurrency().code
   const { pricing, models, failed, retry } = useCatalog()
   const initial = new URLSearchParams(window.location.search)
   const [query, setQuery] = useState(initial.get('q') ?? '')
@@ -56,7 +58,7 @@ export function ModelsPage() {
       <aside className={'zt-promo-ticket' + (bestRatio === null ? ' is-neutral' : '')} data-testid="models-promotion">
         <div className="zt-ticket-top"><span>{t(bestRatio === null ? 'models.title' : 'catalog.promoScope')}</span><span aria-hidden="true">✳</span></div>
         {bestRatio !== null ? <><div className="zt-ticket-rate">{t('catalog.promoRate', { rate: Number((bestRatio * 10).toFixed(4)), percent: Number(((1 - bestRatio) * 100).toFixed(4)) })}</div><p className="zt-ticket-saving">{t('catalog.promoSaving', { percent: Number(((1 - bestRatio) * 100).toFixed(4)) })}</p></> : <><div className="zt-ticket-neutral">ONE API.<br />MORE IDEAS.</div><p className="zt-ticket-saving">{t('catalog.explore')}</p></>}
-        <div className="zt-ticket-bottom"><span>{t(bestRatio === null ? 'catalog.currency' : 'catalog.promoTerms')}</span><span className="zt-ticket-bars" aria-hidden="true" /></div>
+        <div className="zt-ticket-bottom"><span>{t(bestRatio === null ? 'catalog.currency' : 'catalog.promoTerms', { currency })}</span><span className="zt-ticket-bars" aria-hidden="true" /></div>
       </aside>
     </section>
     <section className="zt-filters" aria-label={t('catalog.filters')}>
@@ -65,7 +67,7 @@ export function ModelsPage() {
       <nav className="zt-chips zt-groups" aria-label={t('models.groupsLabel')}><span>{t('models.groups')}</span><button aria-pressed={group === 'all'} onClick={() => update('group', 'all', setGroup)}>{t('models.allGroups')}</button>{groups.map((name) => <button key={name} aria-pressed={group === name} onClick={() => update('group', name, setGroup)}>{name}</button>)}</nav>
     </section>
     <section id="model-catalog" aria-label={t('models.catalogLabel')}>
-      <div className="zt-results-bar"><p role="status">{t('models.count', { count: filtered.length })}</p><span>{t('catalog.currency')}</span>{(query || type !== 'all' || vendor !== 'all' || group !== 'all') && <Button theme="borderless" onClick={clear}>{t('catalog.clear')}</Button>}</div>
+      <div className="zt-results-bar"><p role="status">{t('models.count', { count: filtered.length })}</p><span>{t('catalog.currency', { currency })}</span>{(query || type !== 'all' || vendor !== 'all' || group !== 'all') && <Button theme="borderless" onClick={clear}>{t('catalog.clear')}</Button>}</div>
       {access.error && <p className="zt-error" role="alert">{access.error}</p>}
       {!filtered.length ? <div className="zt-empty"><h2>{t('models.empty')}</h2><Button onClick={clear}>{t('catalog.clear')}</Button></div> : <div className="zt-model-grid">{filtered.map((model) => <article className="zt-model-card" key={model.name} data-testid={'model-card-' + model.name} data-layout="catalog">
         <Discount model={model} pricing={pricing} group={group} />
@@ -76,6 +78,6 @@ export function ModelsPage() {
         <footer><span>{t('catalog.viewPrice')} ↗</span><Button theme="solid" type="primary" disabled={access.pending} loading={access.pendingModelName === model.name} onClick={() => void access.start(model.name)}>{t('catalog.use')}</Button></footer>
       </article>)}</div>}
     </section>
-    <p className="zt-catalog-note">{t('catalog.priceNote')}</p>
+    <p className="zt-catalog-note">{t('catalog.priceNote', { currency })}</p>
   </div></main>
 }

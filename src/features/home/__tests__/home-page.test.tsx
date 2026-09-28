@@ -1,7 +1,7 @@
 import githubIcon from '../../../assets/github.webp'
 import googleIcon from '../../../assets/google.webp'
 import mailIcon from '../../../assets/mail.webp'
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { renderToString } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -18,6 +18,15 @@ class MockIntersectionObserver {
   observe(element: Element): void { this.observed.add(element) }
   unobserve(element: Element): void { this.observed.delete(element) }
   disconnect(): void { this.observed.clear() }
+}
+
+/** What `/api/config.js` sets on zh.ztoken.net.cn. */
+function stubMainland() {
+  vi.stubGlobal('PORTAL_ENABLE_RECHARGE', false)
+  vi.stubGlobal('PORTAL_DOMESTIC_REGION', true)
+  vi.stubGlobal('PORTAL_QUOTA_DISPLAY_TYPE', 'CNY')
+  vi.stubGlobal('PORTAL_USD_EXCHANGE_RATE', 6.7)
+  vi.stubGlobal('PORTAL_ICP_RECORD', '苏ICP备2026073005号')
 }
 
 describe('HomePage', () => {
@@ -73,6 +82,64 @@ describe('HomePage', () => {
     vi.stubGlobal('PORTAL_QUOTA_FOR_NEW_USER', 100000)
 
     expect(renderToString(<HomePage />)).toContain('30万 Token')
+  })
+
+  it('lists overseas models at their discounted USD rate by default', () => {
+    const { container } = render(<HomePage />)
+
+    const table = container.querySelector('.reference-models') as HTMLElement
+    expect(within(table).getByText('claude-fable-5.1')).toBeVisible()
+    expect(within(table).getAllByText('输入 $9.50/M · 输出 $47.50/M')).toHaveLength(2)
+    expect(within(table).getByText('720p $0.1883/秒 · 1080p $0.3511/秒')).toBeVisible()
+    expect(within(table).getAllByText('9.5 折').length).toBeGreaterThan(0)
+  })
+
+  it('lists only mainland models, in yuan and without a discount, on the mainland site', () => {
+    stubMainland()
+    const { container } = render(<HomePage />)
+
+    const table = container.querySelector('.reference-models') as HTMLElement
+    expect(within(table).queryByText(/claude|gpt/)).toBeNull()
+    expect(within(table).getByText('输入 ¥11.926/M · 输出 ¥23.852/M')).toBeVisible()
+    expect(within(table).getByText('输入 ¥1.005/M · 输出 ¥2.01/M')).toBeVisible()
+    // A two-band rate quotes its peak band, never the cheaper off-peak one.
+    const flash = within(table).getByText('deepseek-v4.1-flash').closest('.reference-model-row') as HTMLElement
+    expect(within(flash).getByText('输入 ¥2.00/M · 输出 ¥7.9998/M')).toBeVisible()
+    // Converted per-second rates round up, never under the real rate (¥1.32794 → ¥1.328).
+    expect(within(table).getByText('720p ¥1.328/秒 · 1080p ¥2.4757/秒')).toBeVisible()
+    const cdance = within(table).getByText('cdance2.5-0807').closest('.reference-model-row') as HTMLElement
+    expect(within(cdance).getByText('来源：Doubao')).toBeVisible()
+    expect(within(table).queryByText('9.5 折')).toBeNull()
+    expect(screen.getByRole('link', { name: '苏ICP备2026073005号' })).toHaveAttribute('href', 'https://beian.miit.gov.cn/')
+  })
+
+  it('sends each mainland row to the console, through sign-in for an anonymous visitor', () => {
+    stubMainland()
+    const { container } = render(<HomePage />)
+
+    const table = container.querySelector('.reference-models') as HTMLElement
+    expect(within(table).queryByRole('link', { name: '立即购买' })).toBeNull()
+    for (const link of within(table).getAllByRole('link', { name: '立即使用' })) {
+      expect(link).toHaveAttribute('href', '/sign-in?returnTo=%2Fconsole%2Fdashboard')
+    }
+  })
+
+  it('sends a signed-in visitor straight to the console from a mainland row', async () => {
+    stubMainland()
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ authenticated: true, profile: { id: 7, username: 'alice' } })))))
+    const { container } = render(<HomePage />)
+
+    const table = container.querySelector('.reference-models') as HTMLElement
+    await waitFor(() => expect(within(table).getAllByRole('link', { name: '立即使用' })[0]).toHaveAttribute('href', '/console/dashboard'))
+  })
+
+  it('prerenders the overseas table without an ICP record so hydration matches on every site', () => {
+    stubMainland()
+    const html = renderToString(<HomePage />)
+
+    expect(html).toContain('claude-fable-5.1')
+    expect(html).toContain('$9.50/M')
+    expect(html).not.toContain('苏ICP备')
   })
 
   it('starts the assurance and metric bands at the same time', () => {

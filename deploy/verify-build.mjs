@@ -18,9 +18,10 @@ const BUDGET_GZIP = { html: 18_500, initialJs: 106_000 }
 const html = await readFile('dist/index.html', 'utf8')
 assert.ok(html.includes('id="reference-hero-title"'), 'Homepage must be in the HTML response')
 assert.ok(!html.includes('/src/assets/'), 'No development asset paths in the release')
-for (const { path, browser, stored, expected, blockedStorage } of [
+for (const { path, browser, stored, expected, blockedStorage, gift } of [
   { path: '/', browser: 'en-US', expected: 'One API gateway' },
   { path: '/', browser: 'zh-CN', expected: '统一 API 网关' },
+  { path: '/', browser: 'zh-CN', gift: 0, expected: '统一 API 网关' },
   { path: '/', browser: 'zh-CN', stored: 'en', expected: 'One API gateway' },
   { path: '/', browser: 'en-US', stored: 'zh-CN', expected: '统一 API 网关' },
   { path: '/', browser: 'zh-CN', blockedStorage: true, expected: '统一 API 网关' },
@@ -34,9 +35,12 @@ for (const { path, browser, stored, expected, blockedStorage } of [
       Object.defineProperty(window.navigator, 'languages', { value: [browser ?? 'en-US'] })
       if (stored) window.localStorage.setItem('ztoken.locale', stored)
       if (blockedStorage) Object.defineProperty(window, 'localStorage', { get() { throw new Error('Storage unavailable') } })
+      // What `/api/config.js` sets on a deployment that gives no sign-up gift.
+      if (gift !== undefined) window.PORTAL_QUOTA_FOR_NEW_USER = gift
     },
   })
   const doc = dom.window.document, root = doc.getElementById('root')
+  assert.equal(doc.documentElement.dataset.gift, gift === 0 ? 'none' : undefined, 'A zero gift is hidden before first paint')
   if (expected) {
     assert.ok(doc.querySelector('h1')?.textContent.includes(expected), `Initial locale: ${browser}/${stored}`)
     assert.equal(root.dataset.prerendered, 'true')
@@ -72,6 +76,6 @@ const overBudget = (label, actual, budget) =>
 assert.ok(htmlGzip <= BUDGET_GZIP.html, overBudget('Prerendered homepage', htmlGzip, BUDGET_GZIP.html))
 assert.ok(initialJsGzip <= BUDGET_GZIP.initialJs, overBudget('Initial JS', initialJsGzip, BUDGET_GZIP.initialJs))
 
-console.log(`Build verified: 8 locale/route cases; ${dependencies.size} initial JS modules; no blocking CSS or synchronous chat.`)
+console.log(`Build verified: 9 locale/route cases; ${dependencies.size} initial JS modules; no blocking CSS or synchronous chat.`)
 console.log(`First load: ${(htmlGzip / 1024).toFixed(1)} KB HTML + ${(initialJsGzip / 1024).toFixed(1)} KB JS gzipped `
   + `(budget ${(BUDGET_GZIP.html / 1024).toFixed(1)} / ${(BUDGET_GZIP.initialJs / 1024).toFixed(1)} KB).`)

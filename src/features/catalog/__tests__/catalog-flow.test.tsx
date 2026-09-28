@@ -95,6 +95,20 @@ describe('catalog browsing and pricing', () => {
     expect(screen.getByText('缓存写入')).toBeVisible()
   })
 
+  it('prices cards and details in yuan at the gateway rate on a CNY site', async () => {
+    vi.stubGlobal('PORTAL_QUOTA_DISPLAY_TYPE', 'CNY')
+    vi.stubGlobal('PORTAL_USD_EXCHANGE_RATE', 6.7)
+    const catalog = render(<ModelsPage />)
+    const card = await screen.findByTestId('model-card-deepseek-test')
+    expect(within(card).getByText('¥1.9095')).toBeVisible()
+    expect(within(card).getByText('¥2.01').tagName).toBe('DEL')
+    expect(within(card).getAllByText('CNY / 百万 Token').length).toBeGreaterThan(0)
+    catalog.unmount()
+    render(<ModelDetailPage modelName="deepseek-test" />)
+    expect((await screen.findAllByText('¥1.9095')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/价格以 CNY 列示/).length).toBeGreaterThan(0)
+  })
+
   it('prices every tier on the card and the detail page, naming the one the header quotes', async () => {
     const catalog = render(<ModelsPage />)
     const card = await screen.findByTestId('model-card-deepseek-v4.1-flash')

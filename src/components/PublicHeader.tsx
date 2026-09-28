@@ -5,6 +5,7 @@ import { authenticatedLink } from '../auth/auth-links'
 import { isPlainLeftClick, navigateTo } from '../navigation'
 import { AccountMenu } from './AccountMenu'
 import { LanguageMenu } from './LanguageMenu'
+import { useRechargeEnabled } from '../support/portal-config'
 import logo from '../assets/brand-logo.webp'
 
 function prefetchRoute(path: string): void {
@@ -21,6 +22,7 @@ function prefetchRoute(path: string): void {
 export function PublicHeader({ path }: { path?: string } = {}) {
   const { t } = useTranslation()
   const status = useAuthStatus()
+  const rechargeEnabled = useRechargeEnabled()
   const [menuOpen, setMenuOpen] = useState(false)
   const header = useRef<HTMLElement>(null)
   const menuButton = useRef<HTMLButtonElement>(null)
@@ -38,12 +40,13 @@ export function PublicHeader({ path }: { path?: string } = {}) {
     ['/', t('nav.home')], ['/models', t('nav.models')],
     ['/docs/guides/quick-start', t('nav.docs')]
   ]
-  if (typeof window === 'undefined' || (window as any).PORTAL_ENABLE_RECHARGE !== false) {
-    navItems.push(['/purchase', t('nav.purchase')]);
-  }
-  /** Purchase is the one destination that must leave the page: an anonymous visitor
-   *  is redirected to sign-in with a return address, which needs a real navigation. */
-  const linkProps = (destination: string) => destination === '/purchase'
+  // The call to action is Purchase, or the console where purchasing is switched off. It
+  // settles after hydration: the prerendered homepage always carries Purchase.
+  const cta = rechargeEnabled ? '/purchase' : '/console/dashboard'
+  navItems.push([cta, t(rechargeEnabled ? 'nav.purchase' : 'nav.useNow')])
+  /** The call to action is the one destination that must leave the page: an anonymous
+   *  visitor is redirected to sign-in with a return address, which needs a real navigation. */
+  const linkProps = (destination: string) => destination === cta
     ? { className: 'site-nav-cta', ...authenticatedLink(status, destination) }
     : {
       href: destination,
