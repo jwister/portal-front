@@ -344,10 +344,10 @@ export function HomePage() {
 
       <footer className="reference-footer">
         <span>© 2026 <strong>ZToken</strong>. All rights reserved.</span>
-        {((window as any).PORTAL_ICP_RECORD) && (
+        {((globalThis as any).PORTAL_ICP_RECORD) && (
           <span style={{ marginLeft: '16px' }}>
             <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-              {(window as any).PORTAL_ICP_RECORD}
+              {(globalThis as any).PORTAL_ICP_RECORD}
             </a>
           </span>
         )}
