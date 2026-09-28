@@ -342,7 +342,16 @@ export function HomePage() {
         <p className="reference-terms">{t('home.terms')}</p>
       </section>
 
-      <footer className="reference-footer">© 2026 <strong>ZToken</strong>. All rights reserved.</footer>
+      <footer className="reference-footer">
+        <span>© 2026 <strong>ZToken</strong>. All rights reserved.</span>
+        {((window as any).PORTAL_ICP_RECORD) && (
+          <span style={{ marginLeft: '16px' }}>
+            <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+              {(window as any).PORTAL_ICP_RECORD}
+            </a>
+          </span>
+        )}
+      </footer>
     </main>
   )
 }
