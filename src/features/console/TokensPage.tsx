@@ -59,6 +59,7 @@ function initialDraft(token?: TokenSummary): TokenWriteRequest {
     unlimited: token?.unlimited ?? true,
     remainingQuota: token?.remainingQuota ?? 0,
     expiredTime: token?.expiredTime ?? -1,
+    group: token?.group ?? 'default',
   }
 }
 

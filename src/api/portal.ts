@@ -1,4 +1,4 @@
-export interface DashboardSummary {
+﻿export interface DashboardSummary {
   availableQuota: number
   usedQuota: number
   requestCount: number
@@ -7,7 +7,7 @@ export interface DashboardSummary {
   enableRecharge: boolean
 }
 
-/** 后端已按当前账户权限聚合的图表数据，浏览器不接触 New API 的访问凭据�?*/
+/** 鍚庣宸叉寜褰撳墠璐︽埛鏉冮檺鑱氬悎鐨勫浘琛ㄦ暟鎹紝娴忚鍣ㄤ笉鎺ヨЕ New API 鐨勮闂嚟鎹€?*/
 export interface DashboardAnalytics {
   dailyUsage: Array<{ date: string; quota: number; requestCount: number }>
   topModels: Array<{ modelName: string; quota: number }>
@@ -23,6 +23,7 @@ export interface TokenSummary {
   unlimited: boolean
   expiredTime: number
   maskedKey: string
+  group: string
 }
 
 export interface TokenPage {
@@ -37,9 +38,10 @@ export interface TokenWriteRequest {
   unlimited: boolean
   remainingQuota: number
   expiredTime: number
+  group: string
 }
 
-/** NewAPI 模型广场的原始模型字段；Portal 不在接口层裁剪定价数据�?*/
+/** NewAPI 妯″瀷骞垮満鐨勫師濮嬫ā鍨嬪瓧娈碉紱Portal 涓嶅湪鎺ュ彛灞傝鍓畾浠锋暟鎹€?*/
 export interface NewApiPricingModel {
   id?: number
   model_name: string
@@ -67,7 +69,7 @@ export interface NewApiVendor {
   name: string
 }
 
-/** NewAPI 模型广场 `/api/pricing` 的完整顶层响应�?*/
+/** NewAPI 妯″瀷骞垮満 `/api/pricing` 鐨勫畬鏁撮《灞傚搷搴斻€?*/
 export interface NewApiPricingResponse {
   success: boolean
   data: NewApiPricingModel[]
@@ -129,7 +131,7 @@ export function getDashboard(): Promise<DashboardSummary> {
   return pendingDashboard
 }
 
-/** 获取指定时间范围的个人用量分析；范围被限制为服务端支持的两个安全选项�?*/
+/** 鑾峰彇鎸囧畾鏃堕棿鑼冨洿鐨勪釜浜虹敤閲忓垎鏋愶紱鑼冨洿琚檺鍒朵负鏈嶅姟绔敮鎸佺殑涓や釜瀹夊叏閫夐」銆?*/
 export function getDashboardAnalytics(range: '7d' | '30d'): Promise<DashboardAnalytics> {
   return requestJson(`/api/console/dashboard/analytics${queryString({ range })}`)
 }
@@ -253,22 +255,22 @@ export function updateProfile(profile: ProfileUpdateRequest): Promise<Profile> {
   })
 }
 
-/** 直接读取 Portal 原样透传�?NewAPI 模型广场定价响应�?*/
+/** 鐩存帴璇诲彇 Portal 鍘熸牱閫忎紶鐨?NewAPI 妯″瀷骞垮満瀹氫环鍝嶅簲銆?*/
 export function getPricing(): Promise<NewApiPricingResponse> {
   return requestJson('/api/catalog/pricing')
 }
 
-/** 读取模型广场汇率和导航配置使用的 NewAPI 公开状态响应�?*/
+/** 璇诲彇妯″瀷骞垮満姹囩巼鍜屽鑸厤缃娇鐢ㄧ殑 NewAPI 鍏紑鐘舵€佸搷搴斻€?*/
 export function getModelSquareStatus(): Promise<unknown> {
   return requestJson('/api/catalog/status')
 }
 
-/** 读取模型广场列表卡片使用的性能汇总数据�?*/
+/** 璇诲彇妯″瀷骞垮満鍒楄〃鍗＄墖浣跨敤鐨勬€ц兘姹囨€绘暟鎹€?*/
 export function getPerformanceSummary(query: { hours?: number } = {}): Promise<unknown> {
   return requestJson(`/api/catalog/perf-metrics/summary${queryString(query)}`)
 }
 
-/** 读取模型广场单模型详情使用的性能数据�?*/
+/** 璇诲彇妯″瀷骞垮満鍗曟ā鍨嬭鎯呬娇鐢ㄧ殑鎬ц兘鏁版嵁銆?*/
 export function getPerformanceMetrics(query: { model: string; group?: string; hours?: number }): Promise<unknown> {
   return requestJson(`/api/catalog/perf-metrics${queryString(query)}`)
 }
@@ -351,7 +353,7 @@ export function getPaymentOrder(orderNo: string): Promise<PaymentOrder> {
   return requestJson<PaymentOrder>(`/api/payments/orders/${encodeURIComponent(orderNo)}`)
 }
 
-/** 仅请求服务端取消当前会话所属的待支付订单�?*/
+/** 浠呰姹傛湇鍔＄鍙栨秷褰撳墠浼氳瘽鎵€灞炵殑寰呮敮浠樿鍗曘€?*/
 export function cancelPaymentOrder(orderNo: string): Promise<PaymentOrder> {
   return requestJson<PaymentOrder>(`/api/payments/orders/${encodeURIComponent(orderNo)}/cancel`, { method: 'POST' })
 }
