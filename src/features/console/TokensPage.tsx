@@ -35,10 +35,11 @@ interface TokenEditor {
   token?: TokenSummary
 }
 
-const QUOTA_PER_USD = 500_000
+const getQuotaUnit = () => typeof window !== 'undefined' ? ((window as any).PORTAL_QUOTA_PER_USD || 500_000) : 500_000;
+const getCurrencySymbol = () => typeof window !== 'undefined' ? ((window as any).PORTAL_CURRENCY_SYMBOL || '$') : '$';
 
 function formatUsdQuota(quota: number): string {
-  return `$${(quota / QUOTA_PER_USD).toFixed(2)}`
+  return `${getCurrencySymbol()}${(quota / getQuotaUnit()).toFixed(2)}`
 }
 
 function displayKey(key: string): string {
@@ -143,7 +144,7 @@ function TokenEditorModal({ editor, onClose, onSaved }: {
         <label className="token-checkbox"><input type="checkbox" checked={draft.unlimited} onChange={(event) => setDraft((current) => ({ ...current, unlimited: event.target.checked }))} />{t('tokens.unlimited')}</label>
         {draft.unlimited
           ? <p className="token-warning">{t('tokens.unlimitedWarning')}</p>
-          : <><label htmlFor="token-quota">{t('tokens.remainingQuota')} ($)</label><Input id="token-quota" type="number" value={String(draft.remainingQuota / QUOTA_PER_USD)} onChange={(value) => setDraft((current) => ({ ...current, remainingQuota: Math.round((Number(value) || 0) * QUOTA_PER_USD) }))} /></>}
+          : <><label htmlFor="token-quota">{t('tokens.remainingQuota')} ({getCurrencySymbol()})</label><Input id="token-quota" type="number" value={String(draft.remainingQuota / getQuotaUnit())} onChange={(value) => setDraft((current) => ({ ...current, remainingQuota: Math.round((Number(value) || 0) * getQuotaUnit()) }))} /></>}
         <label className="token-checkbox"><input type="checkbox" checked={draft.expiredTime === -1} onChange={(event) => setDraft((current) => ({ ...current, expiredTime: event.target.checked ? -1 : Math.floor(Date.now() / 1000) }))} />{t('tokens.neverExpires')}</label>
         <label htmlFor="token-expiration">{t('tokens.expiration')}</label>
         <Input id="token-expiration" type="date" disabled={draft.expiredTime === -1} value={dateFromTimestamp(draft.expiredTime)} onChange={(value) => setDraft((current) => ({ ...current, expiredTime: value ? Math.floor(new Date(`${value}T23:59:59`).getTime() / 1000) : current.expiredTime }))} />

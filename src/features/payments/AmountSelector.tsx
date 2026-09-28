@@ -1,3 +1,4 @@
+const getCurrencySymbol = () => typeof window !== 'undefined' ? ((window as any).PORTAL_CURRENCY_SYMBOL || '$') : '$';
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -36,10 +37,10 @@ export function AmountSelector({ selected, customAmount, onSelect, onCustomAmoun
     <section className="zt-amount-selector" aria-labelledby="purchase-amount-title">
       <header><h2 id="purchase-amount-title">{t('purchase.amount')}</h2><p>{t('purchase.amountHint')}</p></header>
       <div className="zt-amount-options">
-        {presetAmounts.map((amount) => <button key={amount} aria-pressed={selected === amount} type="button" onClick={(event) => select(amount,event.currentTarget)}><span className="zt-amount-value">${amount}</span><span className="zt-amount-check" aria-hidden="true">✓</span></button>)}
+        {presetAmounts.map((amount) => <button key={amount} aria-pressed={selected === amount} type="button" onClick={(event) => select(amount,event.currentTarget)}><span className="zt-amount-value">{getCurrencySymbol()}{amount}</span><span className="zt-amount-check" aria-hidden="true">✓</span></button>)}
       </div>
       <button className="zt-amount-custom-toggle" aria-pressed={selected === 'custom'} aria-expanded={selected === 'custom'} aria-controls="custom-amount-panel" type="button" onClick={(event)=>select('custom',event.currentTarget)}>{t('purchase.custom')}<span aria-hidden="true">{selected === 'custom'?'−':'+'}</span></button>
-      {selected === 'custom' && <div className="zt-amount-custom" id="custom-amount-panel"><label htmlFor="custom-amount">{t('purchase.customLabel')}</label><div><span aria-hidden="true">$</span><input id="custom-amount" type="number" min="1" max="10000" step="0.01" inputMode="decimal" value={customAmount} aria-invalid={customHasError} aria-describedby="custom-amount-hint" onChange={(event)=>onCustomAmount(event.target.value)} /></div><p id="custom-amount-hint" className={customHasError?'is-error':undefined} role={customHasError?'alert':undefined}>{t(customHasError?'purchase.amountError':'purchase.customHint')}</p></div>}
+      {selected === 'custom' && <div className="zt-amount-custom" id="custom-amount-panel"><label htmlFor="custom-amount">{t('purchase.customLabel')}</label><div><span aria-hidden="true">{getCurrencySymbol()}</span><input id="custom-amount" type="number" min="1" max="10000" step="0.01" inputMode="decimal" value={customAmount} aria-invalid={customHasError} aria-describedby="custom-amount-hint" onChange={(event)=>onCustomAmount(event.target.value)} /></div><p id="custom-amount-hint" className={customHasError?'is-error':undefined} role={customHasError?'alert':undefined}>{t(customHasError?'purchase.amountError':'purchase.customHint')}</p></div>}
     </section>
   )
 }

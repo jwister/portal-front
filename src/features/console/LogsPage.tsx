@@ -35,8 +35,9 @@ function formatTimestamp(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleString()
 }
 
-const QUOTA_PER_USD = 500_000
-const formatUsd = (quota: number) => `$${(quota / QUOTA_PER_USD).toFixed(4)}`
+const getQuotaUnit = () => typeof window !== 'undefined' ? ((window as any).PORTAL_QUOTA_PER_USD || 500_000) : 500_000;
+const getCurrencySymbol = () => typeof window !== 'undefined' ? ((window as any).PORTAL_CURRENCY_SYMBOL || '$') : '$';
+const formatUsd = (quota: number) => `${getCurrencySymbol()}${(quota / getQuotaUnit()).toFixed(4)}`
 const formatSeconds = (seconds: number) => `${seconds.toFixed(1)}s`
 
 export function LogsPage() {
