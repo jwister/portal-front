@@ -99,7 +99,7 @@ export function SignUpPage(props: SignUpPageProps) {
       <AuthInput name="email" placeholder={t('register.emailPlaceholder')} label={t('auth.email')} type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={emailValue} onChange={(event) => { setEmailValue(event.target.value); setVerificationSent(false) }} readOnly={sendingCode} required error={fieldErrors.email ? t(fieldErrors.email) : undefined} />
       <div className="zt-auth-code-row">
         <AuthInput name="verificationCode" placeholder={t('register.verificationCodePlaceholder')} label={t('register.verificationCode')} autoComplete="one-time-code" inputMode="numeric" required error={fieldErrors.verificationCode ? t(fieldErrors.verificationCode) : undefined} />
-        <button className="zt-auth-secondary" type="button" disabled={coolingDown || !emailValue || submitting} onClick={() => void openCaptcha()}>{coolingDown ? t('register.sendCodeCountdown', { seconds: countdown }) : t('register.sendCode')}</button>
+        <button className="zt-auth-secondary" type="button" disabled={coolingDown || !emailValue || submitting || sendingCode} onClick={() => void openCaptcha()}>{sendingCode ? t('register.sendingCode', '发送中...') : coolingDown ? t('register.sendCodeCountdown', { seconds: countdown }) : t('register.sendCode')}</button>
       </div>
       {verificationSent && <p className="zt-auth-success" role="status">{t('register.verificationSent')}</p>}
       <AuthInput name="password" placeholder={t('auth.passwordPlaceholder')} label={t('auth.password')} type="password" autoComplete="new-password" required error={fieldErrors.password ? t(fieldErrors.password) : undefined} />
