@@ -121,8 +121,8 @@ export async function getCaptcha(): Promise<CaptchaResponse> {
   return await response.json() as CaptchaResponse
 }
 
-export async function sendEmailVerification(email: string, captchaId: string, captchaCode: string): Promise<void> {
-  await request(`/api/auth/verification?email=${encodeURIComponent(email)}&captchaId=${encodeURIComponent(captchaId)}&captchaCode=${encodeURIComponent(captchaCode)}`)
+export async function sendEmailVerification(email: string, captchaVerification: string): Promise<void> {
+  await request(`/api/auth/verification?email=${encodeURIComponent(email)}&captchaVerification=${encodeURIComponent(captchaVerification)}`)
 }
 
 let pendingStatus: Promise<AuthStatus> | undefined

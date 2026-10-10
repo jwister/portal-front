@@ -1,0 +1,48 @@
+diff --git a/node_modules/aj-captcha-react/dist/captcha/Captcha.js b/node_modules/aj-captcha-react/dist/captcha/Captcha.js
+index 631451f..e4418ba 100644
+--- a/node_modules/aj-captcha-react/dist/captcha/Captcha.js
++++ b/node_modules/aj-captcha-react/dist/captcha/Captcha.js
+@@ -71,7 +71,7 @@ var Captcha = /*#__PURE__*/forwardRef(function (props, ref) {
+             _yield$picture = _context.sent;
+             repCode = _yield$picture.repCode;
+             repData = _yield$picture.repData;
+-            msg = CODE[repCode] || '请刷新页面再试';
++            msg = CODE[repCode] || (typeof localStorage !== 'undefined' && (localStorage.getItem('ztoken.locale') || '').startsWith('zh') ? '\u8BF7\u5237\u65B0\u9875\u9762\u518D\u8BD5' : 'Please refresh to retry');
+             if (repCode === '0000') {
+               setError('');
+               setCaptcha(vr.data(repData));
+diff --git a/node_modules/aj-captcha-react/dist/points/Points.js b/node_modules/aj-captcha-react/dist/points/Points.js
+index b1f026c..705b3f9 100644
+--- a/node_modules/aj-captcha-react/dist/points/Points.js
++++ b/node_modules/aj-captcha-react/dist/points/Points.js
+@@ -31,7 +31,7 @@ var point = {
+       }
+       var word = '';
+       if (captcha.word) {
+-        word = "\u8BF7\u4F9D\u6B21\u70B9\u51FB\u3016".concat(captcha.word, "\u3017");
++        word = (typeof localStorage !== 'undefined' && (localStorage.getItem('ztoken.locale') || '').startsWith('zh') ? '\u8BF7\u4F9D\u6B21\u70B9\u51FB\u3016' + captcha.word + '\u3017' : 'Please click in order: ' + captcha.word);
+       }
+       return word.replaceAll(',', '、');
+     }
+diff --git a/node_modules/aj-captcha-react/dist/slider/Slider.js b/node_modules/aj-captcha-react/dist/slider/Slider.js
+index 2c8c725..ea40a49 100644
+--- a/node_modules/aj-captcha-react/dist/slider/Slider.js
++++ b/node_modules/aj-captcha-react/dist/slider/Slider.js
+@@ -171,7 +171,7 @@ var Slider = function Slider(props) {
+     onMouseLeave: handleEnd
+   }, /*#__PURE__*/React.createElement("div", {
+     className: classNames(bem('title'))
+-  }, "\u8BF7\u5B8C\u6210\u5B89\u5168\u9A8C\u8BC1"), /*#__PURE__*/React.createElement("div", {
++  }, (typeof localStorage !== 'undefined' && (localStorage.getItem('ztoken.locale') || '').startsWith('zh') ? '\u8BF7\u5B8C\u6210\u5B89\u5168\u9A8C\u8BC1' : 'Please complete security verification')), /*#__PURE__*/React.createElement("div", {
+     className: classNames(bem('image'))
+   }, captcha.image && /*#__PURE__*/React.createElement("img", {
+     alt: "",
+@@ -193,7 +193,7 @@ var Slider = function Slider(props) {
+     style: {
+       opacity: solving ? 0 : 1
+     }
+-  }, /*#__PURE__*/React.createElement("span", null, "\u5411\u53F3\u6ED1\u52A8\u5B8C\u6210\u9A8C\u8BC1")), /*#__PURE__*/React.createElement("div", {
++  }, /*#__PURE__*/React.createElement("span", null, (typeof localStorage !== 'undefined' && (localStorage.getItem('ztoken.locale') || '').startsWith('zh') ? '\u5411\u53F3\u6ED1\u52A8\u5B8C\u6210\u9A8C\u8BC1' : 'Swipe right to verify'))), /*#__PURE__*/React.createElement("div", {
+     className: classNames(bem('mask', [sliderVariant.className])),
+     style: {
+       width: "".concat(trail.x[trail.x.length - 1] + 30, "px")
