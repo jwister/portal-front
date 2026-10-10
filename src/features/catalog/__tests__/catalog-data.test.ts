@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { catalogModels, priceGroup, videoPrices, tokenTierPrices, dearestTier, tierLabelKey, modelHref, modelType, compareModelsByVendor, modelVersion, vendorRank } from '../catalog-data'
+import { catalogModels, cardPriceRows, priceGroup, videoPrices, tokenTierPrices, dearestTier, tierLabelKey, unreadExpression, modelHref, modelType, compareModelsByVendor, modelVersion, vendorRank } from '../catalog-data'
 import { pricingFixture } from './pricing-fixture'
 import { getBytePlusOfficialReference } from '../seedance-reference'
 
@@ -97,6 +97,48 @@ describe('catalog billing rules', () => {
         { key: 'cache', base: 0.014925, unit: 'million' },
       ] },
     ])
+  })
+  it('reads the cache write rates the live Claude and GPT expressions bill', () => {
+    // Copied verbatim from the live catalog. Before `cc` and `cc1h` were known, every one of
+    // these models showed no price at all.
+    expect(tokenTierPrices('len <= 272000 ? tier("standard", p * 10 + c * 50 + cr * 1 + cc * 12.5) : tier("long_context", p * 20 + c * 75 + cr * 2 + cc * 25)')).toEqual([
+      { label: 'standard', rows: [
+        { key: 'input', base: 10, unit: 'million' },
+        { key: 'output', base: 50, unit: 'million' },
+        { key: 'cache', base: 1, unit: 'million' },
+        { key: 'cacheWrite', base: 12.5, unit: 'million' },
+      ] },
+      { label: 'long_context', rows: [
+        { key: 'input', base: 20, unit: 'million' },
+        { key: 'output', base: 75, unit: 'million' },
+        { key: 'cache', base: 2, unit: 'million' },
+        { key: 'cacheWrite', base: 25, unit: 'million' },
+      ] },
+    ])
+    expect(tokenTierPrices('tier("standard", p * 4 + cr * 0.2 + cc * 5 + cc1h * 8 + c * 20)')[0].rows.map((row) => [row.key, row.base])).toEqual([
+      ['input', 4], ['output', 20], ['cache', 0.2], ['cacheWrite', 5], ['cacheWrite1h', 8],
+    ])
+  })
+  it('reads every token variable New API bills, and keeps the card to the common three', () => {
+    // The image cache example from New API's own expression documentation, plus audio.
+    const [tier] = tokenTierPrices('tier("base", p * 5 + cr * 1.25 + img * 8 + img_cr * 2 + c * 30 + ai * 10 + ao * 50 + img_o * 40)')
+    expect(tier.rows.map((row) => [row.key, row.base])).toEqual([
+      ['input', 5], ['output', 30], ['cache', 1.25],
+      ['imageInput', 8], ['imageCache', 2], ['imageOutput', 40],
+      ['audioInput', 10], ['audioOutput', 50],
+    ])
+    const [model] = catalogModels({ ...pricingFixture, data: [{ model_name: 'media-test', billing_mode: 'tiered_expr', billing_expr: 'tier("base", p * 5 + c * 30 + cr * 1.25 + cc * 6.25 + img * 8 + ao * 50)' }] })
+    expect(cardPriceRows(model).map((row) => row.key)).toEqual(['input', 'output', 'cache'])
+    expect(unreadExpression(model)).toBeNull()
+  })
+  it('hands back the expression as written only when no price could be read from it', () => {
+    const [unread, flat] = catalogModels({ ...pricingFixture, data: [
+      { model_name: 'future-test', billing_mode: 'tiered_expr', billing_expr: ' tier("base", p * 2 + vid * 30) ' },
+      { model_name: 'ratio-test', model_ratio: 1, enable_groups: ['default'] },
+    ] })
+    expect(unread.prices).toEqual([])
+    expect(unreadExpression(unread)).toBe('tier("base", p * 2 + vid * 30)')
+    expect(unreadExpression(flat)).toBeNull()
   })
   it('keeps every clock and input-length band the gateway charges', () => {
     const [, , , , clock, banded] = catalogModels(pricingFixture)

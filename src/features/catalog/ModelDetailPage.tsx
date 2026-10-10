@@ -58,7 +58,7 @@ function Capability({ model, pricing, group }: { model: CatalogModel; pricing: N
     { key: 'catalog.cap.streaming', value: <CapabilityFlag ok={model.type === 'chat'} /> },
     { key: 'catalog.cap.memory', value: <CapabilityFlag ok={conversational} /> },
     { key: 'catalog.cap.billing', value: <span className="zt-cap-text">{t(billingKey(model))}</span> },
-    { key: 'catalog.cap.cache', value: <CapabilityFlag ok={model.prices.some((row) => row.key === 'cache' || row.key === 'cacheWrite')} /> },
+    { key: 'catalog.cap.cache', value: <CapabilityFlag ok={model.prices.some((row) => /cache/i.test(row.key))} /> },
     { key: 'catalog.cap.batch', value: <CapabilityFlag ok={exposes('batch')} /> },
     { key: 'catalog.cap.search', value: <CapabilityFlag ok={exposes('search') || exposes('web')} /> },
     { key: 'catalog.cap.tuning', value: <CapabilityFlag ok={exposes('fine')} /> },

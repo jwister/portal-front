@@ -72,6 +72,12 @@
    both a label we translate (闲时) and the operator's own wording (输入<=32k). */
 .zt-price-tier-label { display:inline-block; margin:0 0 4px; padding:3px 9px; border:1px solid #cbd5e1; border-radius:6px; background:#f1f5f9; color:var(--zt-ink); font-size:12px; font-weight:650; overflow-wrap:anywhere; }
 .zt-price-tier .zt-price-row:first-of-type { border-top:0; }
+/* A price the page could not read is shown as the gateway's expression, never as a blank. */
+.zt-price-expression { display:grid; gap:6px; }
+.zt-price-expression-title { margin:0; color:#92400e; font-size:13px; font-weight:650; }
+.zt-price-expression code { padding:8px 10px; border-radius:6px; background:#f1f5f9; color:#334155; font:12px/1.6 ui-monospace,monospace; overflow-wrap:anywhere; }
+.zt-price-expression small { color:var(--zt-muted); font-size:11px; }
+.zt-model-card .zt-price-expression code { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; }
 .zt-model-card footer { margin-top:auto; padding-top:20px; display:flex; align-items:center; justify-content:space-between; gap:12px; color:#64748b; font-size:12px; }
 .zt-model-card footer button { position:relative; z-index:2; min-height:40px; }
 .zt-catalog-note { color:var(--zt-muted); font-size:13px; margin:24px 0; }

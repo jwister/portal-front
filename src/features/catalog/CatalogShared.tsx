@@ -4,7 +4,7 @@ import { IconCopy } from '@douyinfe/semi-icons'
 import '../../ui/semi-base'
 import Button from '@douyinfe/semi-ui/lib/es/button'
 import Skeleton from '@douyinfe/semi-ui/lib/es/skeleton'
-import { cardPriceRows, cardTierRows, formatPrice, priceGroup, tierLabelKey, type CatalogModel, type PriceRow } from './catalog-data'
+import { cardPriceRows, cardTierRows, formatPrice, priceGroup, tierLabelKey, unreadExpression, type CatalogModel, type PriceRow } from './catalog-data'
 import type { NewApiPricingResponse } from '../../api/portal'
 import { vendorLogoUrl } from './vendor-logos'
 import { displayCurrency, formatMoney } from '../../support/portal-config'
@@ -40,6 +40,16 @@ function PriceRows({ rows, ratio }: { rows: PriceRow[]; ratio: number | null }) 
   </div>)}</>
 }
 
+/** The expression's amounts are USD whatever the site's display currency, so it says so. */
+function RawExpression({ expression }: { expression: string }) {
+  const { t } = useTranslation()
+  return <div className="zt-price-expression">
+    <p className="zt-price-expression-title">{t('catalog.specialExpression')}</p>
+    <code>{expression}</code>
+    <small>{t('catalog.specialExpressionNote')}</small>
+  </div>
+}
+
 export function PriceList({ model, pricing, group, compact = false }: { model: CatalogModel; pricing: NewApiPricingResponse; group: string; compact?: boolean }) {
   const { t } = useTranslation()
   const { ratio, name } = priceGroup(pricing, model, group)
@@ -47,6 +57,7 @@ export function PriceList({ model, pricing, group, compact = false }: { model: C
   // band the gateway charges: one headline price would be right only part of the time.
   const tiers = model.tiers.length > 1 ? model.tiers : []
   const rows = compact ? cardPriceRows(model) : model.prices
+  const expression = unreadExpression(model)
   return <div className="zt-prices" data-testid={`model-card-${model.name}-pricing`}>
     {compact && (tiers.length > 0 || rows.length > 0) && <div className="zt-price-heading"><span>{t(tiers.length ? 'catalog.tierPrice' : 'catalog.salePrice')}</span><span>{name || '—'}</span></div>}
     {!compact && <p className="zt-muted">{t('catalog.priceGroup', { group: name || '—' })}</p>}
@@ -55,6 +66,7 @@ export function PriceList({ model, pricing, group, compact = false }: { model: C
         <p className="zt-price-tier-label">{tierLabelKey(tier.label) ? t(tierLabelKey(tier.label)!) : tier.label}</p>
         <PriceRows rows={compact ? cardTierRows(tier) : tier.rows} ratio={ratio} />
       </div>)
+      : expression ? <RawExpression expression={expression} />
       : !rows.length ? <p className="zt-muted">{t('models.priceUnavailable')}</p> : <PriceRows rows={rows} ratio={ratio} />}
     {!compact && <p className="zt-muted zt-price-note">{t('catalog.priceNote', { currency: displayCurrency().code })}</p>}
   </div>

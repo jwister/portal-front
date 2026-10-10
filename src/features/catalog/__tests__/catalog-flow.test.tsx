@@ -139,6 +139,23 @@ describe('catalog browsing and pricing', () => {
     expect(screen.getAllByText('$0.283575').length).toBeGreaterThan(1)
   })
 
+  it('shows the expression as written when its price cannot be read, never a blank card', async () => {
+    const expression = 'tier("base", p * 2 + c * 8 + vid * 30)'
+    const futurePricing = { ...pricingFixture, data: [...pricingFixture.data, { model_name: 'future-test', vendor_id: 1, billing_mode: 'tiered_expr', enable_groups: ['default'], supported_endpoint_types: ['openai'], billing_expr: expression }] }
+    vi.mocked(fetch).mockImplementation((url) => Promise.resolve(new Response(JSON.stringify(
+      url === '/api/auth/status' ? { authenticated: false, profile: null } : futurePricing,
+    ))))
+    const catalog = render(<ModelsPage />)
+    const card = await screen.findByTestId('model-card-future-test')
+    expect(within(card).getByText('特殊计费表达式')).toBeVisible()
+    expect(within(card).getByText(expression)).toBeVisible()
+    expect(within(card).queryByText('价格暂不可用')).not.toBeInTheDocument()
+    catalog.unmount()
+    render(<ModelDetailPage modelName="future-test" />)
+    expect(await screen.findByText(expression)).toBeVisible()
+    expect(screen.getByText(/公式中的金额为美元（USD）/)).toBeVisible()
+  })
+
   it('adds the group comparison table and the protocol chips', async () => {
     render(<ModelDetailPage modelName="deepseek-test" />)
 

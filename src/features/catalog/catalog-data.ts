@@ -47,16 +47,28 @@ export function videoPrices(expression: string | undefined): PriceRow[] {
   return rows.length === tierCalls.length ? rows : []
 }
 
-/** Which usage each expression variable bills, and the order the rows are printed in. */
-const TOKEN_RATE_KEYS: Record<string, string> = { p: 'input', c: 'output', cr: 'cache', cw: 'cacheWrite' }
-const TOKEN_ROW_ORDER = ['input', 'output', 'cache', 'cacheWrite']
+/**
+ * Which usage each expression variable bills, in the order the rows are printed. This is
+ * New API's full token variable set (`pkg/billingexpr/expr.md` upstream): check it there
+ * when the gateway is upgraded. A variable missing here withholds the parsed price, and
+ * the card falls back to the expression as written.
+ */
+const TOKEN_RATE_KEYS: Record<string, string> = {
+  p: 'input', c: 'output',
+  cr: 'cache', cc: 'cacheWrite', cc1h: 'cacheWrite1h',
+  img: 'imageInput', img_cr: 'imageCache', img_o: 'imageOutput',
+  ai: 'audioInput', ao: 'audioOutput',
+}
+const TOKEN_ROW_ORDER = Object.values(TOKEN_RATE_KEYS)
+/** A card has room for the rates nearly every request pays; the rest stay on the detail page. */
+const CARD_TOKEN_KEYS = ['input', 'output', 'cache']
 
 /** Read one tier's `p * rate + c * rate` sum. A rate is written per million tokens, so
  *  `p * 0.15` is USD 0.15 per million prompt tokens. */
 function tokenRates(formula: string): PriceRow[] {
   const rows: PriceRow[] = []
   for (const term of formula.split('+')) {
-    const rate = term.trim().match(/^([a-z]{1,2})\s*\*\s*(\d+(?:\.\d+)?)$/)
+    const rate = term.trim().match(/^([a-z][a-z0-9_]*)\s*\*\s*(\d+(?:\.\d+)?)$/)
     if (!rate) return []
     const key = TOKEN_RATE_KEYS[rate[1]]
     const base = Number(rate[2])
@@ -168,7 +180,7 @@ export function priceGroup(pricing: NewApiPricingResponse, model: CatalogModel, 
 }
 
 export function cardPriceRows(model: CatalogModel): PriceRow[] {
-  if (model.prices[0]?.unit !== 'second') return model.prices.filter((row) => row.key !== 'cacheWrite')
+  if (model.prices[0]?.unit !== 'second') return model.prices.filter((row) => row.unit !== 'million' || CARD_TOKEN_KEYS.includes(row.key))
   const seen = new Set<string>()
   return model.prices.filter((row) => {
     const key = `${row.label?.split('·').pop()}:${row.base}`
@@ -176,6 +188,16 @@ export function cardPriceRows(model: CatalogModel): PriceRow[] {
     seen.add(key)
     return true
   }).map((row) => ({ ...row, label: row.label?.split('·').pop() }))
+}
+
+/**
+ * The gateway's expression, for a model whose price could not be read from it. It is
+ * printed as written, as New API's own pricing page does, so a new variable or formula
+ * shape leaves the card showing how the model bills instead of no price at all.
+ */
+export function unreadExpression(model: CatalogModel): string | null {
+  const expression = model.raw.billing_expr?.trim()
+  return model.raw.billing_mode === 'tiered_expr' && !model.prices.length && expression ? expression : null
 }
 
 /** One tier's rows trimmed for a card. A tiered card repeats every row once per tier, so it
