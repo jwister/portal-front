@@ -5,6 +5,7 @@ import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCatalog } from './use-catalog'
 import { CatalogState, CopyButton, Discount, PriceList, VendorMark } from './CatalogShared'
+import { Select } from '../../components/Select'
 import { OfficialPriceReference } from './OfficialPriceReference'
 import { ModelExamples } from './ModelExamples'
 import { cardPriceRows, dearestTier, formatPrice, priceGroup, tierLabelKey, type CatalogModel } from './catalog-data'
@@ -179,12 +180,16 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
     <div className="zt-detail-layout">
       <section id="pricing" className="zt-panel">
         <div className="zt-panel-heading"><h2>{t('models.pricing')}</h2><Discount model={model} pricing={pricing} group={group} /></div>
-        <label className="zt-group-select">{t('models.groups')}<select value={group} onChange={(event) => {
-          setGroup(event.target.value)
+        <Select label={t('models.groups')} value={group} options={[
+          { value: 'all', label: t('catalog.defaultGroup') },
+          ...(group !== 'all' && !model.groups.includes(group) ? [{ value: group, label: group }] : []),
+          ...model.groups.map((item) => ({ value: item, label: pricing.usable_group?.[item] ?? item })),
+        ]} onChange={(next) => {
+          setGroup(next)
           const params = new URLSearchParams(window.location.search)
-          if (event.target.value === 'all') params.delete('group'); else params.set('group', event.target.value)
+          if (next === 'all') params.delete('group'); else params.set('group', next)
           window.history.replaceState({}, '', `${window.location.pathname}${params.size ? `?${params}` : ''}`)
-        }}><option value="all">{t('catalog.defaultGroup')}</option>{group !== 'all' && !model.groups.includes(group) && <option value={group}>{group}</option>}{model.groups.map((item) => <option key={item} value={item}>{pricing.usable_group?.[item] ?? item}</option>)}</select></label>
+        }} />
         <PriceList model={model} pricing={pricing} group={group} />
         {model.type === 'video' && <p className="zt-notice">{t('catalog.videoNote')}</p>}
       </section>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CopyButton } from '../catalog/CatalogShared'
+import { CopyButton } from '../../components/CopyButton'
+import { Select } from '../../components/Select'
 import { ASSET_URL, ASSET_VERSION, SEEDANCE_MODELS, isDocumentedSeedance, seedanceExamples } from './seedance-api'
 
 function Code({ value, label = 'JSON' }: { value: string; label?: string }) {
@@ -27,7 +28,7 @@ export function SeedanceSection({ id }: { id: string }) {
       <p><code>POST /v1/videos</code></p>
       <div className="zt-table-wrap"><table><thead><tr><th>{t('docs.param.name')}</th><th>{t('docs.param.type')}</th><th>{t('docs.param.required')}</th><th>{t('docs.param.desc')}</th></tr></thead><tbody>{params.map(([name, type, required]) => <tr key={name}><td><code>{name}</code></td><td>{type}</td><td>{t(required ? 'docs.param.yes' : 'docs.param.no')}</td><td>{t(`seedance.param.${name}`)}</td></tr>)}</tbody></table></div>
       <p className="zt-notice">{t('seedance.limits')}</p>
-      <label className="zt-example-select">{t('docs.exampleModel')}<select value={model} onChange={(event) => setModel(event.target.value)}>{SEEDANCE_MODELS.map((name) => <option key={name}>{name}</option>)}</select></label>
+      <Select label={t('docs.exampleModel')} value={model} options={SEEDANCE_MODELS.map((name) => ({ value: name, label: name }))} onChange={setModel} />
       <p>{t('seedance.environment')}</p>
       <div className="zt-chips" role="group" aria-label={t('docs.codeLanguage')}>{Object.keys(examples).map((lang) => <button key={lang} aria-pressed={language === lang} onClick={() => setLanguage(lang as typeof language)}>{lang}</button>)}</div>
       <Code value={examples[language]} label={language} />

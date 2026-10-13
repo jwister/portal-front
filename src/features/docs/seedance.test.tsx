@@ -31,7 +31,8 @@ describe('Seedance gateway documentation', () => {
     const user = userEvent.setup()
     const view = render(<DocsPage path="/docs/api/seedance" />)
     expect(screen.getByRole('heading', { level: 1, name: 'Seedance 视频 API' })).toBeVisible()
-    await user.selectOptions(screen.getByRole('combobox', { name: '示例模型' }), 'seedance-2.0-fast')
+    await user.click(screen.getByRole('combobox', { name: '示例模型' }))
+    await user.click(screen.getByRole('option', { name: 'seedance-2.0-fast' }))
     await user.click(screen.getByRole('button', { name: 'JavaScript' }))
     const code = view.container.querySelector('#seedanceCreate pre')!.textContent!
     expect(code).toContain('seedance-2.0-fast')

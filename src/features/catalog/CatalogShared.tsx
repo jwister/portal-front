@@ -1,6 +1,4 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { IconCopy } from '@douyinfe/semi-icons'
 import '../../ui/semi-base'
 import Button from '@douyinfe/semi-ui/lib/es/button'
 import Skeleton from '@douyinfe/semi-ui/lib/es/skeleton'
@@ -9,17 +7,11 @@ import type { NewApiPricingResponse } from '../../api/portal'
 import { vendorLogoUrl } from './vendor-logos'
 import { displayCurrency, formatMoney } from '../../support/portal-config'
 
+export { CopyButton } from '../../components/CopyButton'
+
 export function VendorMark({ vendor }: { vendor: string }) {
   const logo = vendorLogoUrl(vendor)
   return <span className="zt-vendor-mark" aria-hidden="true">{logo ? <img src={logo} alt="" /> : vendor.slice(0, 2)}</span>
-}
-export function CopyButton({ value, label }: { value: string; label?: string }) {
-  const { t } = useTranslation()
-  const [status, setStatus] = useState<'idle' | 'done' | 'error'>('idle')
-  return <span className="zt-copy"><Button theme="borderless" icon={<IconCopy />} aria-label={label ?? t('models.copyName')} onClick={async (event) => {
-    event.stopPropagation()
-    try { await navigator.clipboard.writeText(value); setStatus('done') } catch { setStatus('error') }
-  }}>{status === 'done' ? t('models.copied') : label ?? t('models.copyName')}</Button><span role="status" className={status === 'error' ? 'zt-copy-error' : 'zt-sr-only'}>{status === 'error' ? t('catalog.copyError') : status === 'done' ? t('models.copied') : ''}</span></span>
 }
 export function CatalogState({ failed, retry }: { failed: boolean; retry: () => void }) {
   const { t } = useTranslation()

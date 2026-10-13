@@ -10,6 +10,11 @@ import type { OutputChunk } from 'rollup'
 const ROUTES: { pattern: string; chunks: string[] }[] = [
   { pattern: '^/models$', chunks: ['SecondaryRoutes', 'ModelsPage'] },
   { pattern: '^/models/.+', chunks: ['SecondaryRoutes', 'ModelDetailPage'] },
+  // Tool and skill articles load their entries in a third hop; the first matching pattern wins.
+  { pattern: '^/docs/tools/cli$', chunks: ['SecondaryRoutes', 'DocsPage', 'cli-tools'] },
+  { pattern: '^/docs/tools/ide$', chunks: ['SecondaryRoutes', 'DocsPage', 'ide-tools'] },
+  { pattern: '^/docs/tools/clients$', chunks: ['SecondaryRoutes', 'DocsPage', 'chat-clients'] },
+  { pattern: '^/docs/skills$', chunks: ['SecondaryRoutes', 'DocsPage', 'agent-skills'] },
   { pattern: '^/docs(?:/|$)', chunks: ['SecondaryRoutes', 'DocsPage'] },
   { pattern: '^/purchase$', chunks: ['SecondaryRoutes', 'PurchasePage'] },
   { pattern: '^/(?:sign-in|sign-up|oauth/(?:github|oidc))$', chunks: ['AuthRoutes'] },

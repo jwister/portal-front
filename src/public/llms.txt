@@ -9,6 +9,10 @@
 - [Quick start](https://ztoken.cc/docs/guides/quick-start): First API call in five minutes
 - [Model catalogue](https://ztoken.cc/models): Every available model with live pricing
 - [API reference](https://ztoken.cc/docs): Endpoints, authentication and streaming
+- [CLI agents](https://ztoken.cc/docs/tools/cli): Install terminal coding agents such as Claude Code and Codex CLI, and point them at ZToken
+- [IDEs & extensions](https://ztoken.cc/docs/tools/ide): Editors and VS Code extensions that accept a custom provider
+- [Chat clients](https://ztoken.cc/docs/tools/clients): Desktop and web chat apps set up as an OpenAI-compatible provider
+- [Popular skills](https://ztoken.cc/docs/skills): The most-starred agent skill repositories and how to install them
 
 ## Endpoints
 

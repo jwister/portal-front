@@ -1,20 +1,30 @@
 import { SeedanceSection } from './SeedanceSection'
-import { useEffect, useState } from 'react'
-import '../../ui/semi-base'
-import Button from '@douyinfe/semi-ui/lib/es/button'
+import { useEffect, useState, type MouseEvent } from 'react'
+import './docs.css'
 import { useTranslation } from 'react-i18next'
-import { CopyButton } from '../catalog/CatalogShared'
+import { CopyButton } from '../../components/CopyButton'
+import { Select } from '../../components/Select'
 import { useCatalog } from '../catalog/use-catalog'
 import { modelHref } from '../catalog/catalog-data'
+import { EcosystemSection, prefetchEcosystem, useEcosystem, useText, type EcosystemLoader } from './ecosystem/EcosystemSection'
+import { RouteFallback } from '../../components/RouteFallback'
+import { isPlainLeftClick, navigateTo } from '../../navigation'
 
 export const MODEL_BASE_URL = ((window as any).PORTAL_PUBLIC_API_URL || 'https://api.ztoken.cc') + '/v1'
 /** Anthropic-style clients expect the host without the OpenAI `/v1` suffix. */
 export const MODEL_HOST = MODEL_BASE_URL.replace(/\/v1$/, '')
 
 /** Sidebar groups, in render order. */
-const GROUPS = ['guides', 'api', 'resources'] as const
+const GROUPS = ['guides', 'ecosystem', 'api'] as const
 
-const articles = [
+/**
+ * An article either lists i18n-backed `sections`, or `load`s its entries from its own
+ * chunk. Tool and skill lists use the latter so they can grow without adding weight to
+ * the locale tables every page downloads, or to this page's own chunk.
+ */
+type Article = { path: string; key: string; group: typeof GROUPS[number]; sections?: string[]; load?: EcosystemLoader }
+
+const articles: Article[] = [
   { path: '/docs/guides/quick-start', key: 'quick', group: 'guides', sections: ['account', 'balance', 'key', 'connection', 'model', 'request', 'next'] },
   { path: '/docs/guides/tools', key: 'tools', group: 'guides', sections: ['base', 'claudeCode', 'sdk', 'clients', 'editors', 'verify'] },
   { path: '/docs/account', key: 'account', group: 'guides', sections: ['account', 'balance', 'key'] },
@@ -23,6 +33,10 @@ const articles = [
   { path: '/docs/api/seedance', key: 'seedance', group: 'api', sections: ['seedanceOverview', 'seedanceCreate', 'seedanceContent', 'seedancePoll', 'seedanceAssets', 'seedanceErrors'] },
   { path: '/docs/troubleshooting', key: 'errors', group: 'guides', sections: ['errors', 'support'] },
   { path: '/docs/faq', key: 'faq', group: 'guides', sections: ['authKey', 'quota', 'modelMissing', 'priceCalc', 'contact'] },
+  { path: '/docs/tools/cli', key: 'cli', group: 'ecosystem', load: () => import('./ecosystem/cli-tools') },
+  { path: '/docs/tools/ide', key: 'ide', group: 'ecosystem', load: () => import('./ecosystem/ide-tools') },
+  { path: '/docs/tools/clients', key: 'chatClients', group: 'ecosystem', load: () => import('./ecosystem/chat-clients') },
+  { path: '/docs/skills', key: 'skills', group: 'ecosystem', load: () => import('./ecosystem/agent-skills') },
 ]
 
 const ERROR_CODES = ['400', '401', '403', '404', '429', '5xx']
@@ -72,12 +86,12 @@ function Examples() {
   const [language, setLanguage] = useState<'cURL' | 'Python' | 'JavaScript'>('cURL')
   const supported = models.filter((model) => model.type === 'chat' && model.endpoints.includes('/v1/chat/completions'))
   const selected = supported.find((model) => model.name === (choice || requested)) ?? supported.find((model) => model.name.startsWith('deepseek')) ?? supported[0]
-  if (!pricing) return <div role={failed ? 'alert' : 'status'}><p>{t(failed ? 'models.error' : 'catalog.loading')}</p>{failed && <Button onClick={retry}>{t('catalog.retry')}</Button>}</div>
+  if (!pricing) return <div role={failed ? 'alert' : 'status'}><p>{t(failed ? 'models.error' : 'catalog.loading')}</p>{failed && <button type="button" className="zt-doc-button" onClick={retry}>{t('catalog.retry')}</button>}</div>
   if (!selected) return <p className="zt-notice">{t('docs.noExample')}</p>
   const examples = requestExamples(selected.name)
   return <div>
     {requested && !supported.some((model) => model.name === requested) && <p className="zt-notice">{t('docs.exampleMismatch', { model: requested })}</p>}
-    <label className="zt-example-select">{t('docs.exampleModel')}<select value={selected.name} onChange={(event) => setChoice(event.target.value)}>{supported.map((model) => <option key={model.name}>{model.name}</option>)}</select></label>
+    <Select label={t('docs.exampleModel')} value={selected.name} options={supported.map((model) => ({ value: model.name, label: model.name }))} onChange={setChoice} />
     <p><a href={modelHref(selected.name)}>{t('catalog.viewPrice')} →</a></p>
     <p>{t('docs.environment')}</p>
     <div className="zt-code"><div className="zt-code-toolbar"><div role="group" aria-label={t('docs.codeLanguage')}>{Object.keys(examples).map((lang) => <button key={lang} aria-pressed={language === lang} onClick={() => setLanguage(lang as typeof language)}>{lang}</button>)}</div><CopyButton key={language + selected.name} value={examples[language]} label={t('docs.copyCode')} /></div><pre><code>{examples[language]}</code></pre></div>
@@ -175,6 +189,7 @@ function SectionBody({ id }: { id: string }) {
         <li>{t('docs.step.pickModel')}</li>
       </ol>
       <Code language="shell" value={`export ANTHROPIC_BASE_URL="${MODEL_HOST}"\nexport ANTHROPIC_AUTH_TOKEN="YOUR_API_KEY"\nclaude`} />
+      <a href="/docs/tools/cli">{t('docs.eco.more')} →</a>
     </>}
 
     {id === 'sdk' && <>
@@ -198,6 +213,7 @@ function SectionBody({ id }: { id: string }) {
         </tbody>
       </table></div>
       <p className="zt-muted">{t('docs.clientsNote')}</p>
+      <a href="/docs/tools/clients">{t('docs.eco.more')} →</a>
     </>}
 
     {id === 'editors' && <>
@@ -207,6 +223,7 @@ function SectionBody({ id }: { id: string }) {
         <li>{t('docs.step.chooseModelName')}</li>
       </ol>
       <p className="zt-muted">{t('docs.editorsNote')}</p>
+      <a href="/docs/tools/ide">{t('docs.eco.more')} →</a>
     </>}
 
     {id === 'verify' && <>
@@ -246,9 +263,34 @@ function SectionBody({ id }: { id: string }) {
   </>
 }
 
+/**
+ * Moves to another docs or catalog page the way the header does, so the header stays and
+ * only the content swaps instead of the whole app reloading. The console, external links,
+ * new-tab clicks and anchors on the same page keep the browser's own behavior.
+ */
+function followInApp(event: MouseEvent<HTMLElement>, onFollow: () => void) {
+  const link = event.target instanceof Element ? event.target.closest('a') : null
+  if (!link || link.target || event.defaultPrevented || !isPlainLeftClick(event)) return
+  const url = new URL(link.href, window.location.href)
+  if (url.origin !== window.location.origin || !/^\/(docs|models)(\/|$)/.test(url.pathname)) return
+  if (url.pathname === window.location.pathname && url.hash) return
+  event.preventDefault()
+  onFollow()
+  navigateTo(url.pathname + url.search)
+}
+
 export function DocsPage({ path }: { path: string }) {
   const { t } = useTranslation()
+  const text = useText()
   const article = articles.find((item) => item.path === (path === '/docs' || path === '/docs/' ? articles[0].path : path))
+  const ecosystem = useEcosystem(article?.load)
+  const entries = ecosystem?.data?.entries
+  const sections = article?.sections ?? entries?.map((entry) => entry.id) ?? []
+  const sectionKey = sections.join(' ')
+  const title = (id: string) => {
+    const entry = entries?.find((item) => item.id === id)
+    return entry ? text(entry.name) : t(`docs.section.${id}`)
+  }
   const [active, setActive] = useState('')
   const [navOpen, setNavOpen] = useState(false)
   useEffect(() => {
@@ -258,18 +300,31 @@ export function DocsPage({ path }: { path: string }) {
       const heading = entries.filter((entry) => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top).at(-1)
       if (heading?.target.parentElement?.id) setActive(heading.target.parentElement.id)
     }, { rootMargin: '-90px 0px -65% 0px' })
-    article.sections.forEach((id) => { const heading = document.getElementById(id)?.querySelector('h2'); if (heading) observer.observe(heading) })
+    sections.forEach((id) => { const heading = document.getElementById(id)?.querySelector('h2'); if (heading) observer.observe(heading) })
     return () => observer.disconnect()
-  }, [article, path])
+  }, [article, path, sectionKey])
+  // Loaded sections did not exist when the browser tried the URL's #anchor.
+  useEffect(() => {
+    if (entries && window.location.hash) document.getElementById(decodeURIComponent(window.location.hash.slice(1)))?.scrollIntoView?.()
+  }, [entries])
   if (!article) return <main className="zt-public zt-state"><h1>{t('docs.notFound')}</h1><a href="/docs/guides/quick-start">{t('catalog.quickStart')}</a></main>
+  // Same loading state as switching pages from the header: the area under it waits as one.
+  if (article.load && !ecosystem) return <RouteFallback />
   const params = window.location.search
-  return <main className="zt-public zt-docs"><div className="zt-doc-layout">
-    <aside className="zt-doc-sidebar"><button className="zt-doc-toggle" aria-expanded={navOpen} aria-controls="docs-navigation" onClick={() => setNavOpen(!navOpen)}>{t('docs.navigation')} {navOpen ? '−' : '+'}</button><nav id="docs-navigation" className={navOpen ? 'is-open' : ''} aria-label={t('docs.navigation')}><span className="zt-eyebrow">ZTOKEN DOCS</span><p>{t('docs.startHere')}</p>{GROUPS.map((group) => {
+  return <main className="zt-public zt-docs" onClick={(event) => followInApp(event, () => setNavOpen(false))}><div className="zt-doc-layout">
+    <aside className="zt-doc-sidebar"><button className="zt-doc-toggle" aria-expanded={navOpen} aria-controls="docs-navigation" onClick={() => setNavOpen(!navOpen)}>{t('docs.navigation')} {navOpen ? '−' : '+'}</button><nav id="docs-navigation" className={navOpen ? 'is-open' : ''} aria-label={t('docs.navigation')}><span className="zt-eyebrow">ZTOKEN DOCS</span>{GROUPS.map((group) => {
       const items = articles.filter((item) => item.group === group)
       if (!items.length) return null
-      return <div className="zt-doc-group" key={group}><p>{t(`docs.group.${group}`)}</p>{items.map((item) => <a key={item.key} href={item.path + params} aria-current={item === article ? 'page' : undefined}>{t(`docs.title.${item.key}`)}</a>)}</div>
+      return <div className="zt-doc-group" key={group}><p>{t(`docs.group.${group}`)}</p>{items.map((item) => <a key={item.key} href={item.path + params} aria-current={item === article ? 'page' : undefined} onMouseEnter={item.load && (() => prefetchEcosystem(item.load!))}>{t(`docs.title.${item.key}`)}</a>)}</div>
     })}<p>{t('docs.resources')}</p><a href="/models">{t('models.title')} ↗</a><a href="/console/tokens">{t('docs.keyLink')} ↗</a></nav></aside>
-    <article className="zt-doc-article"><span className="zt-eyebrow">{t('docs.startHere')}</span><h1>{t(`docs.title.${article.key}`)}</h1><p className="zt-doc-lead">{t(`docs.intro.${article.key}`)}</p><details className="zt-mobile-toc"><summary>{t('docs.onThisPage')}</summary>{article.sections.map((id) => <a href={`#${id}`} key={id}>{t(`docs.section.${id}`)}</a>)}</details>{article.sections.map((id) => <section key={id} id={id}><h2>{t(`docs.section.${id}`)}</h2><SectionBody id={id} /></section>)}</article>
-    <nav className="zt-doc-toc" aria-label={t('docs.onThisPage')}><strong>{t('docs.onThisPage')}</strong>{article.sections.map((id) => <a key={id} href={`#${id}`} aria-current={active === id ? 'location' : undefined} onClick={() => setActive(id)}>{t(`docs.section.${id}`)}</a>)}</nav>
+    <article className="zt-doc-article"><span className="zt-eyebrow">{t(`docs.group.${article.group}`)}</span><h1>{t(`docs.title.${article.key}`)}</h1><p className="zt-doc-lead">{article.load ? ecosystem?.data && text(ecosystem.data.intro) : t(`docs.intro.${article.key}`)}</p>
+      {ecosystem && (ecosystem.data ? <p className="zt-muted zt-doc-meta">{t('docs.eco.updated', { date: ecosystem.data.updated })}</p>
+        : <div role="alert" className="zt-notice">{t('docs.eco.loadFailed')} <button type="button" className="zt-doc-button" onClick={() => window.location.reload()}>{t('docs.eco.reload')}</button></div>)}
+      <details className="zt-mobile-toc"><summary>{t('docs.onThisPage')}</summary>{sections.map((id) => <a href={`#${id}`} key={id}>{title(id)}</a>)}</details>
+      {sections.map((id) => {
+        const entry = entries?.find((item) => item.id === id)
+        return <section key={id} id={id}><h2>{title(id)}</h2>{entry ? <EcosystemSection entry={entry} baseUrl={MODEL_BASE_URL} host={MODEL_HOST} /> : <SectionBody id={id} />}</section>
+      })}</article>
+    <nav className="zt-doc-toc" aria-label={t('docs.onThisPage')}><strong>{t('docs.onThisPage')}</strong>{sections.map((id) => <a key={id} href={`#${id}`} aria-current={active === id ? 'location' : undefined} onClick={() => setActive(id)}>{title(id)}</a>)}</nav>
   </div></main>
 }

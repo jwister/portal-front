@@ -76,6 +76,54 @@ const overBudget = (label, actual, budget) =>
 assert.ok(htmlGzip <= BUDGET_GZIP.html, overBudget('Prerendered homepage', htmlGzip, BUDGET_GZIP.html))
 assert.ok(initialJsGzip <= BUDGET_GZIP.initialJs, overBudget('Initial JS', initialJsGzip, BUDGET_GZIP.initialJs))
 
+/**
+ * Lazy chunks that still grow with content. A locale table is a dynamic import, so the
+ * initial-JS figure above never sees it, yet every page waits for one: documentation prose
+ * belongs in the per-article chunks under src/features/docs/ecosystem, which only their own
+ * page loads. When an article outgrows its budget, split the category rather than raising it.
+ * Measured 2026-10-12 — locale 18.0 KB (zh-CN), DocsPage 7.0 KB, largest article 3.9 KB.
+ */
+const LAZY_BUDGET_GZIP = [
+  { label: 'Locale table', test: /^src\/i18n\/locales\/[^/]+\.json$/, budget: 20_000 },
+  { label: 'Docs article', test: /^src\/features\/docs\/ecosystem\/[^/]+\.ts$/, budget: 8_000 },
+]
+for (const { label, test, budget } of LAZY_BUDGET_GZIP) {
+  const keys = Object.keys(manifest).filter(key => test.test(key))
+  assert.ok(keys.length, `${label}: no chunk matched ${test}; update deploy/verify-build.mjs`)
+  for (const key of keys) {
+    const size = await gzipOf('dist/' + manifest[key].file)
+    assert.ok(size <= budget, `${label} ${key} is ${(size / 1024).toFixed(1)} KB gzipped, over its ${(budget / 1024).toFixed(1)} KB budget `
+      + 'in deploy/verify-build.mjs. Move docs prose out of the locale tables, or split the article.')
+  }
+}
+
+/**
+ * Everything a docs visit downloads on top of the entry. The docs render no Semi component:
+ * their buttons, copy buttons and dropdown are plain elements, which keeps the UI library
+ * (about 20 kB gzipped with its base styles) off the route. Measured 2026-10-12 — 15.4 KB JS,
+ * 21.6 KB CSS; the code font is a separate file fetched only where code is shown.
+ */
+const DOCS_ROUTE_BUDGET_GZIP = { js: 18_000, css: 25_000 }
+const docsRoute = new Set()
+const walkRoute = key => {
+  if (docsRoute.has(key) || dependencies.has(key)) return
+  docsRoute.add(key)
+  for (const child of manifest[key].imports ?? []) walkRoute(child)
+}
+walkRoute('src/SecondaryRoutes.tsx')
+walkRoute('src/features/docs/DocsPage.tsx')
+let docsJs = 0, docsCss = 0
+for (const key of docsRoute) {
+  const { file, css = [] } = manifest[key]
+  assert.ok(!/semi-(button|skeleton|spin)/.test(await readFile('dist/' + file, 'utf8')), `${key} brings Semi into the docs route; use the plain components in src/components instead`)
+  docsJs += await gzipOf('dist/' + file)
+  for (const sheet of css) docsCss += await gzipOf('dist/' + sheet)
+}
+assert.ok(docsJs <= DOCS_ROUTE_BUDGET_GZIP.js, `Docs route JS is ${(docsJs / 1024).toFixed(1)} KB gzipped, over its ${(DOCS_ROUTE_BUDGET_GZIP.js / 1024).toFixed(1)} KB budget in deploy/verify-build.mjs.`)
+assert.ok(docsCss <= DOCS_ROUTE_BUDGET_GZIP.css, `Docs route CSS is ${(docsCss / 1024).toFixed(1)} KB gzipped, over its ${(DOCS_ROUTE_BUDGET_GZIP.css / 1024).toFixed(1)} KB budget in deploy/verify-build.mjs.`)
+
 console.log(`Build verified: 9 locale/route cases; ${dependencies.size} initial JS modules; no blocking CSS or synchronous chat.`)
 console.log(`First load: ${(htmlGzip / 1024).toFixed(1)} KB HTML + ${(initialJsGzip / 1024).toFixed(1)} KB JS gzipped `
   + `(budget ${(BUDGET_GZIP.html / 1024).toFixed(1)} / ${(BUDGET_GZIP.initialJs / 1024).toFixed(1)} KB).`)
+console.log(`Docs route: ${(docsJs / 1024).toFixed(1)} KB JS + ${(docsCss / 1024).toFixed(1)} KB CSS gzipped beyond the entry, no Semi `
+  + `(budget ${(DOCS_ROUTE_BUDGET_GZIP.js / 1024).toFixed(1)} / ${(DOCS_ROUTE_BUDGET_GZIP.css / 1024).toFixed(1)} KB).`)

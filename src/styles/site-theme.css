@@ -135,11 +135,8 @@ button:not(:disabled),a[href] { cursor: pointer; }
 .zt-marketplace .zt-model-card:has(> .zt-discount) .zt-price-value strong { color: #bd452f; }
 .zt-marketplace .zt-model-card footer .semi-button { color: #fff; background: var(--brand-ink); box-shadow: 0 6px 15px rgba(23,37,84,.18); }
 .zt-marketplace .zt-model-card footer .semi-button:hover { background: var(--brand-teal-dark); box-shadow: 0 9px 20px rgba(30,58,138,.22); }
-.zt-doc-sidebar a[aria-current],.zt-doc-sidebar a:hover { color: var(--brand-teal-dark); background: var(--brand-soft); }
 .zt-detail-tabs a[aria-current] { border-color: var(--brand-teal); }
 .zt-notice { border-left-color: #2563eb; background: #f1f5f9; color: #1e3a8a; }
-.zt-code { border-color: #334155; background: #172554; color: #dbeafe; box-shadow: 0 13px 28px rgba(15,23,42,.14); }
-.zt-code-toolbar { background: #172554; }.zt-code-toolbar button[aria-pressed=true] { background: #1e3a8a; }
 
 .console-shell .console-sider,
 .console-shell .console-topbar { border-color: var(--brand-line); background: rgba(255,255,255,.95); backdrop-filter: blur(14px); }

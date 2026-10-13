@@ -14,6 +14,6 @@ export function navigateTo(path: string): void {
  * A modified click means the visitor asked for a new tab, a download or a paste
  * target, so those must keep the browser's own behavior.
  */
-export function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>): boolean {
+export function isPlainLeftClick(event: MouseEvent<Element>): boolean {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 }

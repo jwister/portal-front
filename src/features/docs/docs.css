@@ -1,0 +1,102 @@
+/*
+ * Documentation pages. Every article shares one layout, one type scale (body text, and a
+ * smaller size for meta lines) and one block spacing, so no page reads differently from
+ * the next. Loaded with the docs chunk only; code blocks, notices and tables keep their
+ * shared look from catalog-docs.css and are only spaced and sized here.
+ */
+.zt-docs { --doc-side:220px; --doc-gap:48px; --doc-text:15px; --doc-meta:14px; --doc-block:16px; background:#fcfdfb; }
+
+/* Navigation | article | on this page, with equal side columns and gutters so the article is centred. */
+.zt-doc-layout { display:grid; grid-template-columns:var(--doc-side) minmax(0,760px) var(--doc-side); gap:var(--doc-gap); justify-content:center; align-items:start; margin:0 auto; }
+.zt-doc-sidebar,.zt-doc-toc { position:sticky; top:104px; max-height:calc(100vh - 128px); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+
+/* styles.css gives every <nav> header margins (margin-left:auto; margin-right:up to 48px); both docs navs fill their column. */
+.zt-doc-sidebar nav,.zt-doc-toc { margin:0; }
+.zt-doc-sidebar nav,.zt-doc-group { display:flex; flex-direction:column; gap:2px; }
+.zt-doc-sidebar .zt-eyebrow { margin:0 12px 4px; }
+/* Group headings read darker and heavier than the links under them. */
+.zt-doc-sidebar nav > p,.zt-doc-group > p { margin:20px 12px 6px; color:#0f172a; font-size:13px; font-weight:700; letter-spacing:.02em; }
+.zt-doc-sidebar a { display:block; padding:7px 12px; border-radius:8px; color:#475569; font-size:14px; line-height:1.5; text-transform:none; letter-spacing:normal; transition:background .14s ease,color .14s ease; }
+.zt-doc-sidebar a:hover { color:#0f172a; background:#f1f5f9; }
+.zt-doc-sidebar a[aria-current] { color:#1d4ed8; background:#eff6ff; font-weight:600; }
+
+.zt-doc-toc { display:flex; flex-direction:column; gap:2px; padding-left:16px; border-left:1px solid var(--zt-line); font-size:13px; line-height:1.5; }
+.zt-doc-toc strong { margin-bottom:8px; color:#0f172a; font-size:13px; font-weight:700; letter-spacing:.02em; }
+.zt-doc-toc a { padding:5px 0; color:#64748b; text-transform:none; letter-spacing:normal; transition:color .14s ease; }
+.zt-doc-toc a:hover { color:#0f172a; }
+.zt-doc-toc a[aria-current] { color:#1d4ed8; font-weight:600; }
+
+/* Article type scale. */
+.zt-doc-article { min-width:0; padding-bottom:48px; color:#1e293b; font-size:var(--doc-text); line-height:1.8; }
+.zt-doc-article > .zt-eyebrow { margin-bottom:10px; }
+.zt-doc-article h1 { margin:0; color:#0f172a; font-size:36px; line-height:1.25; letter-spacing:-.02em; }
+.zt-doc-article .zt-doc-lead { margin:16px 0 0; padding-bottom:24px; border-bottom:1px solid var(--zt-line); color:#475569; font-size:17px; line-height:1.75; }
+.zt-doc-article .zt-doc-meta { margin:12px 0 0; }
+.zt-doc-article section { margin-top:48px; scroll-margin-top:108px; }
+.zt-doc-article h2 { margin:0 0 14px; color:#0f172a; font-size:24px; line-height:1.35; letter-spacing:-.01em; }
+.zt-doc-article h3 { margin:28px 0 10px; color:#0f172a; font-size:17px; line-height:1.5; }
+.zt-doc-article :is(p,li,dt,dd,td,.zt-notice) { font-size:inherit; overflow-wrap:anywhere; }
+.zt-doc-article .zt-muted { color:#64748b; font-size:var(--doc-meta); }
+
+/* One block spacing for everything an article stacks. Margins collapse into the next section's gap. */
+.zt-doc-article section :is(p,ol,ul,dl,.zt-code,.zt-table-wrap,.zt-doc-links,.zt-select,.zt-chips) { margin:0 0 var(--doc-block); }
+.zt-doc-article section > a { display:inline-block; margin:0 0 var(--doc-block); }
+.zt-doc-article section > a,.zt-doc-links a { font-weight:600; }
+.zt-doc-links { display:flex; flex-wrap:wrap; align-items:center; gap:6px 24px; }
+.zt-doc-article .zt-notice { margin:0 0 var(--doc-block); padding:12px 16px; border-radius:0 8px 8px 0; line-height:1.75; }
+.zt-doc-article :not(pre) > code { padding:1px 6px; border-radius:6px; background:#f1f5f9; color:#0f172a; font:.9em/1.6 var(--zt-mono); }
+
+.zt-steps { padding-left:22px; }
+.zt-steps li { margin-bottom:6px; padding-left:4px; }
+.zt-steps li::marker { color:#2563eb; font-weight:600; }
+
+.zt-connection { display:grid; grid-template-columns:140px minmax(0,1fr); border:1px solid var(--zt-line); border-radius:10px; overflow:hidden; background:#fff; }
+.zt-connection dt,.zt-connection dd { margin:0; padding:10px 14px; min-width:0; border-bottom:1px solid var(--zt-line); }
+.zt-connection dt { background:#f8fafc; color:#475569; font-weight:600; }
+.zt-connection dd { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 12px; }
+.zt-connection > :nth-last-child(-n+2) { border-bottom:0; }
+
+.zt-doc-article .zt-table-wrap { border:1px solid var(--zt-line); border-radius:10px; overflow-x:auto; background:#fff; }
+.zt-doc-article table { width:100%; border-collapse:collapse; line-height:1.65; }
+.zt-doc-article th,.zt-doc-article td { padding:11px 14px; text-align:left; vertical-align:top; border-bottom:1px solid var(--zt-line); }
+.zt-doc-article th { background:#f8fafc; color:#475569; font-size:var(--doc-meta); font-weight:600; white-space:nowrap; }
+.zt-doc-article tbody tr:last-child td { border-bottom:0; }
+/* A parameter or field name is read as one token; the table scrolls sideways before it breaks one. */
+.zt-doc-article td > code:first-child { white-space:nowrap; }
+
+.zt-doc-button { display:inline-flex; align-items:center; min-height:36px; margin-left:8px; padding:6px 14px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#0f172a; font:inherit; font-size:var(--doc-meta); font-weight:600; cursor:pointer; }
+.zt-doc-button:hover { border-color:#94a3b8; }
+
+.zt-doc-toggle,.zt-mobile-toc { display:none; }
+
+@media (max-width:1100px) {
+  .zt-doc-layout { grid-template-columns:200px minmax(0,1fr); gap:40px; }
+  .zt-doc-toc { display:none; }
+  .zt-mobile-toc { display:block; margin:24px 0 0; padding:0 16px; border:1px solid var(--zt-line); border-radius:10px; background:#f8fafc; font-size:var(--doc-meta); }
+  .zt-mobile-toc[open] { padding-bottom:8px; }
+  .zt-mobile-toc summary { display:flex; align-items:center; justify-content:space-between; min-height:44px; font-weight:600; cursor:pointer; list-style:none; }
+  .zt-mobile-toc summary::-webkit-details-marker { display:none; }
+  .zt-mobile-toc summary::after { content:'+'; color:#64748b; font-size:18px; }
+  .zt-mobile-toc[open] summary::after { content:'−'; }
+  .zt-mobile-toc a { display:flex; align-items:center; min-height:40px; color:#475569; }
+}
+@media (max-width:800px) {
+  .zt-doc-article section { scroll-margin-top:88px; }
+  .zt-doc-sidebar a { display:flex; align-items:center; min-height:44px; }
+}
+@media (max-width:760px) {
+  .zt-docs { --doc-text:16px; }
+  .zt-doc-layout { display:block; }
+  .zt-doc-sidebar { position:static; max-height:none; overflow:visible; margin-bottom:24px; }
+  .zt-doc-toggle { display:flex; align-items:center; justify-content:space-between; width:100%; min-height:44px; padding:0 16px; border:1px solid var(--zt-line); border-radius:10px; background:#f8fafc; color:#0f172a; font:inherit; font-weight:600; }
+  .zt-doc-sidebar nav { display:none; padding:12px 0 0; }
+  .zt-doc-sidebar nav.is-open { display:flex; }
+  .zt-doc-article h1 { font-size:30px; }
+  .zt-doc-article h2 { font-size:22px; }
+  .zt-doc-article section { margin-top:40px; }
+}
+@media (max-width:520px) {
+  .zt-connection { grid-template-columns:1fr; }
+  .zt-connection dt { padding-bottom:2px; border-bottom:0; background:transparent; }
+  .zt-doc-article th,.zt-doc-article td { padding:10px; }
+}
