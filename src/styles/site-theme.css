@@ -127,6 +127,9 @@ button:not(:disabled),a[href] { cursor: pointer; }
 .zt-marketplace .zt-hero-actions .zt-explore:hover { color: #0f172a; background: #93c5fd; }
 .zt-marketplace .zt-model-card:has(> .zt-discount) { border-top-color: var(--brand-coral); }
 .zt-marketplace .zt-model-card > .zt-discount { background: var(--brand-coral); }
+/* A limited-time offer names itself on the detail page too, rather than passing for a group rate. */
+.zt-detail .zt-discount.is-promo { color: #fff; background: var(--brand-coral); }
+.zt-detail .zt-discount.is-promo small { display: inline; margin-right: 6px; font-size: inherit; }
 .zt-marketplace .zt-model-card:hover { border-color: #94a3b8; box-shadow: 0 17px 34px rgba(23,37,84,.12) !important; }
 .zt-marketplace .zt-prices { background: #f1f5f9; border-color: #e2e8f0; }
 .zt-marketplace .zt-model-card:has(> .zt-discount) .zt-prices { background: #fff7f3; border-color: #f0ded6; }

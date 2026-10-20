@@ -8,7 +8,7 @@ import { CatalogState, CopyButton, Discount, PriceList, VendorMark } from './Cat
 import { Select } from '../../components/Select'
 import { OfficialPriceReference } from './OfficialPriceReference'
 import { ModelExamples } from './ModelExamples'
-import { cardPriceRows, dearestTier, formatPrice, priceGroup, tierLabelKey, type CatalogModel } from './catalog-data'
+import { cardPriceRows, dearestTier, formatPrice, offerRatio, priceGroup, promotionRate, struckPrice, tierLabelKey, type CatalogModel } from './catalog-data'
 import type { NewApiPricingResponse } from '../../api/portal'
 import { displayCurrency, formatMoney } from '../../support/portal-config'
 
@@ -47,7 +47,7 @@ function CapabilityFlag({ ok }: { ok: boolean }) {
 function Capability({ model, pricing, group }: { model: CatalogModel; pricing: NewApiPricingResponse; group: string }) {
   const { t } = useTranslation()
   const modality = MODALITIES[model.type]
-  const { ratio } = priceGroup(pricing, model, group)
+  const ratio = offerRatio(priceGroup(pricing, model, group).ratio, promotionRate(model))
   const discounted = ratio !== null && ratio > 0 && ratio < 1 ? ratio : null
   // Absence in the catalog's endpoint list is the only evidence this page has, so the
   // batch, search and fine-tune rows light up automatically once the gateway serves them.
@@ -133,6 +133,7 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
   const model = models.find((item) => item.name === modelName)
   if (!model) return <main className="zt-public zt-state"><h1>{t('catalog.notFound')}</h1><a href="/models">{t('catalog.back')}</a></main>
   const { ratio, name } = priceGroup(pricing, model, group)
+  const promotion = promotionRate(model)
   const currency = displayCurrency()
   const headline = cardPriceRows(model).slice(0, 2)
   // `prices` holds one tier only, so a tiered model names it here rather than letting two
@@ -149,10 +150,13 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
         <div className="zt-api-name"><code>{model.name}</code><CopyButton value={model.name} /></div>
         <p className="zt-detail-lead">{t('catalog.introLine', { vendor: model.vendor, protocols: model.endpoints.join(' / ') || t(`catalog.type.${model.type}`) })}</p>
         <dl className="zt-detail-facts">
-          {headline.map((row) => <div key={row.key}>
-            <dt>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`, { currency: currency.code })}{headlineTier ? ` · ${headlineTier}` : ''}</small></dt>
-            <dd>{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{ratio < 1 && row.base > 0 && <del>{formatMoney(row.base, formatPrice, currency)}</del>}<strong>{formatMoney(row.base * ratio, formatPrice, currency)}</strong></>}</dd>
-          </div>)}
+          {headline.map((row) => {
+            const struck = row.base === null || ratio === null ? null : struckPrice(row.base, ratio, promotion)
+            return <div key={row.key}>
+              <dt>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`, { currency: currency.code })}{headlineTier ? ` · ${headlineTier}` : ''}</small></dt>
+              <dd>{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{struck !== null && <del>{formatMoney(struck, formatPrice, currency)}</del>}<strong>{formatMoney(row.base * ratio, formatPrice, currency)}</strong></>}</dd>
+            </div>
+          })}
           <div><dt>{t('catalog.cap.billing')}</dt><dd><span className="zt-cap-text">{t(billingKey(model))}</span></dd></div>
           <div><dt>{t('catalog.cap.groups')}</dt><dd>{model.groups.map((item) => <span className="zt-cap-chip" key={item}>{pricing.usable_group?.[item] ?? item}</span>)}</dd></div>
           <div><dt>{t('catalog.cap.protocol')}</dt><dd>{model.endpoints.length

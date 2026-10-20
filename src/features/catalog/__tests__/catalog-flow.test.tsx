@@ -109,6 +109,48 @@ describe('catalog browsing and pricing', () => {
     expect(screen.getAllByText(/价格以 CNY 列示/).length).toBeGreaterThan(0)
   })
 
+  it('marks the limited-time offer and strikes through the rate before it', async () => {
+    // Copied from the live catalog, where this expression already carries the 20% offer.
+    const offerPricing = {
+      ...pricingFixture,
+      group_ratio: { ...pricingFixture.group_ratio, default: 1 },
+      data: [...pricingFixture.data, { model_name: 'qwen3.7-plus', vendor_name: '阿里巴巴', model_ratio: 37.5, completion_ratio: 1, billing_mode: 'tiered_expr', enable_groups: ['default'], supported_endpoint_types: ['openai'], billing_expr: 'len <= 256000 ? tier("standard", p * 0.298908982215 + c * 1.19563592886 + cr * 0.059781796443) : tier("long_context", p * 0.896726946645 + c * 3.586907786579 + cr * 0.179345389329)' }],
+    }
+    vi.mocked(fetch).mockImplementation((url) => Promise.resolve(new Response(JSON.stringify(
+      url === '/api/auth/status' ? { authenticated: false, profile: null } : offerPricing,
+    ))))
+    const catalog = render(<ModelsPage />)
+    const card = await screen.findByTestId('model-card-qwen3.7-plus')
+    expect(within(card).getByText('限时特惠')).toBeVisible()
+    expect(within(card).getByText('8 折')).toBeVisible()
+    expect(within(card).getByText('标准')).toBeVisible()
+    expect(within(card).getByText('长上下文')).toBeVisible()
+    // The gateway's rate stays the sale price; only the struck price is derived from it.
+    expect(within(card).getByText('$0.298908982')).toBeVisible()
+    expect(within(card).getByText('$0.373636228').tagName).toBe('DEL')
+    // Every other model is untouched: no group discount here, so no ribbon and no struck price.
+    const plain = screen.getByTestId('model-card-deepseek-test')
+    expect(within(plain).queryByText('限时特惠')).not.toBeInTheDocument()
+    expect(plain.querySelector('del')).toBeNull()
+    catalog.unmount()
+
+    render(<ModelDetailPage modelName="qwen3.7-plus" />)
+    expect(await screen.findByText('限时特惠')).toBeVisible()
+    expect(screen.getAllByText('$0.373636228').every((node) => node.tagName === 'DEL')).toBe(true)
+    expect(screen.getByText('8 折 · 比基础价省 20%')).toBeVisible()
+  })
+
+  it('names input length bands in copy rather than as the gateway identifiers', async () => {
+    // Copied from the live catalog.
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({
+      ...pricingFixture,
+      data: [...pricingFixture.data, { model_name: 'qwen3-max', vendor_name: '阿里巴巴', model_ratio: 37.5, completion_ratio: 1, billing_mode: 'tiered_expr', enable_groups: ['default'], supported_endpoint_types: ['openai'], billing_expr: 'len <= 32000 ? tier("tier_32k", p * 0.373636227769 + c * 1.494544911075 + cr * 0.074727245554) : len <= 128000 ? tier("tier_128k", p * 0.59781796443 + c * 2.391271857719 + cr * 0.119563592886) : tier("tier_256k", p * 1.046181437752 + c * 4.184725751009 + cr * 0.20923628755)' }],
+    })))
+    render(<ModelsPage />)
+    const card = await screen.findByTestId('model-card-qwen3-max')
+    expect([...card.querySelectorAll('.zt-price-tier-label')].map((node) => node.textContent)).toEqual(['输入 ≤ 32K', '输入 ≤ 128K', '输入 ≤ 256K'])
+  })
+
   it('prices every tier on the card and the detail page, naming the one the header quotes', async () => {
     const catalog = render(<ModelsPage />)
     const card = await screen.findByTestId('model-card-deepseek-v4.1-flash')

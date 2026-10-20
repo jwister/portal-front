@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { catalogModels, cardPriceRows, priceGroup, videoPrices, tokenTierPrices, dearestTier, tierLabelKey, unreadExpression, modelHref, modelType, compareModelsByVendor, modelVersion, vendorRank } from '../catalog-data'
+import { catalogModels, cardPriceRows, priceGroup, videoPrices, tokenTierPrices, dearestTier, tierLabelKey, unreadExpression, modelHref, modelType, compareModelsByVendor, modelVersion, vendorRank, promotionRate, offerRatio, struckPrice } from '../catalog-data'
 import { pricingFixture } from './pricing-fixture'
 import { getBytePlusOfficialReference } from '../seedance-reference'
 
@@ -161,7 +161,24 @@ describe('catalog billing rules', () => {
   it('translates the labels written as identifiers and leaves operator wording alone', () => {
     expect(tierLabelKey('peak')).toBe('catalog.tier.peak')
     expect(tierLabelKey('off_peak')).toBe('catalog.tier.offPeak')
+    expect(tierLabelKey('standard')).toBe('catalog.tier.standard')
+    expect(tierLabelKey('long_context')).toBe('catalog.tier.longContext')
+    expect(['tier_32k', 'tier_128k', 'tier_256k'].map(tierLabelKey)).toEqual(['catalog.tier.upTo32k', 'catalog.tier.upTo128k', 'catalog.tier.upTo256k'])
     expect(tierLabelKey('输入<=32k')).toBeUndefined()
+  })
+  it('strikes through the rate before a limited-time offer the gateway already charges', () => {
+    expect(promotionRate({ name: 'qwen3.7-plus' })).toBe(0.8)
+    expect(promotionRate({ name: 'qwen3.7-max' })).toBeNull()
+    // The catalog carries the offer price, so the struck price divides the offer back out.
+    expect(struckPrice(0.298908982215, 1, 0.8)).toBeCloseTo(0.373636227769, 12)
+    expect(offerRatio(1, 0.8)).toBe(0.8)
+    // A group discount stacks on the offer: both come off the same struck price.
+    expect(offerRatio(0.95, 0.8)).toBeCloseTo(0.76)
+    expect(struckPrice(1, 0.95, 0.8)).toBe(1.25)
+    // Without an offer nothing changes: the base is struck only under a group discount.
+    expect(struckPrice(1, 0.95, null)).toBe(1)
+    expect(struckPrice(1, 1, null)).toBeNull()
+    expect(offerRatio(null, 0.8)).toBeNull()
   })
   it.each([
     ['an unknown usage variable', 'tier("base", x * 0.1)'],

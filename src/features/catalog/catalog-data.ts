@@ -114,7 +114,13 @@ export function dearestTier(tiers: PriceTier[]): PriceTier | null {
 
 /** Bands the gateway names with an identifier rather than copy. Any other label is the
  *  operator's own wording (`输入<=32k`) and is shown exactly as written. */
-const TIER_LABEL_KEYS: Record<string, string> = { peak: 'catalog.tier.peak', off_peak: 'catalog.tier.offPeak' }
+const TIER_LABEL_KEYS: Record<string, string> = {
+  peak: 'catalog.tier.peak', off_peak: 'catalog.tier.offPeak',
+  standard: 'catalog.tier.standard', long_context: 'catalog.tier.longContext',
+  // Input length bands, named for their upper bound. The gateway picks the first band the
+  // request fits, so the bound alone is exact whichever band sits below it.
+  tier_32k: 'catalog.tier.upTo32k', tier_128k: 'catalog.tier.upTo128k', tier_256k: 'catalog.tier.upTo256k',
+}
 export function tierLabelKey(label: string): string | undefined { return TIER_LABEL_KEYS[label] }
 
 /**
@@ -177,6 +183,28 @@ export function priceGroup(pricing: NewApiPricingResponse, model: CatalogModel, 
   const name = selected !== 'all' ? selected : model.groups.includes('default') ? 'default' : model.groups[0] ?? ''
   const ratio = pricing.group_ratio?.[name]
   return { name, ratio: model.groups.includes(name) && validPrice(ratio) ? ratio : null }
+}
+
+/**
+ * Limited-time offers. The gateway already charges the reduced rate and its catalog carries
+ * nothing else, so the page divides the multiplier back out to show the price before the
+ * offer. Hardcoded until the gateway can report a promotion itself: remove the entry the day
+ * the offer ends, or every price for that model reads as discounted from a rate nobody pays.
+ */
+const PROMOTIONS: Record<string, number> = { 'qwen3.7-plus': 0.8 }
+
+export function promotionRate(model: { name: string }): number | null { return PROMOTIONS[model.name] ?? null }
+
+/** What a visitor pays against the struck-through price: the group ratio times the offer
+ *  already inside the catalog rate. Null when the model is not sold in the group. */
+export function offerRatio(ratio: number | null, promotion: number | null): number | null {
+  return ratio === null ? null : ratio * (promotion ?? 1)
+}
+
+/** The amount struck through beside a sale price — the rate before the group discount and
+ *  any limited-time offer — or null when the visitor pays exactly that. */
+export function struckPrice(base: number, ratio: number, promotion: number | null): number | null {
+  return base > 0 && ratio * (promotion ?? 1) < 1 ? base / (promotion ?? 1) : null
 }
 
 export function cardPriceRows(model: CatalogModel): PriceRow[] {
