@@ -830,5 +830,17 @@
   "logs.pagination": "Log pages",
   "logs.previousPage": "Previous",
   "logs.nextPage": "Next",
-  "logs.pageStatus": "{{page}} / {{total}}"
+  "logs.pageStatus": "{{page}} / {{total}}",
+  "chatbox": {
+    "tag": "✨ Official Feature · Zero Setup Chat",
+    "title": "Chatbox · Online AI Agents",
+    "desc": "Instant AI chat without API keys or client configuration. Integrated with GPT-4o, Claude 3.5, Gemini 1.5, and specialized agents.",
+    "cta": "Try Chatbox Now",
+    "models": {
+      "gpt4o": "GPT-4o Top Intelligence",
+      "claude": "Claude 3.5 Sonnet",
+      "deepseek": "DeepSeek-R1 Deep Reasoning",
+      "agents": "AI Agent Center"
+    }
+  }
 }

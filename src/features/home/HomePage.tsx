@@ -338,6 +338,43 @@ function ApiDemoCard() {
   </div>
 }
 
+function ChatboxShowcase() {
+  const { t } = useTranslation()
+  return (
+    <section className="reference-section reference-chatbox-section" aria-label={t('chatbox.title')}>
+      <div className="reference-chatbox-card">
+        <div className="reference-chatbox-glow" aria-hidden="true" />
+        <div className="reference-chatbox-content">
+          <div className="reference-chatbox-badge">
+            <span>{t('chatbox.tag')}</span>
+          </div>
+          <h2>{t('chatbox.title')}</h2>
+          <p>{t('chatbox.desc')}</p>
+          <div className="reference-chatbox-pills">
+            <span className="reference-pill pill-gpt">{t('chatbox.models.gpt4o')}</span>
+            <span className="reference-pill pill-claude">{t('chatbox.models.claude')}</span>
+            <span className="reference-pill pill-deepseek">{t('chatbox.models.deepseek')}</span>
+            <span className="reference-pill pill-agent">{t('chatbox.models.agents')}</span>
+          </div>
+          <div className="reference-chatbox-actions">
+            <a
+              href="https://chatbox.ztoken.cc"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="reference-chatbox-cta"
+            >
+              <span>{t('chatbox.cta')}</span>
+              <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" aria-hidden="true">
+                <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export function HomePage() {
   const { t } = useTranslation()
   const auth = useAuthStatus()
@@ -390,6 +427,8 @@ export function HomePage() {
         </div>
         <ApiDemoCard />
       </section>
+
+      <ChatboxShowcase />
 
       <section className="reference-section reference-steps">
         <div className="reference-heading"><span>{t('home.stepsTag')}</span><h2>{t('home.stepsTitle')}</h2></div>

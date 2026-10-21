@@ -209,3 +209,299 @@ html[data-gift="none"] .reference-gift, html[data-gift="none"] .reference-gift-n
 @keyframes reference-tab-progress { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
 
 @media(max-width:800px) { .reference-home { padding-top:64px; }.reference-hero h1 { text-wrap:balance; }.reference-home { padding-bottom:84px; }.reference-code-tabs button { min-height:44px; } }
+
+/* Chatbox Showcase Section */
+.reference-chatbox-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 32px;
+}
+.reference-chatbox-card {
+  position: relative;
+  border-radius: 20px;
+  padding: 32px 36px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(243, 248, 255, 0.75));
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  box-shadow: 0 16px 36px -12px rgba(37, 99, 235, 0.12);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reference-chatbox-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 44px -10px rgba(37, 99, 235, 0.18);
+}
+:root[data-theme='dark'] .reference-chatbox-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.7));
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+}
+:root[data-theme='dark'] .reference-chatbox-card:hover {
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.8), 0 0 24px rgba(99, 102, 241, 0.2);
+}
+.reference-chatbox-glow {
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.08) 50%, transparent 70%);
+  pointer-events: none;
+  filter: blur(30px);
+}
+:root[data-theme='dark'] .reference-chatbox-glow {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0.12) 50%, transparent 70%);
+}
+.reference-chatbox-content {
+  position: relative;
+  z-index: 1;
+}
+.reference-chatbox-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 650;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+}
+:root[data-theme='dark'] .reference-chatbox-badge {
+  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.25);
+  border-color: rgba(96, 165, 250, 0.2);
+}
+.reference-chatbox-card h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  font-weight: 800;
+  color: var(--home-ink, #0f172a);
+  letter-spacing: -0.02em;
+}
+.reference-chatbox-card p {
+  margin: 0 0 18px;
+  max-width: 680px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--home-muted, #475569);
+}
+.reference-chatbox-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.reference-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: rgba(238, 242, 255, 0.9);
+  color: #3730a3;
+  border: 1px solid rgba(199, 210, 254, 0.8);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.reference-pill:hover {
+  transform: translateY(-1px);
+}
+.reference-pill.pill-gpt {
+  background: rgba(236, 253, 245, 0.95);
+  color: #065f46;
+  border-color: rgba(167, 243, 208, 0.8);
+}
+.reference-pill.pill-claude {
+  background: rgba(254, 243, 199, 0.95);
+  color: #92400e;
+  border-color: rgba(253, 230, 138, 0.8);
+}
+.reference-pill.pill-deepseek {
+  background: rgba(239, 246, 255, 0.95);
+  color: #1e40af;
+  border-color: rgba(191, 219, 254, 0.8);
+}
+.reference-pill.pill-agent {
+  background: rgba(245, 243, 255, 0.95);
+  color: #5b21b6;
+  border-color: rgba(221, 214, 254, 0.8);
+}
+:root[data-theme='dark'] .reference-pill {
+  background: rgba(30, 27, 75, 0.5);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+:root[data-theme='dark'] .reference-pill.pill-gpt {
+  background: rgba(6, 78, 59, 0.35);
+  color: #6ee7b7;
+  border-color: rgba(5, 150, 105, 0.4);
+}
+:root[data-theme='dark'] .reference-pill.pill-claude {
+  background: rgba(120, 53, 15, 0.35);
+  color: #fde68a;
+  border-color: rgba(217, 119, 6, 0.4);
+}
+:root[data-theme='dark'] .reference-pill.pill-deepseek {
+  background: rgba(30, 58, 138, 0.35);
+  color: #93c5fd;
+  border-color: rgba(37, 99, 235, 0.4);
+}
+:root[data-theme='dark'] .reference-pill.pill-agent {
+  background: rgba(76, 29, 149, 0.35);
+  color: #d8b4fe;
+  border-color: rgba(139, 92, 246, 0.4);
+}
+.reference-chatbox-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.reference-chatbox-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+  background: linear-gradient(135deg, #1d4ed8, #4338ca);
+}
+.reference-chatbox-cta svg {
+  transition: transform 0.18s ease;
+}
+.reference-chatbox-cta:hover svg {
+  transform: translateX(3px);
+}
+@media (max-width: 768px) {
+  .reference-chatbox-card {
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .reference-chatbox-pills {
+    justify-content: center;
+  }
+  .reference-chatbox-card p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .reference-chatbox-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+
+
+/* Chatbox showcase section */
+.reference-chatbox-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 32px;
+}
+.reference-chatbox-card {
+  position: relative;
+  border-radius: 20px;
+  padding: 32px 36px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(243, 248, 255, 0.75));
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  box-shadow: 0 16px 36px -12px rgba(37, 99, 235, 0.12);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+:root[data-theme='dark'] .reference-chatbox-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.7));
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+}
+.reference-chatbox-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 650;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  margin-bottom: 14px;
+}
+:root[data-theme='dark'] .reference-chatbox-badge {
+  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.25);
+}
+.reference-chatbox-card h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  font-weight: 800;
+  color: var(--home-ink, #0f172a);
+  letter-spacing: -0.02em;
+}
+.reference-chatbox-card p {
+  margin: 0 0 18px;
+  max-width: 680px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--home-muted, #475569);
+}
+.reference-chatbox-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.reference-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: rgba(238, 242, 255, 0.9);
+  color: #3730a3;
+  border: 1px solid rgba(199, 210, 254, 0.8);
+}
+:root[data-theme='dark'] .reference-pill {
+  background: rgba(30, 27, 75, 0.5);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+.reference-chatbox-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.reference-chatbox-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+}
+@media (max-width: 768px) {
+  .reference-chatbox-card {
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .reference-chatbox-pills {
+    justify-content: center;
+  }
+  .reference-chatbox-card p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .reference-chatbox-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}

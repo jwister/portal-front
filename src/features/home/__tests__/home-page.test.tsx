@@ -216,4 +216,14 @@ describe('HomePage', () => {
       expect(screen.getByRole('tab', { name: 'Gemini' })).toHaveAttribute('aria-selected', 'true')
     } finally { vi.unstubAllGlobals() }
   })
+
+  it('renders the chatbox showcase card linking to openwebui', () => {
+    render(<HomePage />)
+    const link = screen.getByRole('link', { name: /立即在线体验/i })
+    expect(link).toBeInTheDocument()
+    expect(link).toHaveAttribute('href', 'https://chatbox.ztoken.cc')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    expect(screen.getByText('Chatbox · 在线聊智能体')).toBeInTheDocument()
+  })
 })
