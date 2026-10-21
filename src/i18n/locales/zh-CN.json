@@ -842,5 +842,6 @@
       "deepseek": "DeepSeek-R1 深度推理",
       "agents": "智能体聚合中心"
     }
-  }
+  },
+  "nav.chatbox": "Chatbox"
 }

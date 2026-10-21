@@ -842,5 +842,6 @@
       "deepseek": "DeepSeek-R1 Deep Reasoning",
       "agents": "AI Agent Center"
     }
-  }
+  },
+  "nav.chatbox": "Chatbox"
 }

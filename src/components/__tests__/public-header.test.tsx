@@ -86,4 +86,16 @@ describe('PublicHeader', () => {
     await waitFor(() => expect(assign).toHaveBeenCalledWith('/'))
     expect(fetchMock).toHaveBeenLastCalledWith('/api/auth/sign-out', expect.objectContaining({ method: 'POST', credentials: 'include' }))
   })
+
+  it('renders the chatbox navigation link pointing to external chatbox site', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 401 })))
+
+    render(<PublicHeader />)
+
+    const chatboxLink = screen.getByRole('link', { name: /Chatbox/i })
+    expect(chatboxLink).toBeInTheDocument()
+    expect(chatboxLink).toHaveAttribute('href', 'https://chatbox.ztoken.cc')
+    expect(chatboxLink).toHaveAttribute('target', '_blank')
+    expect(chatboxLink).toHaveAttribute('rel', 'noopener noreferrer')
+  })
 })

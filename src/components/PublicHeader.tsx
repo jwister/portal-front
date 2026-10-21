@@ -36,8 +36,10 @@ export function PublicHeader({ path }: { path?: string } = {}) {
   }, [menuOpen])
   const account = status.kind === 'authenticated' ? status.profile : null
   const currentPath = path ?? (typeof window === 'undefined' ? '/' : window.location.pathname)
-  const navItems: Array<[string, string]> = [
-    ['/', t('nav.home')], ['/models', t('nav.models')],
+  const navItems: Array<[string, string, boolean?]> = [
+    ['/', t('nav.home')],
+    ['/models', t('nav.models')],
+    ['https://chatbox.ztoken.cc', t('nav.chatbox'), true],
     ['/docs/guides/quick-start', t('nav.docs')]
   ]
   // The call to action is Purchase, or the console where purchasing is switched off. It
@@ -46,21 +48,31 @@ export function PublicHeader({ path }: { path?: string } = {}) {
   navItems.push([cta, t(rechargeEnabled ? 'nav.purchase' : 'nav.useNow')])
   /** The call to action is the one destination that must leave the page: an anonymous
    *  visitor is redirected to sign-in with a return address, which needs a real navigation. */
-  const linkProps = (destination: string) => destination === cta
-    ? { className: 'site-nav-cta', ...authenticatedLink(status, destination) }
-    : {
-      href: destination,
-      onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
-        if (!isPlainLeftClick(event)) return
-        event.preventDefault()
-        setMenuOpen(false)
-        prefetchRoute(destination)
-        navigateTo(destination)
-      },
+  const linkProps = (destination: string, isExternal?: boolean) => {
+    if (isExternal) {
+      return {
+        href: destination,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        className: 'site-nav-external',
+      }
     }
+    return destination === cta
+      ? { className: 'site-nav-cta', ...authenticatedLink(status, destination) }
+      : {
+        href: destination,
+        onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
+          if (!isPlainLeftClick(event)) return
+          event.preventDefault()
+          setMenuOpen(false)
+          prefetchRoute(destination)
+          navigateTo(destination)
+        },
+      }
+  }
   return <header ref={header} className={`public-header public-site-header${menuOpen ? ' site-menu-open' : ''}${account ? ' site-has-account' : ''}`}>
     <a className="site-brand" href="/" aria-label="ZToken" onClick={(event) => { if (!isPlainLeftClick(event)) return; event.preventDefault(); navigateTo('/') }}><img src={logo} alt="" width="26" height="26" />ZToken</a>
-    <nav id="public-navigation" className="site-links" aria-label={t('nav.main')}>{navItems.map(([destination, label]) => <a key={destination} {...linkProps(destination)} onMouseEnter={() => { if (window.matchMedia('(hover: hover)').matches) prefetchRoute(destination) }} aria-current={(destination === '/' ? currentPath === '/' : currentPath.startsWith(destination.split('/').slice(0, 2).join('/'))) ? 'page' : undefined}>{label}</a>)}</nav>
+    <nav id="public-navigation" className="site-links" aria-label={t('nav.main')}>{navItems.map(([destination, label, isExternal]) => <a key={destination} {...linkProps(destination, isExternal)} onMouseEnter={() => { if (!isExternal && window.matchMedia('(hover: hover)').matches) prefetchRoute(destination) }} aria-current={(!isExternal && (destination === '/' ? currentPath === '/' : currentPath.startsWith(destination.split('/').slice(0, 2).join('/')))) ? 'page' : undefined}>{label}{isExternal && <span className="nav-badge-ai" aria-hidden="true">AI</span>}</a>)}</nav>
     <div className="site-actions">
       <LanguageMenu />
       <button type="button" className="site-primary" aria-busy={status.kind === 'loading'} onClick={() => window.location.assign(account ? '/console/dashboard' : '/sign-in')}>{t(account ? 'nav.console' : 'auth.submit')}</button>

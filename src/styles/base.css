@@ -22,6 +22,7 @@ button:not(:disabled),a[href] { cursor:pointer; }
    even where sibling links turn blue. */
 .site-links a.site-nav-cta { color:#e11d48; font-size:15px; font-weight:800; }
 .site-links a.site-nav-cta:hover,.site-links a.site-nav-cta[aria-current=page] { color:#be123c; background:#fef2f2; }
+.site-links a .nav-badge-ai { margin-left:6px; font-size:10px; font-weight:750; line-height:1; padding:2px 6px; border-radius:9999px; background:linear-gradient(135deg, #2563eb, #7c3aed); color:#ffffff; letter-spacing:0.04em; text-transform:uppercase; box-shadow:0 1px 4px rgba(37, 99, 235, 0.25); display:inline-flex; align-items:center; }
 .site-actions { justify-content:flex-end; }
 .site-actions button { min-height:36px; border:0; border-radius:8px; padding:0 12px; }
 .site-language { background:transparent; color:#0f172a; }
