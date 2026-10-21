@@ -351,7 +351,7 @@ function ChatboxShowcase() {
           <h2>{t('chatbox.title')}</h2>
           <p>{t('chatbox.desc')}</p>
           <div className="reference-chatbox-pills">
-            <span className="reference-pill pill-gpt">{t('chatbox.models.gpt4o')}</span>
+            <span className="reference-pill pill-gpt">{t('chatbox.models.gpt')}</span>
             <span className="reference-pill pill-claude">{t('chatbox.models.claude')}</span>
             <span className="reference-pill pill-deepseek">{t('chatbox.models.deepseek')}</span>
             <span className="reference-pill pill-agent">{t('chatbox.models.agents')}</span>

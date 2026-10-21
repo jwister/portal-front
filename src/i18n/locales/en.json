@@ -834,12 +834,13 @@
   "chatbox": {
     "tag": "✨ Official Feature · Zero Setup Chat",
     "title": "Chatbox · Online AI Agents",
-    "desc": "Instant AI chat without API keys or client configuration. Integrated with GPT-4o, Claude 3.5, Gemini 1.5, and specialized agents.",
+    "desc": "Instant AI chat without API keys or client configuration. Integrated with GPT, Claude, DeepSeek, and specialized agents.",
     "cta": "Try Chatbox Now",
     "models": {
-      "gpt4o": "GPT-4o Top Intelligence",
-      "claude": "Claude 3.5 Sonnet",
-      "deepseek": "DeepSeek-R1 Deep Reasoning",
+      "gpt": "GPT",
+      "gpt4o": "GPT",
+      "claude": "Claude",
+      "deepseek": "DeepSeek",
       "agents": "AI Agent Center"
     }
   },

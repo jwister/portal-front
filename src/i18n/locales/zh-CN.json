@@ -834,12 +834,13 @@
   "chatbox": {
     "tag": "✨ 官方功能 · 免配置即开即聊",
     "title": "Chatbox · 在线聊智能体",
-    "desc": "无需配置客户端与 API Key，即开即聊。聚合 GPT-4o、Claude 3.5、Gemini 1.5 及全系列智能体，开启沉浸式智能对话体验。",
+    "desc": "无需配置客户端与 API Key，即开即聊。聚合 GPT、Claude、DeepSeek 及全系列智能体，开启沉浸式智能对话体验。",
     "cta": "立即在线体验",
     "models": {
-      "gpt4o": "GPT-4o 顶尖智能",
-      "claude": "Claude 3.5 Sonnet",
-      "deepseek": "DeepSeek-R1 深度推理",
+      "gpt": "GPT",
+      "gpt4o": "GPT",
+      "claude": "Claude",
+      "deepseek": "DeepSeek",
       "agents": "智能体聚合中心"
     }
   },
