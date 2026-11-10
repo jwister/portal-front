@@ -2,6 +2,8 @@
    support chat, after the first paint, so their ~700 KB of script stays off the
    critical path. The noscript GTM iframe stays in index.html for no-JS visitors. */
 
+import { loadGoogleAds } from './google-ads'
+
 const GTM_ID = 'GTM-NR5HZ2QB'
 const CLARITY_ID = 'xyfilbhc5s'
 
@@ -32,7 +34,7 @@ function loadClarity(): void {
 /** Same scheduling as the support chat: after load, inside an idle slice. */
 export function scheduleTracking(): void {
   const afterLoad = () => requestAnimationFrame(() => requestAnimationFrame(() => {
-    const start = () => { loadGtm(); loadClarity() }
+    const start = () => { loadGtm(); loadClarity(); loadGoogleAds() }
     if ('requestIdleCallback' in window) window.requestIdleCallback(start, { timeout: 1500 })
     else setTimeout(start, 0)
   }))

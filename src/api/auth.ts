@@ -80,12 +80,16 @@ export async function createOAuthState(provider: 'github' | 'oidc'): Promise<str
 }
 
 /** 回调信息只经 BFF 转发，浏览器永远不会接触 NewAPI access token。 */
-export async function completeOAuth(provider: 'github' | 'oidc', payload: OAuthCallbackPayload): Promise<void> {
-  await request(`/api/auth/oauth/${provider}/complete`, {
+export async function completeOAuth(provider: 'github' | 'oidc', payload: OAuthCallbackPayload): Promise<{ isNewUser: boolean }> {
+  const response = await request(`/api/auth/oauth/${provider}/complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
+  // 兼容部署过渡期的旧版 204；只有后端明确返回 true 才计为注册。
+  if (response.status === 204) return { isNewUser: false }
+  const body = await response.json() as { isNewUser?: unknown }
+  return { isNewUser: body.isNewUser === true }
 }
 
 /** 生成 GitHub OAuth 授权地址。 */

@@ -3,8 +3,9 @@ import { AuthLayout } from './AuthLayout'
 import { useTranslation } from 'react-i18next'
 
 import { completeOAuth } from '../../api/auth'
-import { consumeOAuthReturn } from './auth-links'
+import { consumeOAuthReturn, readOAuthCallbackParameters } from './auth-links'
 import { resolveBalanceDestination } from '../catalog/use-model'
+import { trackRegistration } from '../../support/google-ads'
 import '../../i18n'
 
 interface OAuthCallbackPageProps {
@@ -23,7 +24,7 @@ export function OAuthCallbackPage({ provider, onAuthenticated }: OAuthCallbackPa
   useEffect(() => {
     if (started.current) return
     started.current = true
-    const query = new URLSearchParams(window.location.search)
+    const query = readOAuthCallbackParameters()
     const code = query.get('code')
     const state = query.get('state')
     const error = query.get('error')
@@ -33,7 +34,9 @@ export function OAuthCallbackPage({ provider, onAuthenticated }: OAuthCallbackPa
       return
     }
     void completeOAuth(provider, { code, state, error, errorDescription })
-      .then(async () => {
+      .then(async (result) => {
+        // OAuth 同时承载登录和注册，必须以服务端本次创建结果为准。
+        if (result.isNewUser) await trackRegistration()
         const target = consumeOAuthReturn(provider, state)
         if (onAuthenticated) onAuthenticated()
         else {

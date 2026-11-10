@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 import '../../i18n'
 import { formatUsd, getPaymentOrder, type PaymentOrder } from '../../api/portal'
+import { trackPurchase } from '../../support/google-ads'
 import './payment-complete-page.css'
 
 type CompletionState = { kind: 'loading' } | { kind: 'paid'; order: PaymentOrder } | { kind: 'not-paid' } | { kind: 'error' }
@@ -25,7 +26,11 @@ export function PaymentCompletePage() {
     setSeconds(5)
     if (!orderNo) { setState({ kind: 'error' }); return () => { active = false } }
     void getPaymentOrder(orderNo).then((order) => {
-      if (active) setState(order.status === 'PAID' ? { kind: 'paid', order } : { kind: 'not-paid' })
+      if (active) {
+        // 上报金额与订单号均来自当前用户的服务端订单，未到账订单不产生购买转化。
+        if (order.status === 'PAID') trackPurchase(order)
+        setState(order.status === 'PAID' ? { kind: 'paid', order } : { kind: 'not-paid' })
+      }
     }).catch(() => { if (active) setState({ kind: 'error' }) })
     return () => { active = false; clearTimer() }
   }, [orderNo])

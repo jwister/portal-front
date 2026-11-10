@@ -6,6 +6,9 @@ import { SignInPage } from '../SignInPage'
 import { SignUpPage } from '../SignUpPage'
 import { authSwitchUrl } from '../auth-links'
 
+// 本文件只验证回跳目标；统计等待与超时由 google-ads.test.ts 单独验证。
+vi.mock('../../../support/google-ads', () => ({ trackRegistration: vi.fn().mockResolvedValue(undefined) }))
+
 describe('model selection through registration and login', () => {
   const model = 'vendor/name?version=高清'
   const target = '/console/recharge?' + new URLSearchParams({ model })

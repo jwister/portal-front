@@ -5,6 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../../i18n'
 import { PurchasePage } from '../PurchasePage'
 
+let completionHandler: ((order: { orderNo: string; status: string; method: string }) => void) | undefined
+vi.mock('../PayPalCheckout', () => ({
+  PayPalCheckout: ({ onCompleted }: { onCompleted: typeof completionHandler }) => {
+    completionHandler = onCompleted
+    return <div>PayPal checkout</div>
+  },
+}))
+
 describe('PurchasePage', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('en')
@@ -12,8 +20,24 @@ describe('PurchasePage', () => {
   })
 
   afterEach(() => {
+    completionHandler = undefined
     vi.unstubAllGlobals()
     window.history.replaceState({}, '', '/')
+  })
+
+  it('opens the verified completion page after payment, while intermediate states remain on purchase', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+    vi.stubGlobal('fetch', vi.fn((url) => Promise.resolve(new Response(JSON.stringify(url === '/api/auth/status'
+      ? { authenticated: true, profile: { id: 1, username: 'test' } }
+      : { orderNo: 'PO-1', method: 'PAYPAL', status: 'WAITING_PAYMENT', amountUsdMinor: 500 })))))
+    render(<PurchasePage />)
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Confirm payment' }))
+    await screen.findByText('PayPal checkout')
+    act(() => completionHandler?.({ orderNo: 'PO-1', method: 'PAYPAL', status: 'CONFIRMED' }))
+    expect(assign).not.toHaveBeenCalled()
+    act(() => completionHandler?.({ orderNo: 'PO-1', method: 'PAYPAL', status: 'PAID' }))
+    expect(assign).toHaveBeenCalledWith('/console/payment-complete?orderNo=PO-1')
   })
 
   it('offers every preset amount, validates custom amount, and shows a PayPal option without trusting client-side quota or user IDs', async () => {

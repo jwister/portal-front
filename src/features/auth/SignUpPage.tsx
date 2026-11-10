@@ -4,6 +4,7 @@ import { Captcha } from 'aj-captcha-react'
 import { AuthApiError, sendEmailVerification, signUp } from '../../api/auth'
 import { AuthInput, AuthLayout, AuthSubmit, focusInvalidField } from './AuthLayout'
 import { authSwitchUrl } from './auth-links'
+import { trackRegistration } from '../../support/google-ads'
 
 interface SignUpPageProps { onRegistered?: () => void }
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -86,6 +87,8 @@ export function SignUpPage(props: SignUpPageProps) {
     setSubmitting(true)
     try {
       await signUp(username, email, password, verificationCode)
+      // 仅在账号实际注册成功后上报，等待处理回调或超时后继续原跳转。
+      await trackRegistration()
       if (props.onRegistered) props.onRegistered()
       else window.location.assign(authSwitchUrl('/sign-in'))
     } catch (cause) {

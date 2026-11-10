@@ -3,13 +3,35 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { OAuthCallbackPage } from '../OAuthCallbackPage'
-import { rememberOAuthReturn } from '../auth-links'
+import { rememberOAuthReturn, readOAuthCallbackParameters } from '../auth-links'
+
+const { trackRegistration } = vi.hoisted(() => ({ trackRegistration: vi.fn().mockResolvedValue(undefined) }))
+vi.mock('../../../support/google-ads', () => ({ trackRegistration }))
 
 describe('OAuthCallbackPage', () => {
   afterEach(() => {
+    trackRegistration.mockClear()
     vi.unstubAllGlobals()
     sessionStorage.clear()
     window.history.replaceState({}, '', '/')
+  })
+
+  it.each(['github', 'oidc'] as const)('reports only genuinely new %s accounts', async (provider) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ isNewUser: true }), { status: 200 })))
+    window.history.replaceState({}, '', `/oauth/${provider}?code=provider-code&state=flow-token`)
+    const onAuthenticated = vi.fn()
+    render(<OAuthCallbackPage provider={provider} onAuthenticated={onAuthenticated} />)
+    await waitFor(() => expect(onAuthenticated).toHaveBeenCalledOnce())
+    expect(trackRegistration).toHaveBeenCalledOnce()
+  })
+
+  it('does not report an existing OAuth account as a registration', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ isNewUser: false }), { status: 200 })))
+    window.history.replaceState({}, '', '/oauth/github?code=provider-code&state=flow-token')
+    const onAuthenticated = vi.fn()
+    render(<OAuthCallbackPage provider="github" onAuthenticated={onAuthenticated} />)
+    await waitFor(() => expect(onAuthenticated).toHaveBeenCalledOnce())
+    expect(trackRegistration).not.toHaveBeenCalled()
   })
 
   it('uses the shared ZToken logo', () => {
@@ -24,6 +46,10 @@ describe('OAuthCallbackPage', () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
     vi.stubGlobal('fetch', fetchMock)
     window.history.replaceState({}, '', '/oauth/github?code=provider-code&state=flow-token')
+
+    // 模拟 main 在统计脚本启动前提取授权参数，页面稍后仍应正确完成认证。
+    readOAuthCallbackParameters()
+    expect(window.location.search).toBe('')
 
     render(<OAuthCallbackPage provider="github" onAuthenticated={onAuthenticated} />)
 

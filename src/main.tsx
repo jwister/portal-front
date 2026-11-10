@@ -8,6 +8,13 @@ import './styles/base.css'
 import './styles/home-reference.css'
 import { scheduleSupportChat } from './support/load-chat'
 import { scheduleTracking } from './support/load-tracking'
+import { initializeGoogleAds } from './support/google-ads'
+import { readOAuthCallbackParameters } from './features/auth/auth-links'
+
+// 先清理回调 URL 中的一次性授权参数，避免第三方统计或客服脚本采集完整地址。
+readOAuthCallbackParameters()
+// 先建立统计命令队列，避免异步认证回调早于统计脚本准备完成。
+initializeGoogleAds()
 
 // The translation table is a separate chunk that the bootstrap already preloaded, so
 // waiting for it costs no round trip. The prerendered homepage stays on screen while

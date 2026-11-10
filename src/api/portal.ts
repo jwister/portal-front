@@ -290,6 +290,9 @@ export type PaymentOrderStatus =
 export interface PaymentOrder {
   orderNo: string
   amountUsdMinor: number
+  /** 服务端提供的购买价值与对应币种；可选以兼容旧版订单接口。 */
+  conversionValue?: number
+  conversionCurrency?: 'USD' | 'CNY'
   quotaToCredit: number
   method: PaymentMethod
   status: PaymentOrderStatus

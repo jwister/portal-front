@@ -4,6 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../../i18n'
 import { PaymentCompletePage } from '../PaymentCompletePage'
 
+const { trackPurchase } = vi.hoisted(() => ({ trackPurchase: vi.fn() }))
+vi.mock('../../../support/google-ads', () => ({ trackPurchase }))
+
 const paidOrder = {
   orderNo: 'PO-PAID-1', amountUsdMinor: 2550, quotaToCredit: 12_750_000, method: 'USDT_TRC20', status: 'PAID',
   expiresAt: '2026-09-02T01:00:00Z', confirmedAt: '2026-09-02T00:05:00Z', creditedAt: '2026-09-02T00:06:00Z', createdAt: '2026-09-02T00:00:00Z',
@@ -23,6 +26,7 @@ describe('PaymentCompletePage', () => {
   beforeEach(async () => {
     await i18n.changeLanguage('en')
     assign.mockReset()
+    trackPurchase.mockClear()
     window.history.replaceState({}, '', '/console/payment-complete?orderNo=PO-PAID-1')
     vi.stubGlobal('location', { ...window.location, assign })
   })
@@ -38,6 +42,7 @@ describe('PaymentCompletePage', () => {
     render(<PaymentCompletePage />)
 
     expect(await screen.findByRole('heading', { name: 'Payment complete' })).toBeVisible()
+    expect(trackPurchase).toHaveBeenCalledWith(paidOrder)
     expect(screen.getByText('PO-PAID-1')).toBeVisible()
     expect(screen.getByText('$25.50')).toBeVisible()
     expect(screen.queryByText('12,750,000')).not.toBeInTheDocument()
@@ -83,5 +88,6 @@ describe('PaymentCompletePage', () => {
     expect(screen.queryByRole('button', { name: 'Create API key now' })).not.toBeInTheDocument()
     await act(async () => { vi.advanceTimersByTime(5_000) })
     expect(assign).not.toHaveBeenCalled()
+    expect(trackPurchase).not.toHaveBeenCalled()
   })
 })
