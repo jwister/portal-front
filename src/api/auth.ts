@@ -28,11 +28,13 @@ export interface CaptchaResponse { captchaId: string; image: string; expiresIn: 
 
 export class AuthApiError extends Error {
   readonly status: number
+  readonly retryAfterSeconds?: number
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, retryAfterSeconds?: number) {
     super(message)
     this.name = 'AuthApiError'
     this.status = status
+    this.retryAfterSeconds = retryAfterSeconds
   }
 }
 
@@ -54,7 +56,10 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
   } catch {
     // Use the safe generic message when the response is not JSON.
   }
-  throw new AuthApiError(message, response.status)
+  // 再次校验服务端等待秒数，避免异常响应锁死入口。
+  const retryAfter = response.headers.get('Retry-After') || ''
+  const seconds = /^[0-9]{1,5}$/.test(retryAfter) && Number(retryAfter) <= 86400 ? Number(retryAfter) : undefined
+  throw new AuthApiError(message, response.status, seconds)
 }
 
 export async function signIn(username: string, password: string): Promise<void> {

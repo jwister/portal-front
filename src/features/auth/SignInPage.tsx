@@ -17,6 +17,7 @@ import {
 import '../../i18n'
 import { authSwitchUrl, rememberOAuthReturn } from './auth-links'
 import { resolveBalanceDestination } from '../catalog/use-model'
+import { useAuthRateLimit } from './use-auth-rate-limit'
 
 interface SignInPageProps {
   onAuthenticated?: () => void
@@ -25,6 +26,7 @@ interface SignInPageProps {
 
 export function SignInPage(props: SignInPageProps) {
   const { t } = useTranslation()
+  const rateLimit = useAuthRateLimit()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [providers, setProviders] = useState<OAuthProviderStatus | null>(null)
@@ -58,6 +60,7 @@ export function SignInPage(props: SignInPageProps) {
         window.location.assign(url.pathname === '/console/recharge' && model ? await resolveBalanceDestination(model) : target)
       }
     } catch (cause) {
+      if (rateLimit.handle(cause)) { setError(null); return }
       const message = cause instanceof AuthApiError ? cause.message : t('auth.error')
       setError(message)
     } finally {
@@ -66,7 +69,7 @@ export function SignInPage(props: SignInPageProps) {
   }
 
   const startOAuth = async (provider: 'github' | 'oidc'): Promise<void> => {
-    if (!providers || oauthProvider) return
+    if (!providers || oauthProvider || submitting || rateLimit.seconds > 0) return
     setOAuthProvider(provider)
     setError(null)
     try {
@@ -77,9 +80,9 @@ export function SignInPage(props: SignInPageProps) {
         : buildOidcOAuthUrl(providers.oidcAuthorizationEndpoint, providers.oidcClientId, state)
       if (props.onOAuthNavigate) props.onOAuthNavigate(destination)
       else window.location.assign(destination)
-    } catch {
-      const message = t('auth.oauthFailed')
-      setError(message)
+    } catch (cause) {
+      if (rateLimit.handle(cause)) setError(null)
+      else setError(t('auth.oauthFailed'))
       setOAuthProvider(null)
     }
   }
@@ -90,7 +93,7 @@ export function SignInPage(props: SignInPageProps) {
   return <AuthLayout title={t('auth.title')} copy={t('auth.copy')}>
     <form className="zt-auth-form" noValidate onSubmit={(event) => {
       event.preventDefault()
-      if (submitting || oauthProvider) return
+      if (submitting || oauthProvider || rateLimit.seconds > 0) return
       const form = event.currentTarget
       const values = Object.fromEntries(new FormData(form))
       const errors: Record<string, string> = {}
@@ -104,8 +107,8 @@ export function SignInPage(props: SignInPageProps) {
     }}>
       <AuthInput name="username" label={t('auth.username')} placeholder={t('auth.usernamePlaceholder')} autoComplete="username" autoCapitalize="none" spellCheck={false} required error={fieldErrors.username ? t(fieldErrors.username) : undefined} />
       <AuthInput name="password" label={t('auth.password')} placeholder={t('auth.passwordPlaceholder')} type="password" autoComplete="current-password" required error={fieldErrors.password ? t(fieldErrors.password) : undefined} />
-      {error && <p className="zt-auth-error" role="alert">{error}</p>}
-      <AuthSubmit busy={submitting} disabled={!!oauthProvider}>{t('auth.submit')}</AuthSubmit>
+      {(error || rateLimit.seconds > 0) && <p className="zt-auth-error" role="alert">{rateLimit.seconds > 0 ? t('auth.rateLimited', { seconds: rateLimit.seconds }) : error}</p>}
+      <AuthSubmit busy={submitting} disabled={!!oauthProvider || rateLimit.seconds > 0}>{t('auth.submit')}</AuthSubmit>
     </form>
     <p className="zt-auth-switch">{t('auth.noAccount')} <a href={authSwitchUrl('/sign-up')}>{t('register.submit')}</a></p>
     <div className="zt-auth-oauth" aria-busy={providersLoading}>
@@ -113,10 +116,10 @@ export function SignInPage(props: SignInPageProps) {
         <div className="zt-auth-divider">{t('auth.oauthDivider')}</div>
         <div className="zt-auth-providers">
           {providersLoading ? <><div className="zt-auth-provider-placeholder" aria-hidden="true" /><div className="zt-auth-provider-placeholder" aria-hidden="true" /><span className="zt-auth-sr-only" role="status">{t('auth.providersLoading')}</span></> : <>
-            {githubEnabled && <button className="zt-auth-provider" type="button" aria-label={t('auth.continueGithub')} aria-busy={oauthProvider === 'github'} disabled={!!oauthProvider || submitting} onClick={() => void startOAuth('github')}>
+            {githubEnabled && <button className="zt-auth-provider" type="button" aria-label={t('auth.continueGithub')} aria-busy={oauthProvider === 'github'} disabled={!!oauthProvider || submitting || rateLimit.seconds > 0} onClick={() => void startOAuth('github')}>
               {oauthProvider === 'github' ? <span className="zt-auth-spinner" aria-hidden="true" /> : <img src={githubLogo} alt="" width="20" height="20" />}<span>GitHub</span>
             </button>}
-            {oidcEnabled && <button className="zt-auth-provider" type="button" aria-label={t('auth.continueGoogle', { provider: providers?.oidcDisplayName || 'Google' })} aria-busy={oauthProvider === 'oidc'} disabled={!!oauthProvider || submitting} onClick={() => void startOAuth('oidc')}>
+            {oidcEnabled && <button className="zt-auth-provider" type="button" aria-label={t('auth.continueGoogle', { provider: providers?.oidcDisplayName || 'Google' })} aria-busy={oauthProvider === 'oidc'} disabled={!!oauthProvider || submitting || rateLimit.seconds > 0} onClick={() => void startOAuth('oidc')}>
               {oauthProvider === 'oidc' ? <span className="zt-auth-spinner" aria-hidden="true" /> : <img src={googleLogo} alt="" width="20" height="20" />}<span>{providers?.oidcDisplayName || 'Google'}</span>
             </button>}
           </>}

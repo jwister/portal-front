@@ -1,5 +1,5 @@
 import brandLogo from '../../../assets/brand-logo.webp'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { OAuthCallbackPage } from '../OAuthCallbackPage'
@@ -10,10 +10,26 @@ vi.mock('../../../support/google-ads', () => ({ trackRegistration }))
 
 describe('OAuthCallbackPage', () => {
   afterEach(() => {
+    vi.useRealTimers()
     trackRegistration.mockClear()
     vi.unstubAllGlobals()
     sessionStorage.clear()
     window.history.replaceState({}, '', '/')
+  })
+
+  it('shows the retry time without replaying the OAuth authorization code', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 429, headers: { 'Retry-After': '2' } }))
+    vi.stubGlobal('fetch', fetchMock)
+    window.history.replaceState({}, '', '/oauth/oidc?code=provider-code&state=flow-token')
+    render(<OAuthCallbackPage provider="oidc" />)
+    await act(async () => { await Promise.resolve(); await Promise.resolve() })
+    expect(screen.getByRole('alert')).toHaveTextContent('Too many requests. Try again in 2 seconds.')
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeDisabled()
+    await act(async () => { vi.advanceTimersByTime(2000) })
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled()
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(trackRegistration).not.toHaveBeenCalled()
   })
 
   it.each(['github', 'oidc'] as const)('reports only genuinely new %s accounts', async (provider) => {

@@ -1,4 +1,5 @@
 {
+  "auth.rateLimited": "操作频繁，请在 {{seconds}} 秒后重试。",
   "site.title": "ZToken — 统一 AI API 网关",
   "site.description": "通过一个 API 接入主流 AI 模型。ZToken 提供模型路由、API 密钥管理、用量查询与灵活的按量计费服务。",
   "console.language": "切换语言",

@@ -1,4 +1,5 @@
 {
+  "auth.rateLimited": "Too many requests. Try again in {{seconds}} seconds.",
   "site.title": "ZToken — AI API Gateway",
   "site.description": "Access leading AI models through one API. ZToken provides model routing, API key management, usage tracking and flexible pay-as-you-go billing.",
   "console.language": "Choose language",

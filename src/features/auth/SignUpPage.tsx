@@ -5,12 +5,14 @@ import { AuthApiError, sendEmailVerification, signUp } from '../../api/auth'
 import { AuthInput, AuthLayout, AuthSubmit, focusInvalidField } from './AuthLayout'
 import { authSwitchUrl } from './auth-links'
 import { trackRegistration } from '../../support/google-ads'
+import { useAuthRateLimit } from './use-auth-rate-limit'
 
 interface SignUpPageProps { onRegistered?: () => void }
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function SignUpPage(props: SignUpPageProps) {
   const { t } = useTranslation()
+  const rateLimit = useAuthRateLimit()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -38,7 +40,7 @@ export function SignUpPage(props: SignUpPageProps) {
   const captchaRef = useRef<any>(null);
 
   const openCaptcha = async () => {
-    if (coolingDown || submitting) return;
+    if (coolingDown || submitting || rateLimit.seconds > 0) return;
     setError(null);
     if (!emailPattern.test(emailValue.trim())) {
       const errors = { email: 'auth.emailInvalid' };
@@ -51,13 +53,14 @@ export function SignUpPage(props: SignUpPageProps) {
   };
 
   const onCaptchaSuccess = async (data: any) => {
-    if (sendingCode) return;
+    if (sendingCode || rateLimit.seconds > 0) return;
     setSendingCode(true);
     try {
       await sendEmailVerification(emailValue.trim(), data.captchaVerification);
       setVerificationSent(true);
       setCountdown(60);
     } catch (cause) {
+      if (rateLimit.handle(cause)) { setError(null); return }
       setError(cause instanceof AuthApiError && cause.status > 0 && cause.status < 500 ? cause.message : t('register.verificationSendError'));
     } finally {
       setSendingCode(false);
@@ -66,7 +69,7 @@ export function SignUpPage(props: SignUpPageProps) {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (submitting) return
+    if (submitting || rateLimit.seconds > 0) return
     const form = event.currentTarget
     const values = new FormData(form)
     const username = String(values.get('username') || '').trim()
@@ -92,6 +95,7 @@ export function SignUpPage(props: SignUpPageProps) {
       if (props.onRegistered) props.onRegistered()
       else window.location.assign(authSwitchUrl('/sign-in'))
     } catch (cause) {
+      if (rateLimit.handle(cause)) { setError(null); return }
       setError(cause instanceof AuthApiError ? cause.message : t('register.error'))
     } finally { setSubmitting(false) }
   }
@@ -102,13 +106,13 @@ export function SignUpPage(props: SignUpPageProps) {
       <AuthInput name="email" placeholder={t('register.emailPlaceholder')} label={t('auth.email')} type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={emailValue} onChange={(event) => { setEmailValue(event.target.value); setVerificationSent(false) }} readOnly={sendingCode} required error={fieldErrors.email ? t(fieldErrors.email) : undefined} />
       <div className="zt-auth-code-row">
         <AuthInput name="verificationCode" placeholder={t('register.verificationCodePlaceholder')} label={t('register.verificationCode')} autoComplete="one-time-code" inputMode="numeric" required error={fieldErrors.verificationCode ? t(fieldErrors.verificationCode) : undefined} />
-        <button className="zt-auth-secondary" type="button" disabled={coolingDown || !emailValue || submitting || sendingCode} onClick={() => void openCaptcha()}>{sendingCode ? t('register.sendingCode', '发送中...') : coolingDown ? t('register.sendCodeCountdown', { seconds: countdown }) : t('register.sendCode')}</button>
+        <button className="zt-auth-secondary" type="button" disabled={coolingDown || !emailValue || submitting || sendingCode || rateLimit.seconds > 0} onClick={() => void openCaptcha()}>{sendingCode ? t('register.sendingCode', '发送中...') : coolingDown ? t('register.sendCodeCountdown', { seconds: countdown }) : t('register.sendCode')}</button>
       </div>
       {verificationSent && <p className="zt-auth-success" role="status">{t('register.verificationSent')}</p>}
       <AuthInput name="password" placeholder={t('auth.passwordPlaceholder')} label={t('auth.password')} type="password" autoComplete="new-password" required error={fieldErrors.password ? t(fieldErrors.password) : undefined} />
       <AuthInput name="confirmPassword" placeholder={t('register.confirmPasswordPlaceholder')} label={t('register.confirmPassword')} type="password" autoComplete="new-password" required error={fieldErrors.confirmPassword ? t(fieldErrors.confirmPassword) : undefined} />
-      {error && <p className="zt-auth-error" role="alert">{error}</p>}
-      <AuthSubmit busy={submitting}>{t('register.submit')}</AuthSubmit>
+      {(error || rateLimit.seconds > 0) && <p className="zt-auth-error" role="alert">{rateLimit.seconds > 0 ? t('auth.rateLimited', { seconds: rateLimit.seconds }) : error}</p>}
+      <AuthSubmit busy={submitting} disabled={rateLimit.seconds > 0}>{t('register.submit')}</AuthSubmit>
     </form>
     <p className="zt-auth-switch">{t('register.haveAccount')} <a href={authSwitchUrl('/sign-in')}>{t('auth.submit')}</a></p>
     <Captcha

@@ -6,6 +6,7 @@ import { completeOAuth } from '../../api/auth'
 import { consumeOAuthReturn, readOAuthCallbackParameters } from './auth-links'
 import { resolveBalanceDestination } from '../catalog/use-model'
 import { trackRegistration } from '../../support/google-ads'
+import { useAuthRateLimit } from './use-auth-rate-limit'
 import '../../i18n'
 
 interface OAuthCallbackPageProps {
@@ -18,6 +19,7 @@ interface OAuthCallbackPageProps {
  */
 export function OAuthCallbackPage({ provider, onAuthenticated }: OAuthCallbackPageProps) {
   const { t } = useTranslation()
+  const rateLimit = useAuthRateLimit()
   const started = useRef(false)
   const [failed, setFailed] = useState(false)
 
@@ -45,15 +47,15 @@ export function OAuthCallbackPage({ provider, onAuthenticated }: OAuthCallbackPa
           window.location.replace(url.pathname === '/console/recharge' && model ? await resolveBalanceDestination(model) : target)
         }
       })
-      .catch(() => setFailed(true))
+      .catch((cause) => { rateLimit.handle(cause); setFailed(true) })
   }, [onAuthenticated, provider])
 
   return (
     <AuthLayout title={t(failed ? 'auth.oauthFailed' : 'auth.oauthLoading')}>
       <div aria-live="polite">
         {failed ? <>
-          <p role="alert">{t('auth.oauthFailed')}</p>
-          <button className="zt-auth-primary" type="button" onClick={() => window.location.replace('/sign-in')}>{t('auth.submit')}</button>
+          <p role="alert">{rateLimit.seconds > 0 ? t('auth.rateLimited', { seconds: rateLimit.seconds }) : t('auth.oauthFailed')}</p>
+          <button className="zt-auth-primary" type="button" disabled={rateLimit.seconds > 0} onClick={() => window.location.replace('/sign-in')}>{t('auth.submit')}</button>
         </> : <>
           <p className="zt-auth-callback" role="status"><span className="zt-auth-spinner" aria-hidden="true" />{t('auth.oauthLoading')}</p>
         </>}

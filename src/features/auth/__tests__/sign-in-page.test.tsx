@@ -1,5 +1,5 @@
 import brandLogo from '../../../assets/brand-logo.webp'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,7 +7,31 @@ import { SignInPage } from '../SignInPage'
 
 describe('SignInPage', () => {
   afterEach(() => {
+    vi.useRealTimers()
     vi.unstubAllGlobals()
+  })
+
+  it('shows the retry time and blocks OAuth and password retries until it expires', async () => {
+    const onOAuthNavigate = vi.fn()
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      githubEnabled: true, githubClientId: 'github-client', oidcEnabled: false,
+    }))).mockResolvedValueOnce(new Response(JSON.stringify({ code: 'NEWAPI_RATE_LIMITED', message: '操作频繁，请稍后重试' }), {
+      status: 429, headers: { 'Retry-After': '2' },
+    })).mockResolvedValueOnce(new Response(JSON.stringify({ state: 'new-flow' })))
+    vi.stubGlobal('fetch', fetchMock)
+    render(<SignInPage onOAuthNavigate={onOAuthNavigate} />)
+    const github = await screen.findByRole('button', { name: 'Continue with GitHub' })
+    vi.useFakeTimers()
+    await act(async () => { fireEvent.click(github) })
+    expect(screen.getByRole('alert')).toHaveTextContent('Too many requests. Try again in 2 seconds.')
+    expect(github).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeDisabled()
+    fireEvent.click(github)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    await act(async () => { vi.advanceTimersByTime(2000) })
+    expect(github).toBeEnabled()
+    await act(async () => { fireEvent.click(github) })
+    expect(onOAuthNavigate).toHaveBeenCalledWith(expect.stringContaining('state=new-flow'))
   })
 
   it('uses the shared ZToken logo', () => {
