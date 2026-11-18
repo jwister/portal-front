@@ -29,13 +29,13 @@ describe('catalog browsing and pricing', () => {
     const card = await screen.findByTestId('model-card-deepseek-discount')
     expect(within(card).getByText('6 折')).toBeVisible()
     expect(within(card).getByText('$10.00').tagName).toBe('DEL')
-    expect(within(card).getByText('$5.999994')).toBeVisible()
+    expect(within(card).getByText('$6.0000')).toBeVisible()
     expect(within(screen.getByTestId('models-promotion')).getByText('6 折')).toBeVisible()
     catalog.unmount()
     render(<ModelDetailPage modelName="deepseek-discount" />)
     expect(await screen.findByRole('columnheader', { name: '生效倍率' })).toBeVisible()
     expect(screen.getAllByText('×0.6')).toHaveLength(2)
-    expect(screen.getAllByText('$5.999994').length).toBeGreaterThan(1)
+    expect(screen.getAllByText('$6.0000').length).toBeGreaterThan(1)
   })
 
   it('advertises only verified discounts in the current results and follows group selection', async () => {
@@ -103,17 +103,17 @@ describe('catalog browsing and pricing', () => {
   it('keeps card and detail prices identical, including cache writes in detail', async () => {
     const catalog = render(<ModelsPage />)
     const card = await screen.findByTestId('model-card-deepseek-test')
-    expect(within(card).getByText('$0.285')).toBeVisible()
-    expect(within(card).getByText('$0.57')).toBeVisible()
+    expect(within(card).getByText('$0.2850')).toBeVisible()
+    expect(within(card).getByText('$0.5700')).toBeVisible()
     expect(within(card).getByText('$0.30').tagName).toBe('DEL')
     expect(within(card).getByText('9.5 折')).toBeVisible()
     expect(within(await screen.findByTestId('model-card-cdance2.5-0807')).getByText('价格暂不可用')).toBeVisible()
     catalog.unmount()
     render(<ModelDetailPage modelName="deepseek-test" />)
     // The header spec bar repeats the two headline prices shown in the pricing panel.
-    expect((await screen.findAllByText('$0.285')).length).toBeGreaterThan(0)
-    expect(screen.getAllByText('$0.57').length).toBeGreaterThan(0)
-    expect(screen.getByText('$0.35625')).toBeVisible()
+    expect((await screen.findAllByText('$0.2850')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('$0.5700').length).toBeGreaterThan(0)
+    expect(screen.getByText('$0.3562')).toBeVisible()
     expect(screen.getByText('缓存写入')).toBeVisible()
   })
 
@@ -148,7 +148,7 @@ describe('catalog browsing and pricing', () => {
     expect(within(card).getByText('标准')).toBeVisible()
     expect(within(card).getByText('长上下文')).toBeVisible()
     // The gateway's rate stays the sale price; only the struck price is derived from it.
-    expect(within(card).getByText('$0.298908982')).toBeVisible()
+    expect(within(card).getByText('$0.2989')).toBeVisible()
     expect(within(card).getByText('$0.373636228').tagName).toBe('DEL')
     // Every other model is untouched: no group discount here, so no ribbon and no struck price.
     const plain = screen.getByTestId('model-card-deepseek-test')
@@ -180,8 +180,8 @@ describe('catalog browsing and pricing', () => {
     // gateway's own identifiers.
     expect(within(card).getByText('闲时')).toBeVisible()
     expect(within(card).getByText('忙时')).toBeVisible()
-    expect(within(card).getByText('$0.283575')).toBeVisible()
-    expect(within(card).getByText('$0.141835')).toBeVisible()
+    expect(within(card).getByText('$0.2836')).toBeVisible()
+    expect(within(card).getByText('$0.1418')).toBeVisible()
     expect(within(card).queryByText('价格暂不可用')).not.toBeInTheDocument()
     // Six rows would double the card's height, so the cache rates wait for the detail page.
     expect(within(card).queryByText('缓存读取')).not.toBeInTheDocument()
@@ -195,12 +195,12 @@ describe('catalog browsing and pricing', () => {
     // Named in the header facts and again in the capability matrix.
     expect((await screen.findAllByText('分档计费 · 按请求条件')).length).toBe(2)
     // Both tiers' cache read rates, the ones the card left out.
-    expect(screen.getByText('$0.0056715')).toBeVisible()
-    expect(screen.getByText('$0.00283575')).toBeVisible()
+    expect(screen.getByText('$0.0057')).toBeVisible()
+    expect(screen.getByText('$0.0028')).toBeVisible()
     // The header quotes one tier, so it has to say which — and it is the dearer one, even
     // though the gateway writes the cheap band first.
     expect(screen.getAllByText(/USD \/ 百万 Token · 忙时/).length).toBeGreaterThan(0)
-    expect(screen.getAllByText('$0.283575').length).toBeGreaterThan(1)
+    expect(screen.getAllByText('$0.2836').length).toBeGreaterThan(1)
   })
 
   it('shows the expression as written when its price cannot be read, never a blank card', async () => {
@@ -247,7 +247,7 @@ describe('catalog browsing and pricing', () => {
   it('renders English units without applying token labels to video prices', async () => {
     await i18n.changeLanguage('en')
     render(<ModelDetailPage modelName="seedance-test" />)
-    expect((await screen.findAllByText('$0.095')).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('$0.0950')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('USD / second').length).toBeGreaterThanOrEqual(2)
     expect(screen.queryByText('USD / 1M tokens')).not.toBeInTheDocument()
     expect(screen.getByText('5% off')).toBeVisible()

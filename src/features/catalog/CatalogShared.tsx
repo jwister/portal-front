@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import '../../ui/semi-base'
 import Button from '@douyinfe/semi-ui/lib/es/button'
 import Skeleton from '@douyinfe/semi-ui/lib/es/skeleton'
-import { cardPriceRows, cardTierRows, formatPrice, offerRatio, priceGroup, promotionRate, struckPrice, tierLabelKey, unreadExpression, type CatalogModel, type PriceRow } from './catalog-data'
+import { cardPriceRows, cardTierRows, formatPrice, formatSalePrice, offerRatio, priceGroup, promotionRate, struckPrice, tierLabelKey, unreadExpression, type CatalogModel, type PriceRow } from './catalog-data'
 import type { NewApiPricingResponse } from '../../api/portal'
 import { vendorLogoUrl } from './vendor-logos'
 import { displayCurrency, formatMoney } from '../../support/portal-config'
@@ -31,7 +31,7 @@ function PriceRows({ rows, ratio, promotion }: { rows: PriceRow[]; ratio: number
     const struck = row.base === null || ratio === null ? null : struckPrice(row.base, ratio, promotion)
     return <div className="zt-price-row" key={row.key}>
       <span>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`, { currency: currency.code })}</small></span>
-      <span className="zt-price-value">{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{struck !== null && <del title={t(promotion === null ? 'catalog.basePrice' : 'catalog.promoBasePrice')}>{formatMoney(struck, formatPrice, currency)}</del>}<strong title={t('catalog.salePrice')}>{formatMoney(row.base * ratio, formatPrice, currency)}</strong></>}</span>
+      <span className="zt-price-value">{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{struck !== null && <del title={t(promotion === null ? 'catalog.basePrice' : 'catalog.promoBasePrice')}>{formatMoney(struck, formatPrice, currency)}</del>}<strong title={t('catalog.salePrice')}>{formatMoney(row.base * ratio, formatSalePrice, currency)}</strong></>}</span>
     </div>
   })}</>
 }

@@ -8,7 +8,7 @@ import { CatalogState, CopyButton, Discount, PriceList, VendorMark } from './Cat
 import { Select } from '../../components/Select'
 import { OfficialPriceReference } from './OfficialPriceReference'
 import { ModelExamples } from './ModelExamples'
-import { cardPriceRows, dearestTier, formatPrice, offerRatio, priceGroup, promotionRate, struckPrice, tierLabelKey, type CatalogModel } from './catalog-data'
+import { cardPriceRows, dearestTier, formatPrice, formatSalePrice, offerRatio, priceGroup, promotionRate, struckPrice, tierLabelKey, type CatalogModel } from './catalog-data'
 import type { NewApiPricingResponse } from '../../api/portal'
 import { displayCurrency, formatMoney } from '../../support/portal-config'
 
@@ -108,11 +108,11 @@ function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: 
               const base = model.prices.find((row) => row.key === key)?.base ?? null
               return <td key={key}>{base === null || ratio === null
                 ? <small>{t('models.priceUnavailable')}</small>
-                : <span className="zt-price-value"><strong>{formatMoney(base * ratio, formatPrice, currency)}</strong></span>}</td>
+                : <span className="zt-price-value"><strong>{formatMoney(base * ratio, formatSalePrice, currency)}</strong></span>}</td>
             })}
             {!columns.length && <td>{model.prices.length ? model.prices.map((row) => <span className="zt-group-price" key={row.key}>
               {row.label ?? t(`catalog.price.${row.key}`)}{' '}
-              {row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : formatMoney(row.base * ratio, formatPrice, currency)}
+              {row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : formatMoney(row.base * ratio, formatSalePrice, currency)}
             </span>) : <small>{t('models.priceUnavailable')}</small>}</td>}
             <td>{ratio === null ? <small>{t('models.priceUnavailable')}</small> : `×${Number(ratio.toFixed(4))}`}</td>
           </tr>
@@ -154,7 +154,7 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
             const struck = row.base === null || ratio === null ? null : struckPrice(row.base, ratio, promotion)
             return <div key={row.key}>
               <dt>{row.label ?? t(`catalog.price.${row.key}`)}<small>{t(`catalog.unit.${row.unit}`, { currency: currency.code })}{headlineTier ? ` · ${headlineTier}` : ''}</small></dt>
-              <dd>{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{struck !== null && <del>{formatMoney(struck, formatPrice, currency)}</del>}<strong>{formatMoney(row.base * ratio, formatPrice, currency)}</strong></>}</dd>
+              <dd>{row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : <>{struck !== null && <del>{formatMoney(struck, formatPrice, currency)}</del>}<strong>{formatMoney(row.base * ratio, formatSalePrice, currency)}</strong></>}</dd>
             </div>
           })}
           <div><dt>{t('catalog.cap.billing')}</dt><dd><span className="zt-cap-text">{t(billingKey(model))}</span></dd></div>
