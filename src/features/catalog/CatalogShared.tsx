@@ -22,7 +22,7 @@ export function Discount({ model, pricing, group }: { model: CatalogModel; prici
   const promotion = promotionRate(model)
   const ratio = offerRatio(priceGroup(pricing, model, group).ratio, promotion)
   return ratio !== null && ratio > 0 && ratio < 1 && model.prices.some((row) => row.base !== null && row.base > 0)
-    ? <span className={'zt-discount' + (promotion === null ? '' : ' is-promo')}><small>{t(promotion === null ? 'catalog.groupOffer' : 'catalog.promoOffer')}</small><span>{t('catalog.discount', { rate: Number((ratio * 10).toFixed(4)), percent: Number(((1 - ratio) * 100).toFixed(4)) })}</span></span> : null
+    ? <span className={'zt-discount' + (promotion === null ? '' : ' is-promo')}><small>{t(promotion !== null ? 'catalog.promoOffer' : model.requestMultiplier !== undefined && model.requestMultiplier !== 1 ? 'catalog.requestOffer' : 'catalog.groupOffer')}</small><span>{t('catalog.discount', { rate: Number((ratio * 10).toFixed(2)), percent: Number(((1 - ratio) * 100).toFixed(2)) })}</span></span> : null
 }
 function PriceRows({ rows, ratio, promotion }: { rows: PriceRow[]; ratio: number | null; promotion: number | null }) {
   const { t } = useTranslation()

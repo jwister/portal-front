@@ -4,6 +4,47 @@ import { pricingFixture } from './pricing-fixture'
 import { getBytePlusOfficialReference } from '../seedance-reference'
 
 describe('catalog billing rules', () => {
+  /** 使用固定时刻验证实际折扣，避免测试依赖运行机器的时区和时间。 */
+  const discountedModel = (expression: string, now = new Date('2026-11-18T04:00:00Z')) => {
+    const pricing = { ...pricingFixture, group_ratio: { default: 0.9 }, data: [{ model_name: 'deepseek-v4.1-flash', enable_groups: ['default'], billing_mode: 'tiered_expr', billing_expr: expression }] }
+    return { pricing, model: catalogModels(pricing, now)[0] }
+  }
+
+  it('combines the all-day request multiplier with the group while preserving list prices', () => {
+    const { pricing, model } = discountedModel('(tier("base", p * 10 + c * 20)) * (hour("Asia/Shanghai") >= 0 ? 0.666666 : 1)')
+    expect(model.prices[0].base).toBe(10)
+    expect(priceGroup(pricing, model).ratio).toBeCloseTo(0.5999994)
+    expect(unreadExpression(model)).toBeNull()
+  })
+
+  it('uses the group alone when the time condition does not match', () => {
+    const { pricing, model } = discountedModel('tier("base", p * 10 + c * 20) * (hour("Asia/Shanghai") >= 22 || hour("Asia/Shanghai") < 8 ? 0.6 : 1)')
+    expect(model.prices[0].base).toBe(10)
+    expect(priceGroup(pricing, model).ratio).toBe(0.9)
+  })
+
+  it('multiplies every matching rule and supports video prices', () => {
+    const { pricing, model } = discountedModel('tier("720p", u("duration") * 1) * (hour("Asia/Shanghai") >= 0 ? 0.8 : 1) * (weekday("Asia/Shanghai") == 3 ? 0.5 : 1)')
+    expect(model.prices[0].base).toBe(1)
+    expect(priceGroup(pricing, model).ratio).toBeCloseTo(0.36)
+  })
+
+  it('does not move a branch-specific multiplier outside its pricing condition', () => {
+    const { model } = discountedModel('hour("UTC") < 8 ? tier("a", p * 1) : tier("b", p * 2) * (hour("UTC") >= 0 ? 0.6 : 1)')
+    expect(model.prices).toEqual([])
+    expect(unreadExpression(model)).toBe(model.raw.billing_expr)
+  })
+
+  it.each([
+    'param("service_tier") == "flex"',
+    'hour("Invalid/Zone") >= 0',
+    'hour("Asia/Shanghai") >= 0 || param("x") == 1',
+  ])('retains the raw expression when the page cannot determine a rule: %s', (condition) => {
+    const { model } = discountedModel(`tier("base", p * 10 + c * 20) * (${condition} ? 0.6 : 1)`)
+    expect(model.prices).toEqual([])
+    expect(unreadExpression(model)).toBe(model.raw.billing_expr)
+  })
+
   it('keeps verified BytePlus references separate from aliases, promotions and CDance models', () => {
     const reference = getBytePlusOfficialReference('seedance-2.0')!
     expect(reference.modelId).toBe('dreamina-seedance-2-0-260128')

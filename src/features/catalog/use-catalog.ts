@@ -78,18 +78,25 @@ export function useCatalog() {
   const [pricing, setPricing] = useState<NewApiPricingResponse | null>(() => readCache())
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const [minute, setMinute] = useState(() => Math.floor(Date.now() / 60000))
+
+  // 时间规则按分钟重新求值，标签和金额在活动开始、结束后同步更新。
+  useEffect(() => {
+    const timer = window.setInterval(() => setMinute(Math.floor(Date.now() / 60000)), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     let active = true
     setFailed(false)
     void requestPricing().then((data) => {
       if (!active) return
-      // Re-rendering every cache revalidation is wasted work; only swap when it changed.
-      setPricing((current) => (current && current.pricing_version === data.pricing_version ? current : data))
+      // 网关可能返回固定协议版本号，必须比较实际数据以读取刚保存的折扣。
+      setPricing((current) => (current && JSON.stringify(current) === JSON.stringify(data) ? current : data))
     }).catch(() => { if (active) setFailed(true) })
     return () => { active = false }
   }, [attempt])
 
-  const models = useMemo(() => pricing ? catalogModels(pricing) : [], [pricing])
+  const models = useMemo(() => pricing ? catalogModels(pricing, new Date(minute * 60000)) : [], [pricing, minute])
   return { pricing, models, failed, retry: () => { clearCatalogCache(); setPricing(null); setAttempt((value) => value + 1) } }
 }

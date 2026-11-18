@@ -66,7 +66,7 @@ function Capability({ model, pricing, group }: { model: CatalogModel; pricing: N
     { key: 'catalog.cap.groups', value: <>{model.groups.map((name) => <span className="zt-cap-chip" key={name}>{name}</span>)}</> },
     { key: 'catalog.cap.rate', value: <span className="zt-cap-text">{discounted === null
       ? t('catalog.cap.rateNone')
-      : t('catalog.cap.rateValue', { rate: Number((discounted * 10).toFixed(4)), percent: Number(((1 - discounted) * 100).toFixed(4)) })}</span> },
+      : t('catalog.cap.rateValue', { rate: Number((discounted * 10).toFixed(2)), percent: Number(((1 - discounted) * 100).toFixed(2)) })}</span> },
   ]
   return <section id="capability" className="zt-panel zt-capability">
     <div className="zt-panel-heading"><h2>{t('catalog.capabilityTitle')}</h2></div>
@@ -87,8 +87,8 @@ function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: 
   const current = priceGroup(pricing, model, group).name
   const currency = displayCurrency()
   const appliedRatio = (name: string) => {
-    const ratio = pricing.group_ratio?.[name]
-    return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : null
+    const ratio = priceGroup(pricing, model, name).ratio
+    return typeof ratio === 'number' && Number.isFinite(ratio) && ratio >= 0 ? ratio : null
   }
   return <section id="groups" className="zt-panel zt-group-prices">
     <div className="zt-panel-heading"><h2>{t('catalog.groupTable', { model: model.name })}</h2></div>
@@ -98,7 +98,7 @@ function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: 
           <th scope="col">{t('models.groups')}</th>
           {columns.map((key) => <th scope="col" key={key}>{t(`catalog.price.${key}`)}<small>{t('catalog.unit.million', { currency: currency.code })}</small></th>)}
           {!columns.length && <th scope="col">{t('models.pricing')}</th>}
-          <th scope="col">{t('catalog.groupRatio')}</th>
+          <th scope="col">{t(model.requestMultiplier === undefined ? 'catalog.groupRatio' : 'catalog.effectiveRatio')}</th>
         </tr></thead>
         <tbody>{model.groups.map((name) => {
           const ratio = appliedRatio(name)
@@ -114,7 +114,7 @@ function GroupPrices({ model, pricing, group }: { model: CatalogModel; pricing: 
               {row.label ?? t(`catalog.price.${row.key}`)}{' '}
               {row.base === null || ratio === null ? <small>{t('models.priceUnavailable')}</small> : formatMoney(row.base * ratio, formatPrice, currency)}
             </span>) : <small>{t('models.priceUnavailable')}</small>}</td>}
-            <td>{ratio === null ? <small>{t('models.priceUnavailable')}</small> : `×${ratio}`}</td>
+            <td>{ratio === null ? <small>{t('models.priceUnavailable')}</small> : `×${Number(ratio.toFixed(4))}`}</td>
           </tr>
         })}</tbody>
       </table>
@@ -162,7 +162,7 @@ export function ModelDetailPage({ modelName }: { modelName: string }) {
           <div><dt>{t('catalog.cap.protocol')}</dt><dd>{model.endpoints.length
             ? model.endpoints.map((endpoint) => <code className="zt-cap-code" key={endpoint}>{endpoint}</code>)
             : <small>{t('models.priceUnavailable')}</small>}</dd></div>
-          <div><dt>{t('catalog.groupRatio')}</dt><dd><span className="zt-cap-chip">{name || '—'}</span><span className="zt-cap-text">{ratio === null ? '—' : `×${ratio}`}</span></dd></div>
+          <div><dt>{t(model.requestMultiplier === undefined ? 'catalog.groupRatio' : 'catalog.effectiveRatio')}</dt><dd><span className="zt-cap-chip">{name || '—'}</span><span className="zt-cap-text">{ratio === null ? '—' : `×${Number(ratio.toFixed(4))}`}</span></dd></div>
         </dl>
       </div>
       <div className="zt-detail-actions">

@@ -117,6 +117,8 @@
   "catalog.groupTableTier": "表中为「{{tier}}」档位价格，其余档位见上方价格信息。",
   "catalog.groupTableEmpty": "该模型暂未配置可用分组。",
   "catalog.groupRatio": "分组倍率",
+  "catalog.requestOffer": "模型优惠",
+  "catalog.effectiveRatio": "生效倍率",
   "catalog.groupCurrent": "当前",
   "catalog.tab.overview": "总览",
   "catalog.tab.groups": "分组价格",

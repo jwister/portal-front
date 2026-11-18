@@ -117,6 +117,8 @@
   "catalog.groupTableTier": "The table shows the \"{{tier}}\" tier; the other tiers are listed under pricing above.",
   "catalog.groupTableEmpty": "No available group is configured for this model.",
   "catalog.groupRatio": "Group ratio",
+  "catalog.requestOffer": "MODEL OFFER",
+  "catalog.effectiveRatio": "Effective ratio",
   "catalog.groupCurrent": "Current",
   "catalog.tab.overview": "Overview",
   "catalog.tab.groups": "Group pricing",

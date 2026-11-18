@@ -16,6 +16,28 @@ describe('catalog browsing and pricing', () => {
   })
   afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState({}, '', '/') })
 
+  it('shows the combined six-fold discount consistently on cards, details and group comparisons', async () => {
+    // 原价为 10 美元，九折分组通过补偿规则得到接近六折的实际费用。
+    const pricing = { ...pricingFixture, group_ratio: { default: 0.9 }, data: [{
+      model_name: 'deepseek-discount', enable_groups: ['default'], billing_mode: 'tiered_expr',
+      billing_expr: 'tier("base", p * 10 + c * 20) * (hour("Asia/Shanghai") >= 0 ? 0.666666 : 1)',
+    }] }
+    vi.mocked(fetch).mockImplementation((url) => Promise.resolve(new Response(JSON.stringify(
+      url === '/api/auth/status' ? { authenticated: false, profile: null } : pricing,
+    ))))
+    const catalog = render(<ModelsPage />)
+    const card = await screen.findByTestId('model-card-deepseek-discount')
+    expect(within(card).getByText('6 折')).toBeVisible()
+    expect(within(card).getByText('$10.00').tagName).toBe('DEL')
+    expect(within(card).getByText('$5.999994')).toBeVisible()
+    expect(within(screen.getByTestId('models-promotion')).getByText('6 折')).toBeVisible()
+    catalog.unmount()
+    render(<ModelDetailPage modelName="deepseek-discount" />)
+    expect(await screen.findByRole('columnheader', { name: '生效倍率' })).toBeVisible()
+    expect(screen.getAllByText('×0.6')).toHaveLength(2)
+    expect(screen.getAllByText('$5.999994').length).toBeGreaterThan(1)
+  })
+
   it('advertises only verified discounts in the current results and follows group selection', async () => {
     const user = userEvent.setup()
     const offerPricing = {

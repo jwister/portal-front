@@ -3,7 +3,7 @@ import '../../ui/semi-base'
 import Button from '@douyinfe/semi-ui/lib/es/button'
 import { useTranslation } from 'react-i18next'
 import '../../i18n'
-import { compareModelsByVendor, modelHref, priceGroup, vendorRank } from './catalog-data'
+import { compareModelsByVendor, modelHref, priceGroup, offerRatio, promotionRate, vendorRank } from './catalog-data'
 import { useCatalog } from './use-catalog'
 import { useModelNavigation } from './use-model'
 import { CatalogState, CopyButton, Discount, PriceList, VendorMark } from './CatalogShared'
@@ -40,7 +40,7 @@ export function ModelsPage() {
   const bestRatio = useMemo(() => {
     if (!pricing) return null
     const discountedRatios = filtered.flatMap((model) => {
-      const { ratio } = priceGroup(pricing, model, group)
+      const ratio = offerRatio(priceGroup(pricing, model, group).ratio, promotionRate(model))
       return ratio !== null && ratio > 0 && ratio < 1 && model.prices.some((row) => row.base !== null && row.base > 0) ? [ratio] : []
     })
     return discountedRatios.length ? Math.min(...discountedRatios) : null
@@ -57,7 +57,7 @@ export function ModelsPage() {
       </div>
       <aside className={'zt-promo-ticket' + (bestRatio === null ? ' is-neutral' : '')} data-testid="models-promotion">
         <div className="zt-ticket-top"><span>{t(bestRatio === null ? 'models.title' : 'catalog.promoScope')}</span><span aria-hidden="true">✳</span></div>
-        {bestRatio !== null ? <><div className="zt-ticket-rate">{t('catalog.promoRate', { rate: Number((bestRatio * 10).toFixed(4)), percent: Number(((1 - bestRatio) * 100).toFixed(4)) })}</div><p className="zt-ticket-saving">{t('catalog.promoSaving', { percent: Number(((1 - bestRatio) * 100).toFixed(4)) })}</p></> : <><div className="zt-ticket-neutral">ONE API.<br />MORE IDEAS.</div><p className="zt-ticket-saving">{t('catalog.explore')}</p></>}
+        {bestRatio !== null ? <><div className="zt-ticket-rate">{t('catalog.promoRate', { rate: Number((bestRatio * 10).toFixed(2)), percent: Number(((1 - bestRatio) * 100).toFixed(2)) })}</div><p className="zt-ticket-saving">{t('catalog.promoSaving', { percent: Number(((1 - bestRatio) * 100).toFixed(2)) })}</p></> : <><div className="zt-ticket-neutral">ONE API.<br />MORE IDEAS.</div><p className="zt-ticket-saving">{t('catalog.explore')}</p></>}
         <div className="zt-ticket-bottom"><span>{t(bestRatio === null ? 'catalog.currency' : 'catalog.promoTerms', { currency })}</span><span className="zt-ticket-bars" aria-hidden="true" /></div>
       </aside>
     </section>

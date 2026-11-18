@@ -1,4 +1,5 @@
 import { isDocumentedSeedance } from '../docs/seedance-api'
+import { requestPricing } from './request-pricing'
 import type { NewApiPricingModel, NewApiPricingResponse } from '../../api/portal'
 
 export type ModelType = 'chat' | 'embedding' | 'image' | 'video' | 'audio' | 'other'
@@ -17,6 +18,8 @@ export interface CatalogModel {
   tiers: PriceTier[]
   endpoints: string[]
   raw: NewApiPricingModel
+  /** 已命中的请求规则乘积；基础价格仍保留原价。 */
+  requestMultiplier?: number
 }
 
 const validPrice = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0
@@ -141,17 +144,19 @@ export function tokenTierPrices(expression: string | undefined): PriceTier[] {
   return tiers.length && selectsTiersOnly(expression.replace(tierCall, 'T')) ? tiers : []
 }
 
-export function catalogModels(pricing: NewApiPricingResponse): CatalogModel[] {
+export function catalogModels(pricing: NewApiPricingResponse, now = new Date()): CatalogModel[] {
   const vendors = new Map((pricing.vendors ?? []).map((vendor) => [vendor.id, vendor.name]))
   return pricing.data.map((raw) => {
     const type = modelType(raw)
     let prices: PriceRow[] = []
     let tiers: PriceTier[] = []
+    const request = raw.billing_mode === 'tiered_expr' ? requestPricing(raw.billing_expr ?? '', now) : null
+    const expression = request?.expression ?? raw.billing_expr
     if (raw.billing_mode === 'tiered_expr') {
-      const perSecond = videoPrices(raw.billing_expr)
+      const perSecond = videoPrices(expression)
       if (perSecond.length) prices = perSecond
       else {
-        tiers = tokenTierPrices(raw.billing_expr)
+        tiers = tokenTierPrices(expression)
         prices = dearestTier(tiers)?.rows ?? []
       }
     }
@@ -175,14 +180,15 @@ export function catalogModels(pricing: NewApiPricingResponse): CatalogModel[] {
       const endpoint = pricing.supported_endpoint?.[key]
       return endpoint && !Array.isArray(endpoint) && endpoint.path.startsWith('/') ? [endpoint.path] : []
     })
-    return { name: raw.model_name, vendor, type, groups: raw.enable_groups ?? [], prices, tiers, endpoints, raw }
+    return { name: raw.model_name, vendor, type, groups: raw.enable_groups ?? [], prices, tiers, endpoints, raw, requestMultiplier: request?.multiplier }
   })
 }
 
 export function priceGroup(pricing: NewApiPricingResponse, model: CatalogModel, selected = 'all'): { name: string; ratio: number | null } {
   const name = selected !== 'all' ? selected : model.groups.includes('default') ? 'default' : model.groups[0] ?? ''
   const ratio = pricing.group_ratio?.[name]
-  return { name, ratio: model.groups.includes(name) && validPrice(ratio) ? ratio : null }
+  // 统一输出实际生效倍率，卡片、详情和分组对照表复用同一计算。
+  return { name, ratio: model.groups.includes(name) && validPrice(ratio) ? ratio * (model.requestMultiplier ?? 1) : null }
 }
 
 /**
