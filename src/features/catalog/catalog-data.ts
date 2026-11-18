@@ -243,9 +243,9 @@ export function formatPrice(value: number): string {
   return value > 0 && value < 0.000000001 ? value.toExponential(3) : value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 9 })
 }
 
-/** 折后售价固定显示四位小数；仅在展示时舍入，不改变计费或原价精度。 */
+/** 折后售价最多显示四位小数并省略末尾零；仅在展示时舍入，不改变计费或原价精度。 */
 export function formatSalePrice(value: number): string {
-  return value.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+  return value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 4 })
 }
 
 /** Headline vendors always lead the marketplace; everyone else sorts by name. */
