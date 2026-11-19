@@ -32,6 +32,23 @@
 .reference-home h1,.reference-home h2,.reference-home h3,.reference-home p { margin-top: 0; }
 .reference-home a { text-decoration: none; }
 .reference-home a:focus-visible { outline: 3px solid rgba(37,99,235,.34); outline-offset: 4px; }
+/* 首页顶部促销采用紧凑横栏，在窄屏将报价入口移到第二行。 */
+.reference-series-promo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  padding: 8px max(22px, calc((100% - 1184px) / 2));
+  border-bottom: 1px solid var(--home-line);
+  background: #eff6ff;
+}
+.reference-series-promo h2 { margin: 0; font-family: inherit; font-size: 1.125rem; }
+.reference-series-promo strong { color: var(--home-coral); }
+.reference-series-promo small { color: var(--home-muted); }
+.reference-series-promo-links { display: flex; gap: 16px; }
+html[data-portal-region="domestic"] .reference-series-promo { display: none; }
+
 .reference-section { max-width: 1280px; margin: 0 auto; padding: 88px 48px; }
 /* Consecutive blocks share one gap instead of stacking two section paddings. The
    metrics band keeps its own top gap so no heading hugs its divider. */

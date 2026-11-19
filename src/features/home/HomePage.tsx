@@ -102,7 +102,7 @@ interface ModelGroup {
   /** The copy that labels both figures; `unit` is what each figure carries itself. */
   price: 'home.modelPrice' | 'home.modelPriceVideo'
   unit: '/M' | ''
-  models: readonly (readonly [vendor: string, model: string, first: number, second: number, source: string])[]
+  models: readonly (readonly [vendor: string, model: string, first: number, second: number, source: string, discount?: 'home.seriesOfferDiscount'])[]
 }
 
 /**
@@ -114,7 +114,8 @@ interface ModelGroup {
  * that labels them — token models quote input and output per million, video models quote two
  * resolutions per second. Re-check every figure against that site's `/api/catalog/pricing`
  * whenever a rate changes; nothing here fails when the gateway moves. Last checked
- * 2026-09-20 (overseas) and 2026-09-28 (mainland).
+ * 2026-11-19 (overseas DeepSeek and GLM), 2026-09-20 (other overseas models)
+ * and 2026-09-28 (mainland).
  *
  * Models whose rate varies per request (`deepseek-v4.1-flash` off-peak, `glm-5.1` input
  * bands) are deliberately left out: one price slot cannot state two, and half a story about
@@ -141,8 +142,9 @@ const overseasModels: readonly ModelGroup[] = [
     models: [
       ['Anthropic', 'claude-opus-5', 4.75, 23.75, 'aws'],
       ['OpenAI', 'gpt-5.6-terra', 1.9, 11.4, 'azure'],
-      ['DeepSeek', 'deepseek-v4-pro', 1.691, 3.382, 'deepseek'],
-      ['Zhipu', 'glm-5.2', 1.121, 3.914, 'Baidu Cloud'],
+      ['DeepSeek', 'deepseek-v4-pro', 1.068, 2.136, 'deepseek', 'home.seriesOfferDiscount'],
+      ['Zhipu', 'glm-5.2', 0.708, 2.472, 'Baidu Cloud', 'home.seriesOfferDiscount'],
+      ['Zhipu', 'glm-5.3', 0.7154, 2.5038, 'Baidu Cloud', 'home.seriesOfferDiscount'],
     ],
   },
   {
@@ -152,8 +154,7 @@ const overseasModels: readonly ModelGroup[] = [
     models: [
       ['Anthropic', 'claude-sonnet-5', 1.9, 9.5, 'aws'],
       ['OpenAI', 'gpt-5.6-luna', 0.19, 1.14, 'azure'],
-      ['DeepSeek', 'deepseek-v3.2', 0.285, 0.4275, 'deepseek'],
-      ['DeepSeek', 'deepseek-v4-flash', 0.1425, 0.285, 'deepseek'],
+      ['Zhipu', 'glm-5.3-flash', 0.0716, 0.2504, 'Baidu Cloud', 'home.seriesOfferDiscount'],
     ],
   },
   {
@@ -262,6 +263,24 @@ function GiftBalance() {
   return <div className="reference-mini-balance"><Trans i18nKey="home.giftBalance" values={{ amount }} components={{ strong: <strong /> }} /><small className="reference-mini-gift">{t('home.giftTag')}</small></div>
 }
 
+/** 首页首屏活动适用于海外站默认分组，两项入口分别筛选模型系列及其最新价格。 */
+function SeriesPromotion() {
+  const { t } = useTranslation()
+  const domestic = useDomesticRegion()
+  if (domestic) return null
+
+  return <section className="reference-series-promo" aria-labelledby="reference-series-promo-title">
+    <div>
+      <h2 id="reference-series-promo-title"><Trans i18nKey="home.seriesOfferTitle" components={{ strong: <strong /> }} /></h2>
+      <small>{t('home.seriesOfferScope')}</small>
+    </div>
+    <div className="reference-series-promo-links">
+      <a className="reference-hero-link" href="/models?q=deepseek&group=default#model-catalog">{t('home.seriesOfferDeepseek')}</a>
+      <a className="reference-hero-link" href="/models?q=glm&group=default#model-catalog">{t('home.seriesOfferGlm')}</a>
+    </div>
+  </section>
+}
+
 /** The vendor's own mark. These sit below the fold, so they load lazily; the fixed
  *  box keeps the table row from shifting once they arrive. */
 function VendorLogo({ vendor }: { vendor: string }) {
@@ -286,12 +305,12 @@ function ModelGroups({ auth }: { auth: ReturnType<typeof useAuthStatus> }) {
   return <div className="reference-model-groups">
     {(domestic ? domesticModels : overseasModels).map((group) => <article className="reference-model-group" key={group.title}>
       <h3>{t(group.title)}</h3>
-      {group.models.map(([vendor, model, first, second, source]) => <div className="reference-model-row" key={model}>
+      {group.models.map(([vendor, model, first, second, source, discount]) => <div className="reference-model-row" key={model}>
         <VendorLogo vendor={vendor} />
         <p><small>{vendor}</small><strong>{model}</strong></p>
         <span className="reference-price">{t(group.price, { first: price(first, group.unit), second: price(second, group.unit) })}</span>
         <span className="reference-source">{t('home.modelSource', { source })}</span>
-        {!domestic && <b className="reference-discount">{t('home.modelDiscount')}</b>}
+        {!domestic && <b className="reference-discount">{t(discount ?? 'home.modelDiscount')}</b>}
         <a {...action}>{t(rechargeEnabled ? 'home.buyNow' : 'home.useNow')}</a>
       </div>)}
     </article>)}
@@ -409,6 +428,7 @@ export function HomePage() {
 
   return (
     <main className="reference-home" ref={pageRef}>
+      <SeriesPromotion />
       <section className="reference-hero" aria-labelledby="reference-hero-title">
         <div className="reference-hero-copy">
           <GiftBadge link={authenticatedLink(auth, '/console/dashboard')} />

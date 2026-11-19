@@ -51,6 +51,15 @@ describe('HomePage', () => {
     expect(screen.getAllByRole('link', { name: '开始使用' })[0]).toHaveAttribute('href', '/sign-in?returnTo=%2Fconsole%2Fdashboard')
   })
 
+  it('puts the six-discount promotion before the hero with filtered model links', () => {
+    render(<HomePage />)
+
+    const promotion = screen.getByRole('region', { name: 'DeepSeek 与 GLM 全天 6 折' })
+    expect(screen.getByRole('main').firstElementChild).toBe(promotion)
+    expect(within(promotion).getByRole('link', { name: 'DeepSeek 报价' })).toHaveAttribute('href', '/models?q=deepseek&group=default#model-catalog')
+    expect(within(promotion).getByRole('link', { name: 'GLM 报价' })).toHaveAttribute('href', '/models?q=glm&group=default#model-catalog')
+  })
+
   it('advertises the sign-up gift the deployment configures', () => {
     vi.stubGlobal('PORTAL_QUOTA_FOR_NEW_USER', 100000)
     render(<HomePage />)
@@ -92,6 +101,11 @@ describe('HomePage', () => {
     expect(within(table).getAllByText('输入 $9.50/M · 输出 $47.50/M')).toHaveLength(2)
     expect(within(table).getByText('720p $0.1883/秒 · 1080p $0.3511/秒')).toBeVisible()
     expect(within(table).getAllByText('9.5 折').length).toBeGreaterThan(0)
+    const deepseek = within(table).getByText('deepseek-v4-pro').closest('.reference-model-row') as HTMLElement
+    expect(within(deepseek).getByText('输入 $1.068/M · 输出 $2.136/M')).toBeVisible()
+    expect(within(deepseek).getByText('6 折')).toBeVisible()
+    expect(within(table).getByText('glm-5.3-flash')).toBeVisible()
+    expect(within(table).queryByText(/^(deepseek-v3\.2|deepseek-v4-flash)$/)).toBeNull()
   })
 
   it('lists only mainland models, in yuan and without a discount, on the mainland site', () => {
@@ -99,6 +113,7 @@ describe('HomePage', () => {
     const { container } = render(<HomePage />)
 
     const table = container.querySelector('.reference-models') as HTMLElement
+    expect(screen.queryByRole('region', { name: 'DeepSeek 与 GLM 全天 6 折' })).toBeNull()
     expect(within(table).queryByText(/claude|gpt/)).toBeNull()
     expect(within(table).getByText('输入 ¥11.926/M · 输出 ¥23.852/M')).toBeVisible()
     expect(within(table).getByText('输入 ¥1.005/M · 输出 ¥2.01/M')).toBeVisible()

@@ -13,15 +13,17 @@ import { JSDOM } from 'jsdom'
  * something a visitor sees before the first interaction. Measured 2026-09-20 —
  * HTML 15.6 KB, initial JS 90.4 KB, as the line this script prints reports them.
  */
-const BUDGET_GZIP = { html: 18_500, initialJs: 106_000 }
+// 首屏促销随中英预渲染 HTML 一起发送，为新增内容保留 300 字节压缩预算。
+const BUDGET_GZIP = { html: 18_800, initialJs: 106_000 }
 
 const html = await readFile('dist/index.html', 'utf8')
 assert.ok(html.includes('id="reference-hero-title"'), 'Homepage must be in the HTML response')
 assert.ok(!html.includes('/src/assets/'), 'No development asset paths in the release')
-for (const { path, browser, stored, expected, blockedStorage, gift } of [
+for (const { path, browser, stored, expected, blockedStorage, gift, domestic } of [
   { path: '/', browser: 'en-US', expected: 'One API gateway' },
   { path: '/', browser: 'zh-CN', expected: '统一 API 网关' },
   { path: '/', browser: 'zh-CN', gift: 0, expected: '统一 API 网关' },
+  { path: '/', browser: 'zh-CN', domestic: true, expected: '统一 API 网关' },
   { path: '/', browser: 'zh-CN', stored: 'en', expected: 'One API gateway' },
   { path: '/', browser: 'en-US', stored: 'zh-CN', expected: '统一 API 网关' },
   { path: '/', browser: 'zh-CN', blockedStorage: true, expected: '统一 API 网关' },
@@ -37,12 +39,15 @@ for (const { path, browser, stored, expected, blockedStorage, gift } of [
       if (blockedStorage) Object.defineProperty(window, 'localStorage', { get() { throw new Error('Storage unavailable') } })
       // What `/api/config.js` sets on a deployment that gives no sign-up gift.
       if (gift !== undefined) window.PORTAL_QUOTA_FOR_NEW_USER = gift
+      if (domestic) window.PORTAL_DOMESTIC_REGION = true
     },
   })
   const doc = dom.window.document, root = doc.getElementById('root')
   assert.equal(doc.documentElement.dataset.gift, gift === 0 ? 'none' : undefined, 'A zero gift is hidden before first paint')
+  assert.equal(doc.documentElement.dataset.portalRegion, domestic ? 'domestic' : undefined, '地区标记应在首页首次绘制前设置')
   if (expected) {
     assert.ok(doc.querySelector('h1')?.textContent.includes(expected), `Initial locale: ${browser}/${stored}`)
+    assert.equal(root.querySelector('main')?.firstElementChild?.className, 'reference-series-promo', '活动应位于首页首屏内容顶部')
     assert.equal(root.dataset.prerendered, 'true')
   } else {
     assert.equal(root.childElementCount, 0, `No homepage flash on ${path}`)
