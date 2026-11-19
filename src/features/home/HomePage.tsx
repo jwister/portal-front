@@ -270,10 +270,7 @@ function SeriesPromotion() {
   if (domestic) return null
 
   return <section className="reference-series-promo" aria-labelledby="reference-series-promo-title">
-    <div>
-      <h2 id="reference-series-promo-title"><Trans i18nKey="home.seriesOfferTitle" components={{ strong: <strong /> }} /></h2>
-      <small>{t('home.seriesOfferScope')}</small>
-    </div>
+    <h2 id="reference-series-promo-title"><Trans i18nKey="home.seriesOfferTitle" components={{ strong: <strong /> }} /></h2>
     <div className="reference-series-promo-links">
       <a className="reference-hero-link" href="/models?q=deepseek&group=default#model-catalog">{t('home.seriesOfferDeepseek')}</a>
       <a className="reference-hero-link" href="/models?q=glm&group=default#model-catalog">{t('home.seriesOfferGlm')}</a>
