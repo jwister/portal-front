@@ -472,6 +472,7 @@
   "home.modelPriceVideo": "720p {{first}}/s · 1080p {{second}}/s",
   "home.modelSource": "Source: {{source}}",
   "home.modelDiscount": "5% off",
+  "home.gptClaudeDiscount": "10% off",
   "home.seriesOfferTitle": "DeepSeek and GLM <strong>40% off all day</strong>",
   "home.seriesOfferDeepseek": "DeepSeek pricing",
   "home.seriesOfferGlm": "GLM pricing",

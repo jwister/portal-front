@@ -102,7 +102,7 @@ interface ModelGroup {
   /** The copy that labels both figures; `unit` is what each figure carries itself. */
   price: 'home.modelPrice' | 'home.modelPriceVideo'
   unit: '/M' | ''
-  models: readonly (readonly [vendor: string, model: string, first: number, second: number, source: string, discount?: 'home.seriesOfferDiscount'])[]
+  models: readonly (readonly [vendor: string, model: string, first: number, second: number, source: string, discount?: 'home.seriesOfferDiscount' | 'home.gptClaudeDiscount'])[]
 }
 
 /**
@@ -114,7 +114,7 @@ interface ModelGroup {
  * that labels them — token models quote input and output per million, video models quote two
  * resolutions per second. Re-check every figure against that site's `/api/catalog/pricing`
  * whenever a rate changes; nothing here fails when the gateway moves. Last checked
- * 2026-11-19 (overseas DeepSeek and GLM), 2026-09-20 (other overseas models)
+ * 2026-11-19 (overseas token models), 2026-09-20 (overseas video models)
  * and 2026-09-28 (mainland).
  *
  * Models whose rate varies per request (`deepseek-v4.1-flash` off-peak, `glm-5.1` input
@@ -125,14 +125,15 @@ interface ModelGroup {
  * rounded UP to four decimals so the column stays legible without ever quoting under the
  * real rate; `/models` carries the exact figure.
  */
+// GPT、Claude 使用 2026-11-19 接口默认分组九折价格；新增 Sol 模型与模型广场保持一致。
 const overseasModels: readonly ModelGroup[] = [
   {
     title: 'home.models.flagship',
     price: 'home.modelPrice',
     unit: '/M',
     models: [
-      ['Anthropic', 'claude-fable-5.1', 9.5, 47.5, 'aws'],
-      ['OpenAI', 'gpt-6-astra', 9.5, 47.5, 'azure'],
+      ['Anthropic', 'claude-fable-5.1', 9, 45, 'aws', 'home.gptClaudeDiscount'],
+      ['OpenAI', 'gpt-6-astra', 9, 45, 'azure', 'home.gptClaudeDiscount'],
     ],
   },
   {
@@ -140,8 +141,10 @@ const overseasModels: readonly ModelGroup[] = [
     price: 'home.modelPrice',
     unit: '/M',
     models: [
-      ['Anthropic', 'claude-opus-5', 4.75, 23.75, 'aws'],
-      ['OpenAI', 'gpt-5.6-terra', 1.9, 11.4, 'azure'],
+      ['Anthropic', 'claude-opus-5', 4.5, 22.5, 'aws', 'home.gptClaudeDiscount'],
+      ['OpenAI', 'gpt-6.2-sol', 1.8, 9, 'azure', 'home.gptClaudeDiscount'],
+      ['OpenAI', 'gpt-6.1-sol', 1.8, 9, 'azure', 'home.gptClaudeDiscount'],
+      ['OpenAI', 'gpt-5.6-terra', 1.8, 10.8, 'azure', 'home.gptClaudeDiscount'],
       ['DeepSeek', 'deepseek-v4-pro', 1.068, 2.136, 'deepseek', 'home.seriesOfferDiscount'],
       ['Zhipu', 'glm-5.2', 0.708, 2.472, 'Baidu Cloud', 'home.seriesOfferDiscount'],
       ['Zhipu', 'glm-5.3', 0.7154, 2.5038, 'Baidu Cloud', 'home.seriesOfferDiscount'],
@@ -152,8 +155,8 @@ const overseasModels: readonly ModelGroup[] = [
     price: 'home.modelPrice',
     unit: '/M',
     models: [
-      ['Anthropic', 'claude-sonnet-5', 1.9, 9.5, 'aws'],
-      ['OpenAI', 'gpt-5.6-luna', 0.19, 1.14, 'azure'],
+      ['Anthropic', 'claude-sonnet-5', 1.8, 9, 'aws', 'home.gptClaudeDiscount'],
+      ['OpenAI', 'gpt-5.6-luna', 0.18, 1.08, 'azure', 'home.gptClaudeDiscount'],
       ['Zhipu', 'glm-5.3-flash', 0.0716, 0.2504, 'Baidu Cloud', 'home.seriesOfferDiscount'],
     ],
   },

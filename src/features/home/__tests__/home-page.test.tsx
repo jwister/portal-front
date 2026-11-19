@@ -98,9 +98,15 @@ describe('HomePage', () => {
 
     const table = container.querySelector('.reference-models') as HTMLElement
     expect(within(table).getByText('claude-fable-5.1')).toBeVisible()
-    expect(within(table).getAllByText('输入 $9.50/M · 输出 $47.50/M')).toHaveLength(2)
+    expect(within(table).getAllByText('输入 $9.00/M · 输出 $45.00/M')).toHaveLength(2)
     expect(within(table).getByText('720p $0.1883/秒 · 1080p $0.3511/秒')).toBeVisible()
-    expect(within(table).getAllByText('9.5 折').length).toBeGreaterThan(0)
+    expect(within(table).getAllByText('9 折').length).toBeGreaterThan(0)
+    // GPT 和 Claude 按接口默认分组九折展示，两款 Sol 使用真实模型 ID。
+    for (const model of ['gpt-6.2-sol', 'gpt-6.1-sol']) {
+      const row = within(table).getByText(model).closest('.reference-model-row') as HTMLElement
+      expect(within(row).getByText('输入 $1.80/M · 输出 $9.00/M')).toBeVisible()
+      expect(within(row).getByText('9 折')).toBeVisible()
+    }
     const deepseek = within(table).getByText('deepseek-v4-pro').closest('.reference-model-row') as HTMLElement
     expect(within(deepseek).getByText('输入 $1.068/M · 输出 $2.136/M')).toBeVisible()
     expect(within(deepseek).getByText('6 折')).toBeVisible()
@@ -153,7 +159,7 @@ describe('HomePage', () => {
     const html = renderToString(<HomePage />)
 
     expect(html).toContain('claude-fable-5.1')
-    expect(html).toContain('$9.50/M')
+    expect(html).toContain('$9.00/M')
     expect(html).not.toContain('苏ICP备')
   })
 
